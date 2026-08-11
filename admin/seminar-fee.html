@@ -116,7 +116,7 @@
         .preview-table th, .preview-table td { border: 1px solid #eee; padding: 8px 10px; text-align: left; }
         .preview-table th { background: rgba(232,248,238,0.9); font-weight: bold; position: sticky; top: 0; color: var(--primary); }
 
-        #print-area-receipt { display: none; }
+        @media screen { #print-area-receipt { display: none; } }
 
         /* ---- Receipt slip visuals ---- */
         .print-area, #print-area-receipt { width: 100%; font-family: 'Times New Roman', Georgia, serif; }
@@ -135,7 +135,6 @@
             line-height: 1.5;
             color: #111;
             background: #fff;
-            margin-top: 15px; /* FIXED: Prevent copy badge from getting cut off at top */
         }
         .slip[data-first="true"]::before { content: "\2702"; position: absolute; top: -4px; left: -10px; font-size: 13px; color: #444; background: #fff; transform: rotate(-90deg); }
         .slip.env      { border-color: #1f5c2e; }
@@ -194,6 +193,10 @@
 
         /* PERFECT PRINT CSS FIX: Guarantee No White Page */
         @media print {
+            @page {
+                size: A5 landscape;
+                margin: 15mm 6mm 6mm 6mm;
+            }
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
@@ -285,7 +288,9 @@
     <main class="panel-main">
         <section class="academic-banner no-print"><h1>Fee Management — Seminar &amp; Land Use</h1></section>
 
+        <!-- TOP 3 PANELS WRAPPER -->
         <div class="top-panels-wrapper no-print">
+            <!-- 1. Fee Type Box -->
             <div class="panel">
                 <div class="panel-title" style="margin-bottom: 10px;"><h2>Fee Type</h2></div>
                 <div class="form-group" style="flex: 1;">
@@ -298,6 +303,7 @@
                 </div>
             </div>
 
+            <!-- 2. Search Student Box -->
             <div class="panel">
                 <div class="panel-title" style="margin-bottom: 10px;"><h2>Search Student</h2></div>
                 <div class="form-group" style="flex: 1;">
@@ -310,60 +316,152 @@
                 <div id="statusBox" class="status hide" style="margin-top:8px;"></div>
             </div>
 
+            <!-- 3. Manual Excel Entry Box -->
             <div class="panel">
                 <div class="panel-title" style="margin-bottom: 10px;"><h2>Manual Excel Entry</h2></div>
                 <div class="form-group" style="flex: 1;">
                     <label>Select Excel/CSV File</label>
                     <input type="file" id="excel_file" class="form-control" accept=".xlsx, .xls, .csv">
+                    <p class="tab-note" style="margin-top: 10px;">"Ad Roll", "Amount", "Mobile" will match automatically.</p>
                 </div>
                 <div class="form-group">
-                    <button class="btn blue" style="width: 100%;" onclick="previewExcelData()">Preview Excel Data</button>
+                    <button class="btn primary" style="width: 100%;" onclick="previewExcel()">Preview Excel</button>
                 </div>
             </div>
-        </div> <div class="panel hide no-print" id="excel_preview_panel" style="display: none;">
-            <div class="panel-title" style="margin-bottom: 10px;">
-                <h2>Excel Data Preview</h2>
+        </div> 
+
+        <!-- EXCEL PREVIEW PANEL -->
+        <div class="panel no-print" id="excel_preview_panel" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h2 style="margin: 0;">Excel Data Preview</h2>
+                    <span id="preview_count" style="font-size: 13px; color: var(--muted);"></span>
+                </div>
+                <button class="btn blue" id="btn_confirm_upload" onclick="confirmExcelUpload()">Confirm & Upload to Database</button>
             </div>
+            
             <div class="preview-table-wrapper">
-                <table class="preview-table" id="preview_table">
+                <table class="preview-table">
                     <thead>
-                        <tr id="preview_table_head"></tr>
+                        <tr>
+                            <th>Ad Roll / Regi</th>
+                            <th>Student Name</th>
+                            <th>Class Roll</th>
+                            <th>Year</th>
+                            <th>Fee Type</th>
+                            <th>Amount (৳)</th>
+                        </tr>
                     </thead>
-                    <tbody id="preview_table_body"></tbody>
+                    <tbody id="preview_body"></tbody>
                 </table>
             </div>
-            <div style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
-                <button class="btn ghost" onclick="cancelExcel()">Cancel</button>
-                <button class="btn" onclick="uploadExcelData()">Confirm & Upload</button>
+            <div id="excelStatusBox" class="status hide" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- FEE ENTRY FORM -->
+        <div class="panel no-print">
+            <div class="panel-title"><h2>Fee Entry Form</h2></div>
+
+            <div class="grid two">
+                <div class="form-group" id="fg_ad_roll"><label>Admission Roll (7 Digits)</label><input type="text" id="admission_roll" class="form-control" placeholder="Auto-filled when found" maxlength="7" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+                <div class="form-group"><label>Receipt No</label><input type="text" id="receipt_no" class="form-control"></div>
+                <div class="form-group"><label>Admission Date</label><input type="date" id="receipt_date" class="form-control"></div>
+                <div class="form-group"><label>Name</label><input type="text" id="name" class="form-control"></div>
+                <div class="form-group"><label>Class Roll (13 Digits)</label><input type="text" id="class_roll" class="form-control" maxlength="13" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+                <div class="form-group" id="fg_registration_number"><label>Registration Number (11 Digits)</label><input type="text" id="registration_number" class="form-control" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+                <div class="form-group">
+                    <label>Year</label>
+                    <select id="year" class="form-control"></select>
+                </div>
+                <div class="form-group"><label>Session</label><select id="session" class="form-control" onchange="refreshReceiptNoFromForm()"></select></div>
+                <div class="form-group"><label>Student Mobile (11 Digits)</label><input type="text" id="student_mobile" class="form-control" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+                <div class="form-group" id="fg_guardian_mobile"><label>Guardian Mobile (11 Digits)</label><input type="text" id="guardian_mobile" class="form-control" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+                
+                <div class="form-group" id="fg_merit"><label>Merit Position</label><input type="text" id="merit" class="form-control"></div>
+                <div class="form-group chk-group" id="fg_migration"><input type="checkbox" id="migration" value="Yes"><label for="migration">Migration (Yes)</label></div>
+                
+                <div class="form-group"><label>Paid Amount (৳)</label><input type="number" id="amount" class="form-control" oninput="convertToWords()"></div>
+                <div class="form-group"><label>Amount In Words</label><input type="text" id="amount_in_words" class="form-control" readonly></div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+                <button class="btn primary" onclick="saveData()">Save / Update</button>
+                <button class="btn ghost" onclick="prepareAndPrintReceipt()">Print Receipt</button>
+                <button class="btn ghost" onclick="unlockAllFields()">Unlock Fields (Edit)</button>
+                <button class="btn ghost" onclick="clearForm()">Clear Form</button>
             </div>
         </div>
 
-        <div class="panel" id="report-panel" style="margin-top: 20px;">
-            <div id="report_header" style="display: none; text-align: center; margin-bottom: 20px;">
-                <h2 style="margin: 0; font-size: 22px;">Kumudini Government College</h2>
-                <h3 style="margin: 5px 0; font-size: 18px; color: #333;">Department of Geography and Environment</h3>
-                <h4 style="margin: 5px 0; font-size: 16px; text-decoration: underline;" id="print_report_title">Seminar & Land Use Fee Report</h4>
+        <div class="panel" id="report-panel">
+            <div class="panel-title no-print"><h2>Year &amp; Session Wise Report (Paid Only)</h2></div>
+            <div class="grid two no-print" style="align-items: flex-end;">
+                <div class="form-group">
+                    <label>Fee Type</label>
+                    <select id="report_fee_type" class="form-control">
+                        <option value="All">All Types</option>
+                        <option value="Seminar">Seminar Fee</option>
+                        <option value="LandUse">Land Use Fee</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Year</label>
+                    <select id="report_year" class="form-control">
+                        <option value="All">All Years</option>
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                        <option value="Masters">Masters</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Session (Optional)</label>
+                    <select id="report_session" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>From Date (Optional)</label>
+                    <input type="date" id="report_date_from" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>To Date (Optional)</label>
+                    <input type="date" id="report_date_to" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Sort By</label>
+                    <select id="report_sort" class="form-control">
+                        <option value="admission_roll">Admission Roll (Ascending)</option>
+                        <option value="class_roll">Class Roll (Ascending)</option>
+                        <option value="registration_number">Registration Number (Ascending)</option>
+                    </select>
+                </div>
             </div>
-
-            <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2>Recent Transactions</h2>
-                <button class="btn ghost no-print" onclick="printReport()">🖨️ Print Report</button>
+            <div class="no-print" style="display:flex; gap:10px; margin: 15px 0;">
+                <button class="btn blue" onclick="loadReport()">Load Report</button>
+                <button class="btn ghost" onclick="printReport()">Print Report</button>
             </div>
-            
-            <div style="overflow-x: auto;">
-                <table class="report-table preview-table" style="width: 100%;">
-                    <thead>
+            <!-- Report Header (print area -->
+            <div id="report_header" style="text-align:center; margin-bottom:20px; display:none;">
+                <div style="font-size:18px; font-weight:bold;">DEPARTMENT OF GEOGRAPHY & ENVIRONMENT</div>
+                <div style="font-size:16px; font-weight:bold;">KUMUDINI GOVT. COLLEGE, TANGAIL</div>
+                <div id="report_info" style="margin:10px 0; font-size:14px;"></div>
+                <div id="report_date" style="font-size:12px;"></div>
+            </div>
+            <div class="table-responsive">
+                <table class="report-table" id="report_table">
+                    <thead id="report_thead">
                         <tr>
+                            <th>Sl</th>
+                            <th>Class Roll</th>
                             <th>Ad. Roll</th>
-                            <th>Name</th>
+                            <th>Student Name</th>
                             <th>Year</th>
+                            <th>Session</th>
                             <th>Fee Type</th>
                             <th>Amount</th>
-                            <th class="no-print">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="transaction_body">
-                        <tr><td colspan="6" style="text-align: center; color: #666;">No recent records found.</td></tr>
+                    <tbody id="report_body">
+                        <tr><td colspan="8" style="text-align:center; color:var(--muted);">Select criteria and load report</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -371,50 +469,921 @@
     </main>
 </div>
 
+<!-- ============ PRINT RECEIPT AREA ============ -->
+<div id="print-area-receipt" class="print-area" style="padding-top: 10mm;">
+  <div class="slips-row">
+    <!-- DEPARTMENT COPY -->
+    <div class="slip dept">
+        <span class="copy-badge">DEPARTMENT COPY</span>
+        <div class="header">
+            <div class="seal"><img src="https://kgc.ac.bd/wp-content/uploads/2019/05/logo-kgc-202x300.jpg" alt="KGC Logo"></div>
+            <h3>GEOGRAPHY AND<br>ENVIRONMENT DEPARTMENT</h3>
+            <p class="college">KUMUDINI GOVT. COLLEGE, TANGAIL</p>
+        </div>
+        <div class="receipt-bar">SEMINAR FEE RECEIPT</div>
+        <div class="receipt-meta">
+            <span>Receipt No: <span class="rno" id="p2_receipt"></span></span>
+            <span>Date: <strong id="p2_date"></strong></span>
+        </div>
+        
+        <div class="row-p" id="p2_ad_roll_row"><span class="label">Admission Roll</span><strong id="p2_ad_roll"></strong></div>
+        <div class="row-p" id="p2_reg_row"><span class="label">Registration No</span><strong id="p2_reg"></strong></div>
+        <div class="row-p"><span class="label">Name</span><strong id="p2_name"></strong></div>
+        <div class="row-p"><span class="label">Class Roll</span><strong id="p2_cl_roll"></strong></div>
+        <div class="row-p"><span class="label">Year</span><strong id="p2_year"></strong></div>
+        <div class="row-p"><span class="label">Session</span><strong id="p2_session"></strong></div>
+        <div class="row-p" style="border-bottom:none;"><span class="label">Student Mobile</span><strong id="p2_s_mobile"></strong></div>
+        <div class="amount-box"><span>Paid to be Amount (৳):</span><span class="box" id="p2_amount"></span></div>
+        <div class="words-box"><span class="lbl">Amount in Words:</span><span id="p2_words"></span></div>
+        <div class="clearfix"><div class="footer-sign">Receiver Signature</div></div>
+    </div>
+
+    <!-- STUDENT COPY -->
+    <div class="slip student">
+        <span class="copy-badge">STUDENT COPY</span>
+        <div class="header">
+            <div class="seal"><img src="https://kgc.ac.bd/wp-content/uploads/2019/05/logo-kgc-202x300.jpg" alt="KGC Logo"></div>
+            <h3>GEOGRAPHY AND<br>ENVIRONMENT DEPARTMENT</h3>
+            <p class="college">KUMUDINI GOVT. COLLEGE, TANGAIL</p>
+        </div>
+        <div class="receipt-bar">SEMINAR FEE RECEIPT</div>
+        <div class="receipt-meta">
+            <span>Receipt No: <span class="rno" id="p3_receipt"></span></span>
+            <span>Date: <strong id="p3_date"></strong></span>
+        </div>
+        
+        <div class="row-p" id="p3_ad_roll_row"><span class="label">Admission Roll</span><strong id="p3_ad_roll"></strong></div>
+        <div class="row-p" id="p3_reg_row"><span class="label">Registration No</span><strong id="p3_reg"></strong></div>
+        <div class="row-p"><span class="label">Name</span><strong id="p3_name"></strong></div>
+        <div class="row-p"><span class="label">Class Roll</span><strong id="p3_cl_roll"></strong></div>
+        <div class="row-p"><span class="label">Year</span><strong id="p3_year"></strong></div>
+        <div class="row-p"><span class="label">Session</span><strong id="p3_session"></strong></div>
+        <div class="row-p" style="border-bottom:none;"><span class="label">Student Mobile</span><strong id="p3_s_mobile"></strong></div>
+        <div class="amount-box"><span>Paid to be Amount (৳):</span><span class="box" id="p3_amount"></span></div>
+        <div class="words-box"><span class="lbl">Amount in Words:</span><span id="p3_words"></span></div>
+        <div class="clearfix"><div class="footer-sign">Receiver Signature</div></div>
+    </div>
+  </div>
+  <div class="print-note">Note: Please bring this receipt at the time of seminar presentation.</div>
+</div>
+
+<script src="../assets/supabase-config.js"></script>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+
 <script>
-    function onFeeTypeChange() {
-        const type = document.getElementById('fee_type').value;
-        const note = document.getElementById('feeTypeNote');
-        if (type === 'Seminar') {
-            note.textContent = "Applicable for 1st Year / Fresh Admissions.";
-        } else {
-            note.textContent = "Applicable during form fill-up (4th Year & Masters).";
+    let db;
+    try {
+        if (window.supabase && window.GEO_SUPABASE_URL && window.GEO_SUPABASE_PUBLISHABLE_KEY) {
+            db = window.supabase.createClient(window.GEO_SUPABASE_URL, window.GEO_SUPABASE_PUBLISHABLE_KEY);
+        }
+    } catch (e) { console.error("Database connection failed", e); }
+
+    const statusBox = document.getElementById('statusBox');
+    const YEAR_OPTIONS = [
+        ['1st Year', 'Hons 1st Year'],
+        ['2nd Year', 'Hons 2nd Year'],
+        ['3rd Year', 'Hons 3rd Year'],
+        ['4th Year', 'Hons 4th Year'],
+        ['Masters', 'Masters']
+    ];
+
+    function showMsg(el, type, msg) {
+        if (!el) return;
+        el.className = 'status ' + type;
+        el.textContent = msg;
+        el.classList.remove('hide');
+    }
+
+    function numberToWords(num) {
+        const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+        const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+        if ((num = num.toString()).length > 9) return 'overflow';
+        let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+        if (!n) return; let str = '';
+        str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+        str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+        str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+        str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+        str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+        return str ? str.trim() + ' Taka Only' : '';
+    }
+    
+    function convertToWords() {
+        const amount = document.getElementById('amount').value;
+        document.getElementById('amount_in_words').value = amount ? numberToWords(amount) : '';
+    }
+
+    function normalizeAcademicYear(v) {
+        const s = String(v || '').toLowerCase();
+        if (s.includes('1st')) return '1st Year';
+        if (s.includes('2nd')) return '2nd Year';
+        if (s.includes('3rd')) return '3rd Year';
+        if (s.includes('4th')) return '4th Year';
+        if (s.includes('master')) return 'Masters';
+        return '';
+    }
+
+    function currentFeeType() { return document.getElementById('fee_type').value; }
+
+    function buildSessionOptions(blankLabel) {
+        const nowYear = new Date().getFullYear();
+        const startYear = nowYear - 7;
+        const endYear = nowYear + 1;
+        const opts = [];
+        if (blankLabel) opts.push(['', blankLabel]);
+        for (let y = startYear; y <= endYear; y++) {
+            const label = `${y}-${String((y + 1) % 100).padStart(2, '0')}`;
+            opts.push([label, label]);
+        }
+        return opts;
+    }
+
+    function populateSessionDropdowns() {
+        const entrySel = document.getElementById('session');
+        const reportSel = document.getElementById('report_session');
+        if (entrySel) {
+            const cur = entrySel.value;
+            entrySel.innerHTML = buildSessionOptions('-- Select Session --').map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+            if (cur) entrySel.value = cur;
+        }
+        if (reportSel) {
+            reportSel.innerHTML = buildSessionOptions('All Sessions').map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
         }
     }
 
-    function searchStudent() {
-        // Search logic goes here
-        console.log("Searching student...");
+    function setSessionValue(value) {
+        const sel = document.getElementById('session');
+        if (!sel) return;
+        const v = (value || '').toString();
+        if (!v) { sel.value = ''; return; }
+        let opt = Array.from(sel.options).find(o => o.value === v);
+        if (!opt) {
+            opt = document.createElement('option');
+            opt.value = v;
+            opt.textContent = v;
+            sel.appendChild(opt);
+        }
+        sel.value = v;
     }
 
-    function previewExcelData() {
-        document.getElementById('excel_preview_panel').style.display = 'block';
-        // Excel parsing logic using XLSX goes here
+    function applyYearOptionsForFeeType(resetDefault) {
+        const feeType = currentFeeType();
+        const yearSel = document.getElementById('year');
+        const allowed = feeType === 'LandUse' ? ['4th Year', 'Masters'] : ['1st Year', 'Masters'];
+        const current = yearSel.value;
+        yearSel.innerHTML = YEAR_OPTIONS.filter(([v]) => allowed.includes(v)).map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+        if (resetDefault) {
+            yearSel.value = allowed[0];
+        } else if (allowed.includes(current)) {
+            yearSel.value = current;
+        } else if (current) {
+            const legacyOpt = document.createElement('option');
+            legacyOpt.value = current;
+            legacyOpt.textContent = current + ' (legacy)';
+            yearSel.appendChild(legacyOpt);
+            yearSel.value = current;
+        } else {
+            yearSel.value = allowed[0];
+        }
     }
 
-    function cancelExcel() {
-        document.getElementById('excel_file').value = "";
-        document.getElementById('excel_preview_panel').style.display = 'none';
+    function currentSessionDefault() {
+        const now = new Date();
+        const startYear = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+        return `${startYear}-${String((startYear + 1) % 100).padStart(2, '0')}`;
     }
 
-    function uploadExcelData() {
-        // Supabase bulk upload logic goes here
-        console.log("Uploading data...");
+    function ensureDefaultSession() {
+        const sel = document.getElementById('session');
+        if (!sel || sel.value) return sel ? sel.value : '';
+        const fallback = currentSessionDefault();
+        setSessionValue(fallback);
+        return fallback;
+    }
+
+    function updateFeeTypeNote() {
+        const feeType = currentFeeType();
+        const note = document.getElementById('feeTypeNote');
+        note.textContent = feeType === 'LandUse'
+            ? 'Collected at Form Fill-up (4th Year/Masters).'
+            : 'Collected at Admission (1st Year/Masters).';
+    }
+
+    async function onFeeTypeChange() {
+        applyYearOptionsForFeeType(true);
+        updateFeeTypeNote();
+        
+        const feeType = currentFeeType();
+        const isLandUse = (feeType === 'LandUse');
+
+        document.getElementById('fg_ad_roll').style.display = isLandUse ? 'none' : 'flex';
+        document.getElementById('fg_merit').style.display = isLandUse ? 'none' : 'flex';
+        document.getElementById('fg_migration').style.display = isLandUse ? 'none' : 'flex';
+        document.getElementById('fg_guardian_mobile').style.display = isLandUse ? 'none' : 'flex';
+        
+        document.getElementById('fg_registration_number').style.display = isLandUse ? 'flex' : 'none';
+
+        if(isLandUse) {
+            document.getElementById('admission_roll').value = '';
+            document.getElementById('merit').value = '';
+            document.getElementById('migration').checked = false;
+            document.getElementById('guardian_mobile').value = '';
+        } else {
+            document.getElementById('registration_number').value = '';
+        }
+
+        await setNextReceiptDefaults();
+    }
+
+    function seriesPrefix(year) { return (year === 'Masters') ? 'Msc' : 'Hons'; }
+
+    async function generateReceiptNo(yearVal, sessionVal, feeTypeVal) {
+        const year = yearVal || document.getElementById('year').value || '4th Year';
+        const session = ((sessionVal !== undefined ? sessionVal : document.getElementById('session').value) || '').trim() || 'General';
+        const feeType = feeTypeVal || currentFeeType();
+        const prefix = `${seriesPrefix(year)}-${session}-`;
+
+        let nextNum = 1;
+        if (db) {
+            try {
+                const { data, error } = await db
+                    .from('seminar_fee')
+                    .select('receipt_no')
+                    .eq('fee_type', feeType)
+                    .like('receipt_no', prefix + '%')
+                    .not('receipt_no', 'is', null) 
+                    .order('receipt_no', { ascending: false })
+                    .limit(1);
+                    
+                if (!error && data && data.length > 0 && data[0].receipt_no) {
+                    const parts = data[0].receipt_no.toString().split('-');
+                    const lastDigits = parts[parts.length - 1];
+                    if (!isNaN(parseInt(lastDigits, 10))) {
+                        nextNum = parseInt(lastDigits, 10) + 1;
+                    }
+                }
+            } catch (e) { console.error('Could not fetch last receipt no:', e); }
+        }
+        return prefix + String(nextNum).padStart(4, '0');
+    }
+
+    async function setNextReceiptDefaults() {
+        document.getElementById('receipt_date').value = new Date().toISOString().split('T')[0];
+
+        const yearVal = document.getElementById('year').value || '1st Year';
+        const sessionVal = (document.getElementById('session').value || '').trim() || 'General';
+        const placeholderPrefix = `${seriesPrefix(yearVal)}-${sessionVal}-`;
+        document.getElementById('receipt_no').value = placeholderPrefix + '0001';
+
+        try {
+            document.getElementById('receipt_no').value = await generateReceiptNo(yearVal, sessionVal);
+        } catch (e) {
+            console.error('Receipt number generation failed, keeping placeholder:', e);
+        }
+    }
+
+    async function refreshReceiptNoFromForm() {
+        try {
+            document.getElementById('receipt_no').value = await generateReceiptNo();
+        } catch (e) {
+            console.error('Receipt number refresh failed:', e);
+        }
+    }
+
+    const LOCKABLE_FIELDS = ['admission_roll', 'name', 'class_roll', 'registration_number', 'year', 'session', 'student_mobile', 'guardian_mobile', 'merit', 'amount', 'amount_in_words'];
+
+    function unlockAllFields() {
+        LOCKABLE_FIELDS.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.readOnly = false;
+            el.disabled = false;
+            el.classList.remove('locked-field');
+        });
+    }
+
+    function lockFilledFields() {
+        LOCKABLE_FIELDS.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const hasVal = !!(el.value && el.value.toString().trim().length);
+            const isSelect = el.tagName === 'SELECT';
+            if (hasVal) {
+                if (isSelect) el.disabled = true; else el.readOnly = true;
+                el.classList.add('locked-field');
+            } else {
+                if (isSelect) el.disabled = false; else el.readOnly = false;
+                el.classList.remove('locked-field');
+            }
+        });
+    }
+
+    async function clearForm() {
+        const fields = ['admission_roll', 'name', 'class_roll', 'registration_number', 'student_mobile', 'guardian_mobile', 'merit', 'amount', 'amount_in_words'];
+        fields.forEach(id => { if (document.getElementById(id)) document.getElementById(id).value = ''; });
+        setSessionValue('');
+        document.getElementById('migration').checked = false;
+        unlockAllFields();
+        applyYearOptionsForFeeType();
+        if (statusBox) statusBox.className = 'status hide';
+        await setNextReceiptDefaults();
+    }
+
+    async function fillFormFromFeeRow(data) {
+        document.getElementById('admission_roll').value = data.admission_roll || '';
+        document.getElementById('name').value = data.name || '';
+        document.getElementById('class_roll').value = data.class_roll || '';
+        document.getElementById('registration_number').value = data.registration_number || '';
+        
+        applyYearOptionsForFeeType();
+        document.getElementById('year').value = data.year || document.getElementById('year').value;
+        setSessionValue(data.session || '');
+        
+        document.getElementById('receipt_date').value = data.receipt_date || new Date().toISOString().split('T')[0];
+        
+        let existingReceiptNo = data.receipt_no || '';
+        if (!existingReceiptNo) {
+             existingReceiptNo = await generateReceiptNo(document.getElementById('year').value, document.getElementById('session').value);
+        }
+        document.getElementById('receipt_no').value = existingReceiptNo;
+
+        document.getElementById('student_mobile').value = data.student_mobile || '';
+        document.getElementById('guardian_mobile').value = data.guardian_mobile || '';
+        document.getElementById('merit').value = data.merit || '';
+        document.getElementById('migration').checked = data.migration === 'Yes';
+        document.getElementById('amount').value = data.amount || '';
+        document.getElementById('amount_in_words').value = data.amount_in_words || '';
+    }
+
+    async function searchStudent() {
+        if (!db) return showMsg(statusBox, 'err', 'Database connection error.');
+        const feeType = currentFeeType();
+        const val = document.getElementById('search_value').value.trim().replace(/[(),]/g, '');
+        
+        if (!val) return showMsg(statusBox, 'err', 'Please enter a search value.');
+        showMsg(statusBox, 'info', 'Searching...');
+
+        try {
+            const { data: stu, error: stuErr } = await db.from('students')
+                .select('*')
+                .or(`Roll.eq.${val},RegistrationNumber.eq.${val}`)
+                .maybeSingle();
+
+            if (stuErr) throw stuErr;
+
+            let existingFeeRow = null;
+            const { data: feeRows, error: feeRowsErr } = await db.from('seminar_fee')
+                .select('*')
+                .eq('fee_type', feeType)
+                .or(`admission_roll.eq.${val},class_roll.eq.${val},registration_number.eq.${val}`);
+
+            if (feeRowsErr) console.error('seminar_fee lookup failed:', feeRowsErr);
+            if (feeRows && feeRows.length > 0) {
+                existingFeeRow = feeRows[0];
+            }
+
+            if (existingFeeRow) {
+                await fillFormFromFeeRow(existingFeeRow);
+                lockFilledFields();
+                showMsg(statusBox, 'ok', `Existing ${feeType === 'LandUse' ? 'Land Use' : 'Seminar'} fee record found and loaded.`);
+                return;
+            }
+
+            if (stu) {
+                const normalizedYear = normalizeAcademicYear(stu.AcademicYear || stu.CurrentYear || '');
+                if (feeType === 'LandUse' && !(normalizedYear === '4th Year' || normalizedYear === 'Masters')) {
+                    return showMsg(statusBox, 'err', 'Land Use Fee is only applicable for Hons 4th Year or Masters students.');
+                }
+
+                let resolvedAdmissionRoll = '';
+                if (feeType === 'LandUse') {
+                    const { data: prevFee } = await db.from('seminar_fee')
+                        .select('admission_roll')
+                        .eq('class_roll', stu.Roll)
+                        .eq('fee_type', 'Seminar')
+                        .maybeSingle();
+                    if (prevFee) resolvedAdmissionRoll = prevFee.admission_roll;
+                }
+
+                await clearForm();
+                document.getElementById('admission_roll').value = resolvedAdmissionRoll;
+                document.getElementById('name').value = stu.Name || '';
+                document.getElementById('class_roll').value = stu.Roll || '';
+                document.getElementById('registration_number').value = stu.RegistrationNumber || '';
+                applyYearOptionsForFeeType();
+                if (normalizedYear) document.getElementById('year').value = normalizedYear;
+                setSessionValue(stu.SessionYear || stu.StudySessionYear || '');
+                document.getElementById('student_mobile').value = stu.StudentMobile || '';
+                document.getElementById('guardian_mobile').value = stu.GuardianMobile || '';
+                
+                await setNextReceiptDefaults();
+                lockFilledFields();
+                showMsg(statusBox, 'info', 'Student profile loaded — ready for a new entry.');
+                return;
+            }
+
+            if (feeType === 'Seminar') {
+                await clearForm();
+                document.getElementById('admission_roll').value = val;
+                showMsg(statusBox, 'info', 'No existing record — ready for a new entry.');
+            } else {
+                showMsg(statusBox, 'err', 'No student or fee record found.');
+            }
+        } catch (e) {
+            showMsg(statusBox, 'err', 'Search error: ' + e.message);
+        }
+    }
+
+    function isExactDigits(value, len) {
+        return new RegExp(`^\\d{${len}}$`).test(value);
+    }
+
+    async function saveData() {
+        if (!db) return showMsg(statusBox, 'err', 'Database connection error.');
+        const feeType = currentFeeType();
+        let admissionRoll = document.getElementById('admission_roll').value.trim();
+        const classRoll = document.getElementById('class_roll').value.trim();
+        const studentMobile = document.getElementById('student_mobile').value.trim();
+
+        if (classRoll && !isExactDigits(classRoll, 13)) return showMsg(statusBox, 'err', 'Class Roll must be exactly 13 digits.');
+        if (studentMobile && !isExactDigits(studentMobile, 11)) return showMsg(statusBox, 'err', 'Student Mobile must be exactly 11 digits.');
+
+        if (feeType === 'Seminar') {
+            if (!admissionRoll) return showMsg(statusBox, 'err', 'Admission Roll is required for Seminar Fee.');
+            if (!isExactDigits(admissionRoll, 7)) return showMsg(statusBox, 'err', 'Admission Roll must be exactly 7 digits.');
+
+            const gm = document.getElementById('guardian_mobile').value.trim();
+            if (gm && !isExactDigits(gm, 11)) return showMsg(statusBox, 'err', 'Guardian Mobile must be exactly 11 digits.');
+        }
+
+        if (feeType === 'LandUse') {
+            const regi = document.getElementById('registration_number').value.trim();
+            if (!regi) return showMsg(statusBox, 'err', 'Registration Number is required for Land Use Fee.');
+            if (!isExactDigits(regi, 11)) return showMsg(statusBox, 'err', 'Registration Number must be exactly 11 digits.');
+            admissionRoll = regi; 
+        }
+
+        showMsg(statusBox, 'info', 'Saving...');
+
+        const payload = {
+            admission_roll: admissionRoll,
+            fee_type: feeType,
+            receipt_no: document.getElementById('receipt_no').value,
+            receipt_date: document.getElementById('receipt_date').value,
+            name: document.getElementById('name').value,
+            class_roll: classRoll,
+            registration_number: document.getElementById('registration_number').value,
+            year: document.getElementById('year').value,
+            session: document.getElementById('session').value,
+            student_mobile: studentMobile,
+            guardian_mobile: document.getElementById('guardian_mobile').value,
+            merit: document.getElementById('merit').value,
+            migration: document.getElementById('migration').checked ? 'Yes' : 'No',
+            amount: document.getElementById('amount').value,
+            amount_in_words: document.getElementById('amount_in_words').value,
+            updated_at: new Date().toISOString()
+        };
+
+        try {
+            const { error } = await db.from('seminar_fee').upsert(payload, { onConflict: 'admission_roll,fee_type' });
+            if (error) throw error;
+            showMsg(statusBox, 'ok', (feeType === 'LandUse' ? 'Land Use' : 'Seminar') + ' fee saved successfully!');
+            
+            // Auto-reload the report if it has been used
+            const reportFeeType = document.getElementById('report_fee_type').value;
+            if (reportFeeType) {
+                await loadReport();
+            }
+        } catch (e) {
+            showMsg(statusBox, 'err', 'Error saving data: ' + e.message);
+        }
+    }
+
+    let pendingExcelPayload = [];
+
+    async function previewExcel() {
+        const fileInput = document.getElementById('excel_file');
+        const previewPanel = document.getElementById('excel_preview_panel');
+        
+        if (!fileInput.files.length) {
+            alert('Select an Excel file first.');
+            return;
+        }
+
+        const defaultFeeType = currentFeeType();
+        const reader = new FileReader();
+        
+        reader.onload = async function (e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const excelRows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                if (!excelRows.length) throw new Error('File is empty.');
+
+                const normalize = (str) => (str || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                const getVal = (row, matches) => {
+                    for (let key in row) if (matches.includes(normalize(key))) return row[key];
+                    return null;
+                };
+
+                let sequenceCache = {};
+                const todayStr = new Date().toISOString().split('T')[0];
+                let tempPayload = [];
+                let skippedInvalidRows = 0;
+
+                for (let row of excelRows) {
+                    let adRoll = getVal(row, ['admissionroll', 'adroll', 'roll', 'admission']);
+                    let amountVal = getVal(row, ['amount', 'paidamount', 'fee', 'paid', 'taka']);
+                    let rawDate = getVal(row, ['date', 'receiptdate', 'paymentdate']);
+                    let feeTypeVal = getVal(row, ['feetype', 'type']);
+                    let normalizedFeeType = defaultFeeType;
+                    
+                    if (feeTypeVal) {
+                        const ft = feeTypeVal.toString().toLowerCase();
+                        normalizedFeeType = ft.includes('land') ? 'LandUse' : 'Seminar';
+                    }
+                    
+                    let parsedDate = null;
+                    if (rawDate) {
+                        if (typeof rawDate === 'number') parsedDate = new Date(Math.round((rawDate - 25569) * 86400 * 1000)).toISOString().split('T')[0];
+                        else {
+                            let d = new Date(rawDate);
+                            if (!isNaN(d)) parsedDate = d.toISOString().split('T')[0];
+                        }
+                    }
+                    if (!parsedDate) {
+                        parsedDate = todayStr;
+                    }
+                    
+                    let finalAdRoll = (adRoll || '').toString();
+                    if(normalizedFeeType === 'LandUse' && !finalAdRoll) {
+                        finalAdRoll = (getVal(row, ['registrationnumber', 'regino', 'regnumber', 'regi', 'registration']) || '').toString();
+                    }
+
+                    let excelReceiptNo = (getVal(row, ['receiptno', 'receipt', 'memono']) || '').toString();
+                    let yearVal = (getVal(row, ['year', 'academicyear', 'classyear']) || '1st Year').toString();
+                    let sessionVal = (getVal(row, ['session', 'academicsession']) || '').toString();
+
+                    if (!excelReceiptNo) {
+                        let sessionForPrefix = sessionVal || 'General';
+                        let prefix = `${seriesPrefix(yearVal)}-${sessionForPrefix}-`;
+                        
+                        if (sequenceCache[prefix] === undefined) {
+                            let nextNum = 0;
+                            if (db) {
+                                try {
+                                    const { data, error } = await db
+                                        .from('seminar_fee')
+                                        .select('receipt_no')
+                                        .eq('fee_type', normalizedFeeType)
+                                        .like('receipt_no', prefix + '%')
+                                        .order('receipt_no', { ascending: false })
+                                        .limit(1);
+                                    if (!error && data && data.length && data[0].receipt_no) {
+                                        const match = data[0].receipt_no.toString().match(/(\d+)$/);
+                                        if (match) nextNum = parseInt(match[1], 10);
+                                    }
+                                } catch(e) {}
+                            }
+                            sequenceCache[prefix] = nextNum;
+                        }
+                        sequenceCache[prefix]++;
+                        excelReceiptNo = prefix + String(sequenceCache[prefix]).padStart(4, '0');
+                    }
+
+                    let classRollVal = (getVal(row, ['classroll', 'croll', 'class']) || '').toString();
+                    let regiNumberVal = (getVal(row, ['registrationnumber', 'regino', 'regnumber', 'regi', 'registration']) || '').toString();
+                    let studentMobileVal = (getVal(row, ['studentmobile', 'mobile', 'phone', 'contact']) || '').toString();
+                    let guardianMobileVal = (getVal(row, ['guardianmobile', 'gmobile', 'parentmobile']) || '').toString();
+
+                    // Validate digit-format fields — skip malformed rows instead of silently saving bad data
+                    let rowInvalid = false;
+                    if (normalizedFeeType === 'Seminar' && !isExactDigits(finalAdRoll, 7)) rowInvalid = true;
+                    if (normalizedFeeType === 'LandUse' && !isExactDigits(finalAdRoll, 11)) rowInvalid = true;
+                    if (classRollVal && !isExactDigits(classRollVal, 13)) rowInvalid = true;
+                    if (studentMobileVal && !isExactDigits(studentMobileVal, 11)) rowInvalid = true;
+                    if (guardianMobileVal && !isExactDigits(guardianMobileVal, 11)) rowInvalid = true;
+                    if (regiNumberVal && !isExactDigits(regiNumberVal, 11)) rowInvalid = true;
+
+                    if (rowInvalid) {
+                        skippedInvalidRows++;
+                        continue;
+                    }
+
+                    if (finalAdRoll) {
+                        tempPayload.push({
+                            admission_roll: finalAdRoll,
+                            fee_type: normalizedFeeType,
+                            name: (getVal(row, ['name', 'studentname', 'fullname']) || '').toString(),
+                            class_roll: classRollVal,
+                            registration_number: regiNumberVal,
+                            year: yearVal,
+                            session: sessionVal,
+                            student_mobile: studentMobileVal,
+                            guardian_mobile: guardianMobileVal,
+                            merit: (getVal(row, ['merit', 'meritposition', 'position']) || '').toString(),
+                            migration: (getVal(row, ['migration', 'mig']) || 'No').toString(),
+                            amount: amountVal || null,
+                            amount_in_words: amountVal ? numberToWords(amountVal) : '',
+                            receipt_no: excelReceiptNo,
+                            receipt_date: parsedDate,
+                            updated_at: new Date().toISOString()
+                        });
+                    }
+                }
+                
+                pendingExcelPayload = tempPayload;
+
+                if (!pendingExcelPayload.length) throw new Error("No valid rows found (check Roll/Registration Number and digit-length rules).");
+
+                previewPanel.style.display = 'block';
+                document.getElementById('preview_count').textContent = skippedInvalidRows > 0
+                    ? `Found ${pendingExcelPayload.length} valid records to upload. Skipped ${skippedInvalidRows} row(s) due to invalid Roll/Registration/Mobile format.`
+                    : `Found ${pendingExcelPayload.length} valid records to upload.`;
+                document.getElementById('excelStatusBox').className = 'status hide';
+                
+                const tbody = document.getElementById('preview_body');
+                tbody.innerHTML = '';
+                pendingExcelPayload.forEach(row => {
+                    tbody.innerHTML += `<tr>
+                        <td>${row.admission_roll}</td>
+                        <td>${row.name || '-'}</td>
+                        <td>${row.class_roll || '-'}</td>
+                        <td>${row.year || '-'}</td>
+                        <td>${row.fee_type}</td>
+                        <td style="font-weight:bold;">${row.amount || 0}</td>
+                    </tr>`;
+                });
+
+            } catch (err) {
+                alert('Error parsing Excel: ' + err.message);
+                previewPanel.style.display = 'none';
+            }
+        };
+        reader.readAsArrayBuffer(fileInput.files[0]);
+    }
+
+    async function confirmExcelUpload() {
+        if (!db) return alert('Database connection error.');
+        const excelStatusBox = document.getElementById('excelStatusBox');
+        const btnUpload = document.getElementById('btn_confirm_upload');
+        
+        if(!pendingExcelPayload || !pendingExcelPayload.length) return;
+
+        showMsg(excelStatusBox, 'info', 'Uploading to database, please wait...');
+        btnUpload.disabled = true;
+
+        try {
+            const { error } = await db.from('seminar_fee').upsert(pendingExcelPayload, { onConflict: 'admission_roll,fee_type' });
+            if (error) throw error;
+            showMsg(excelStatusBox, 'ok', `Successfully uploaded ${pendingExcelPayload.length} records!`);
+            
+            pendingExcelPayload = [];
+            document.getElementById('excel_file').value = '';
+            
+            setTimeout(() => { document.getElementById('excel_preview_panel').style.display = 'none'; }, 3000);
+
+        } catch (err) {
+            showMsg(excelStatusBox, 'err', 'Upload failed: ' + err.message);
+        } finally {
+            btnUpload.disabled = false;
+        }
+    }
+
+    let currentReportData = [];
+    async function loadReport() {
+        if (!db) return alert('Database setup error.');
+        const feeType = document.getElementById('report_fee_type').value;
+        const year = document.getElementById('report_year').value;
+        const session = document.getElementById('report_session').value;
+        const dateFrom = document.getElementById('report_date_from').value;
+        const dateTo = document.getElementById('report_date_to').value;
+        const sortBy = document.getElementById('report_sort').value || 'admission_roll';
+        const tbody = document.getElementById('report_body');
+        const thead = document.getElementById('report_thead');
+        const reportHeader = document.getElementById('report_header');
+        const reportInfo = document.getElementById('report_info');
+        const reportDate = document.getElementById('report_date');
+
+        // Determine which header columns to show
+        const isLandUseOnly = feeType === 'LandUse';
+        const isSeminarOnly = feeType === 'Seminar';
+        const isAll = feeType === 'All';
+        const colCount = isAll ? 9 : 8;
+
+        tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;">Loading...</td></tr>`;
+
+        // Generate table header
+        let headerHtml = '<tr>';
+        headerHtml += '<th>Sl</th>';
+        headerHtml += '<th>Class Roll</th>';
+        
+        if (isLandUseOnly) {
+            headerHtml += '<th>Registration No</th>';
+        } else if (isSeminarOnly) {
+            headerHtml += '<th>Ad. Roll</th>';
+        } else { // All
+            headerHtml += '<th>Ad. Roll</th>';
+            headerHtml += '<th>Registration No</th>';
+        }
+        
+        headerHtml += '<th>Student Name</th>';
+        headerHtml += '<th>Year</th>';
+        headerHtml += '<th>Session</th>';
+        headerHtml += '<th>Fee Type</th>';
+        headerHtml += '<th>Amount</th>';
+        headerHtml += '</tr>';
+        thead.innerHTML = headerHtml;
+
+        // Generate report info text with year and session in one line
+        let reportInfoHtml = '';
+        
+        // Add report title
+        let title = feeType === 'All' ? 'Seminar & Land Use Fee Report' : (feeType === 'LandUse' ? 'Land Use Fee Report' : 'Seminar Fee Report');
+        reportInfoHtml += `<div style="font-size:15px; font-weight:bold; margin:5px 0;">${title}</div>`;
+        
+        // Add year and session in one line
+        let yearSessionParts = [];
+        if (year !== 'All') yearSessionParts.push(`Year: ${year}`);
+        yearSessionParts.push(`Session: ${session || 'All Sessions'}`);
+        reportInfoHtml += `<div style="font-size:14px; margin:3px 0;">${yearSessionParts.join('  ')}</div>`;
+        
+        // Add date range if selected
+        if (dateFrom || dateTo) {
+            reportInfoHtml += `<div style="font-size:14px; margin:3px 0;">Date: ${dateFrom ? dateFrom : 'Start'} - ${dateTo ? dateTo : 'End'}</div>`;
+        }
+        
+        reportInfo.innerHTML = reportInfoHtml;
+        reportDate.textContent = `Generated on: ${new Date().toLocaleDateString('en-GB')} ${new Date().toLocaleTimeString()}`;
+        reportHeader.style.display = 'block';
+
+        try {
+            let query = db.from('seminar_fee').select('*').order(sortBy, { ascending: true });
+            if (feeType !== 'All') query = query.eq('fee_type', feeType);
+            if (year !== 'All') query = query.eq('year', year);
+            if (session) query = query.eq('session', session);
+            if (dateFrom) query = query.gte('receipt_date', dateFrom);
+            if (dateTo) query = query.lte('receipt_date', dateTo);
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            // Paid means receipt number exists and is not empty
+            const paidOnly = (data || []).filter(row => row.receipt_no && String(row.receipt_no).trim() !== '');
+            currentReportData = paidOnly;
+
+            if (!paidOnly.length) {
+                tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color:red;">No paid records found.</td></tr>`;
+                return;
+            }
+
+            let html = '', totalAmount = 0;
+            paidOnly.forEach((row, index) => {
+                let adRollDisplay = row.fee_type === 'LandUse' ? '-' : (row.admission_roll || '-');
+                let regDisplay = row.registration_number || '-';
+                
+                html += `<tr>`;
+                html += `<td>${index + 1}</td>`;
+                html += `<td>${row.class_roll || '-'}</td>`;
+                
+                if (isLandUseOnly) {
+                    html += `<td>${regDisplay}</td>`;
+                } else if (isSeminarOnly) {
+                    html += `<td>${adRollDisplay}</td>`;
+                } else { // All
+                    html += `<td>${adRollDisplay}</td>`;
+                    html += `<td>${regDisplay}</td>`;
+                }
+                
+                html += `<td>${row.name || '-'}</td>`;
+                html += `<td>${row.year || '-'}</td>`;
+                html += `<td>${row.session || '-'}</td>`;
+                html += `<td>${row.fee_type === 'LandUse' ? 'Land Use' : 'Seminar'}</td>`;
+                html += `<td>${row.amount || '0'} ৳</td>`;
+                html += `</tr>`;
+                
+                totalAmount += Number(row.amount || 0);
+            });
+            html += `<tr style="font-weight:bold; background:#e8f5ee;"><td colspan="${colCount - 1}" style="text-align:right;">Total Collected:</td><td>${totalAmount} ৳</td></tr>`;
+            tbody.innerHTML = html;
+        } catch (e) {
+            reportHeader.style.display = 'none';
+            tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color:red;">Error loading report.</td></tr>`;
+        }
+    }
+
+    function setPrintStyle(size, orientation) {
+        let style = document.getElementById('print-page-style');
+        if (!style) {
+            style = document.createElement('style');
+            style.id = 'print-page-style';
+            document.head.appendChild(style);
+        }
+        // Increase top margin more to prevent copy labels from being cut off
+        style.innerHTML = `@page { size: ${size} ${orientation}; margin: 15mm 6mm 6mm 6mm; }`;
+    }
+
+    function resetPrintClasses() {
+        document.body.classList.remove('print-mode-receipt', 'print-mode-report');
+    }
+    
+    window.addEventListener('afterprint', resetPrintClasses);
+
+    function prepareAndPrintReceipt() {
+        const feeType = currentFeeType();
+        let roll = document.getElementById('admission_roll').value;
+        let regi = document.getElementById('registration_number').value;
+        let dateVal = document.getElementById('receipt_date').value;
+
+        if (feeType === 'Seminar' && !roll) return alert('Search or load a student first to print receipt.');
+        if (feeType === 'LandUse' && !regi) return alert('Search or load a student first to print receipt.');
+
+        const barText = feeType === 'LandUse' ? 'LAND USE FEE RECEIPT' : 'SEMINAR FEE RECEIPT';
+        document.querySelectorAll('.receipt-bar').forEach(el => el.textContent = barText);
+        document.querySelector('.print-note').textContent = feeType === 'LandUse'
+            ? 'Note: Please keep this receipt safe; it may be required during Form Fill-up verification.'
+            : 'Note: Please bring this receipt at the time of seminar presentation.';
+
+        const slipsRow = document.querySelector('.slips-row');
+        const deptSlip = document.querySelector('.slip.dept');
+        
+        if (feeType === 'LandUse') {
+            slipsRow.classList.add('two-col');
+            deptSlip.setAttribute('data-first', 'true');
+            
+            document.getElementById('p2_ad_roll_row').style.display = 'none';
+            document.getElementById('p3_ad_roll_row').style.display = 'none';
+            document.getElementById('p2_reg_row').style.display = 'flex';
+            document.getElementById('p3_reg_row').style.display = 'flex';
+        } else {
+            slipsRow.classList.remove('two-col');
+            deptSlip.setAttribute('data-first', 'true');
+            
+            document.getElementById('p2_ad_roll_row').style.display = 'flex';
+            document.getElementById('p3_ad_roll_row').style.display = 'flex';
+            document.getElementById('p2_reg_row').style.display = 'none';
+            document.getElementById('p3_reg_row').style.display = 'none';
+        }
+
+        let displayRoll = feeType === 'LandUse' ? '-' : document.getElementById('admission_roll').value;
+
+        ['p2', 'p3'].forEach(prefix => {
+            document.getElementById(prefix + '_receipt').innerText = document.getElementById('receipt_no').value;
+            document.getElementById(prefix + '_date').innerText = dateVal;
+            document.getElementById(prefix + '_ad_roll').innerText = displayRoll;
+            document.getElementById(prefix + '_reg').innerText = regi;
+            document.getElementById(prefix + '_name').innerText = document.getElementById('name').value;
+            document.getElementById(prefix + '_cl_roll').innerText = document.getElementById('class_roll').value;
+            document.getElementById(prefix + '_year').innerText = document.getElementById('year').value;
+            document.getElementById(prefix + '_session').innerText = document.getElementById('session').value;
+            document.getElementById(prefix + '_s_mobile').innerText = document.getElementById('student_mobile').value;
+            document.getElementById(prefix + '_amount').innerText = document.getElementById('amount').value;
+            document.getElementById(prefix + '_words').innerText = document.getElementById('amount_in_words').value;
+        });
+
+        setPrintStyle('A5', 'landscape');
+        document.body.className = "print-mode-receipt";
+        
+        setTimeout(() => {
+            try {
+                if (window.stableDirectPrint) {
+                    window.stableDirectPrint(document.getElementById('print-area-receipt'), 'Fee Receipt', '@page { size: A5 landscape; margin: 15mm 6mm 6mm 6mm; }');
+                } else {
+                    window.print();
+                }
+            } catch(e) {
+                window.print();
+            }
+        }, 150);
     }
 
     function printReport() {
-        document.body.classList.add('print-mode-report');
-        window.print();
-        // Remove class after print dialog closes
+        if (!currentReportData.length) return alert('Please load a report first.');
+        document.body.className = "print-mode-report";
         setTimeout(() => {
-            document.body.classList.remove('print-mode-report');
-        }, 500);
+            try {
+                if (window.stableDirectPrint) {
+                    window.stableDirectPrint(document.getElementById('report-panel'), 'Fee Report', '@page { size: A4 portrait; margin: 6mm; }');
+                } else {
+                    window.print();
+                }
+            } catch(e) {
+                window.print();
+            }
+        }, 150);
     }
 
-    // Initialize UI on load
-    window.onload = () => {
-        onFeeTypeChange();
-    };
+    window.addEventListener('DOMContentLoaded', () => {
+        try {
+            populateSessionDropdowns();
+        } catch (e) { console.error('populateSessionDropdowns failed:', e); }
+        try {
+            onFeeTypeChange();
+        } catch (e) { console.error('onFeeTypeChange failed:', e); }
+        document.getElementById('year').addEventListener('change', refreshReceiptNoFromForm);
+    });
 </script>
 </body>
 </html>

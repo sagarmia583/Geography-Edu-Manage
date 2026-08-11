@@ -1,0 +1,1 @@
+const AUTH_USER = requireAuth('admin'); attachLogout();

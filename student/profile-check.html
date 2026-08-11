@@ -1,0 +1,55 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Profile Check - Student Panel</title><link rel="stylesheet" href="../assets/site.css"></head><body class="student-card-page"><header class="topbar student-topbar-full no-print student-card-topbar"><div class="inner"><a class="brand" href="index.html"><span class="brand-logo">👤</span><span>Profile Check</span></a><button class="mobile-menu" data-mobile-menu>Menu</button><nav class="navlinks student-card-nav"><a href="index.html">Student Home</a><a href="result-check.html">Result Check</a><a class="active" href="profile-check.html">Profile Check</a><a href="seminar-library.html">Seminar Library</a><a href="admit-card.html">Admit Card</a><a class="nav-cta" href="../index.html">Main Login</a></nav></div></header><main class="page-pad student-card-main"><div class="container"><section class="public-student-hero"><h1>Profile Check</h1></section><form id="profileForm" class="panel"><div class="filter-row" style="grid-template-columns:1fr auto"><label class="field"><span class="label">Class Roll</span><input id="rollInput" class="input" placeholder="Enter class roll" required></label><button class="btn blue" type="submit">Search Profile</button></div><div id="profileStatus" class="status info hide"></div></form><section id="profileBox" class="panel hide" style="margin-top:14px"><div class="profile-box"><div id="profilePhoto" class="profile-photo">👤</div><div><h2 id="profileName" style="color:var(--primary)">Student Name</h2><div class="profile-details" id="profileDetails"></div></div></div></section></div></main>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+const form = document.getElementById('profileForm');
+const statusEl = document.getElementById('profileStatus');
+const box = document.getElementById('profileBox');
+const details = document.getElementById('profileDetails');
+
+function item(label, value) {
+  return `<div class="profile-item"><b>${value || '-'}</b></div>`;
+}
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const roll = document.getElementById('rollInput').value.trim();
+  if (!roll) return;
+  showStatus(statusEl, 'info', 'Loading profile...');
+  box.classList.add('hide');
+  try {
+    const res = await geoApiGet('getStudent', { roll });
+    if (!res.found || !res.student) {
+      showStatus(statusEl, 'err', 'No student profile found for this roll.');
+      return;
+    }
+    const s = res.student;
+    document.getElementById('profileName').textContent = s.Name || s.FullName || 'Student';
+    const photo = document.getElementById('profilePhoto');
+    if (s.PhotoURL) photo.innerHTML = `<img src="${s.PhotoURL}" alt="Student Photo">`;
+    else photo.textContent = '👤';
+
+    details.innerHTML =
+      item('Class Roll', s.Roll || s.RollID) +
+      item('Registration Number', s.RegistrationNumber) +
+      item('Session', s.SessionYear) +
+      item('Current Year', s.CurrentYear || s.AcademicLevel) +
+      item('Father Name', s.FatherName) +
+      item('Mother Name', s.MotherName) +
+      item('Student Mobile', s.StudentPhone || s.Phone) +
+      item('Guardian Mobile', s.GuardianPhone) +
+      item('Email', s.Email) +
+      item('Address', s.Address) +
+      item('Non-Major Group', s.NonMajorGroup) +
+      item('1st Year Non-Major', s.NonMajor1) +
+      item('2nd Year Non-Major', s.NonMajor2) +
+      item('Status', s.Status || 'Active');
+
+    showStatus(statusEl, 'ok', 'Profile loaded.');
+    box.classList.remove('hide');
+  } catch (err) {
+    showStatus(statusEl, 'err', err.message);
+  }
+});
+</script>
+</body></html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Attendance Marks Entry</title><link rel="stylesheet" href="../assets/site.css"></head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">✅</span><span>Attendance Marks Entry</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">✅</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a class="active" href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><section class="academic-banner"><h1>Attendance Marks Entry</h1></section><div class="panel"><div class="filter-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto auto"><label class="field"><span class="label">Academic Year</span><select id="academicYear"></select></label><label class="field"><span class="label">Study Session</span><select id="studySessionYear" class="input"></select></label><label class="field"><span class="label">Max Attendance Marks</span><input id="maxMarks" class="input" type="number" value="5" min="1"></label><label class="field"><span class="label">Filter Roll / Regi</span><input id="studentSearch" class="input" placeholder="Roll / Registration / Name"></label><label class="field"><span class="label">Sort By</span><select id="sortField" class="input"><option value="roll">Roll</option><option value="reg">Regi No</option><option value="name">Name</option><option value="session">Session</option><option value="type">Type</option></select></label><label class="field"><span class="label">Order</span><select id="sortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label><button id="loadStudents" class="btn primary" type="button">Load Session + Year List</button><button id="saveAttendanceMarks" class="btn blue" type="button">Save</button></div><div id="attMarkStatus" class="status info hide"></div></div><form id="attendanceMarksForm" class="table-wrap" style="margin-top:14px"><table><thead><tr><th>SL</th><th>Roll</th><th>Regi No</th><th>Name</th><th>Session</th><th>Type</th><th>Attendance Marks</th><th>Remarks</th></tr></thead><tbody id="attMarksTable"><tr><td colspan="8" class="empty">Select year + session and load students.</td></tr></tbody></table></form></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+fillSelect(document.getElementById('academicYear'), currentAcademicYears(), 'Select year');
+
+const yearEl = document.getElementById('academicYear');
+const sessionEl = document.getElementById('studySessionYear');
+fillSelect(sessionEl, currentSessionYears(), 'Select session');
+const maxEl = document.getElementById('maxMarks');
+const searchEl = document.getElementById('studentSearch');
+const table = document.getElementById('attMarksTable');
+const statusEl = document.getElementById('attMarkStatus');
+let students = [];
+let saveTimer = null;
+
+function typeBadge(s){
+  const type = s.StudentType || s.IrregularStatus || 'Regular';
+  const cls = type === 'Irregular' ? 'irregular' : 'regular';
+  const title = s.IrregularReason ? ` title="${s.IrregularReason}"` : '';
+  return `<span class="student-type-badge ${cls}"${title}>${type}</span>`;
+}
+
+function esc(v){
+  return String(v ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+
+function markActiveRow(el){
+  document.querySelectorAll('#attMarksTable tr').forEach(tr => tr.classList.remove('active-entry-row'));
+  el.closest('tr')?.classList.add('active-entry-row');
+}
+
+function validateAttInput(inp){
+  const mx = Number(inp.max || 0);
+  const val = Number(inp.value || 0);
+  if(inp.value !== '' && Number.isNaN(Number(inp.value))){
+    inp.value = '';
+    return false;
+  }
+  if(inp.value !== '' && val > mx){
+    inp.value = mx;
+    alert('Max attendance marks er beshi deua jabe na. Max: ' + mx);
+  }
+  if(inp.value !== '' && val < 0) inp.value = 0;
+  return true;
+}
+
+function getRowPayload(tr){
+  const inp = tr?.querySelector('.att-mark');
+  if(!inp) return null;
+  return {
+    roll: inp.dataset.roll,
+    registrationNumber: inp.dataset.reg,
+    name: inp.dataset.name,
+    sessionYear: inp.dataset.session,
+    attendanceMarks: inp.value,
+    remarks: tr.querySelector('.att-remarks')?.value || ''
+  };
+}
+
+function updateLocalStudent(row){
+  const idx = students.findIndex(s => String(s.Roll) === String(row.roll));
+  if(idx >= 0){
+    students[idx].AttendanceMarks = row.attendanceMarks;
+    students[idx].AttendanceRemarks = row.remarks;
+  }
+}
+
+async function saveSingleAttendanceRow(tr, moveAfterSave=false){
+  const academicYear = yearEl.value;
+  const sessionYear = sessionEl.value.trim();
+  const maxMarks = Number(maxEl.value || 5);
+  if(!academicYear){ showStatus(statusEl,'err','Academic year required.'); return false; }
+  if(!sessionYear){ showStatus(statusEl,'err','Study Session required.'); return false; }
+
+  const row = getRowPayload(tr);
+  if(!row || row.attendanceMarks === ''){
+    showStatus(statusEl,'err','Attendance marks empty. Mark দিন তারপর Enter চাপুন।');
+    return false;
+  }
+
+  const inp = tr.querySelector('.att-mark');
+  if(!validateAttInput(inp)) return false;
+
+  tr.classList.add('saving-row');
+  showStatus(statusEl,'info','Saving roll ' + row.roll + '...');
+  try{
+    const res = await geoApiPost({ action:'saveAttendanceMarks', academicYear, sessionYear, maxMarks, marks:[row] });
+    tr.classList.remove('saving-row');
+    tr.classList.add('saved-row');
+    setTimeout(()=>tr.classList.remove('saved-row'), 900);
+    updateLocalStudent(row);
+    showStatus(statusEl,res.success?'ok':'err',res.message || 'Saved');
+    return true;
+  }catch(err){
+    tr.classList.remove('saving-row');
+    tr.classList.add('entry-error-row');
+    setTimeout(()=>tr.classList.remove('entry-error-row'), 1500);
+    showStatus(statusEl,'err',err.message);
+    return false;
+  }
+}
+
+function moveDownSameColumn(inp){
+  const inputs = [...document.querySelectorAll('#attMarksTable input.att-mark')];
+  const idx = inputs.indexOf(inp);
+  const next = inputs[idx + 1];
+  if(next){
+    next.focus();
+    next.select();
+  }
+}
+
+function renderRows(list){
+  const max = Number(maxEl.value || 5);
+  if(!list.length){
+    table.innerHTML = '<tr><td colspan="8" class="empty">No student found.</td></tr>';
+    return;
+  }
+  table.innerHTML = list.map((s,i)=>`<tr>
+    <td>${i+1}</td>
+    <td>${esc(s.Roll)}</td>
+    <td>${esc(s.RegistrationNumber)}</td>
+    <td>${esc(s.Name)}</td>
+    <td>${esc(s.StudySessionYear || s.SessionYear)}</td>
+    <td>${typeBadge(s)}</td>
+    <td><input class="mini-input att-mark mark-cell" type="number" min="0" max="${max}" data-roll="${esc(s.Roll)}" data-reg="${esc(s.RegistrationNumber)}" data-name="${esc(s.Name)}" data-session="${esc(s.StudySessionYear || s.SessionYear)}" value="${esc(s.AttendanceMarks)}"></td>
+    <td><input class="input att-remarks" value="${esc(s.AttendanceRemarks || '')}" placeholder="Optional"></td>
+  </tr>`).join('');
+
+  document.querySelectorAll('#attMarksTable .att-mark,#attMarksTable .att-remarks').forEach(inp => {
+    inp.addEventListener('focus', () => markActiveRow(inp));
+  });
+
+  document.querySelectorAll('.att-mark').forEach(inp => {
+    inp.addEventListener('input', () => {
+      validateAttInput(inp);
+      const tr = inp.closest('tr');
+      tr?.classList.remove('saved-row','entry-error-row');
+    });
+
+    inp.addEventListener('keydown', e => {
+      if(e.key !== 'Enter') return;
+      e.preventDefault();
+      validateAttInput(inp);
+      const tr = inp.closest('tr');
+      moveDownSameColumn(inp);
+      // Save in background; do not wait for Google Sheet before moving down.
+      saveSingleAttendanceRow(tr, false);
+    });
+
+    inp.addEventListener('blur', () => {
+      // Small auto-save on blur, but only if a value exists.
+      const tr = inp.closest('tr');
+      if(inp.value !== ''){
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(()=>saveSingleAttendanceRow(tr, false), 450);
+      }
+    });
+  });
+
+  document.querySelectorAll('.att-remarks').forEach(inp => {
+    inp.addEventListener('keydown', e => {
+      if(e.key !== 'Enter') return;
+      e.preventDefault();
+      const tr = inp.closest('tr');
+      const inputs = [...document.querySelectorAll('#attMarksTable input.att-remarks')];
+      const idx = inputs.indexOf(inp);
+      if(inputs[idx+1]) inputs[idx+1].focus();
+      saveSingleAttendanceRow(tr, false);
+    });
+  });
+}
+
+function applyFilter(){
+  const q = searchEl.value.toLowerCase().trim();
+  const list = students.filter(s => [s.Roll,s.RegistrationNumber,s.Name,s.SessionYear,s.StudySessionYear,s.StudentType,s.IrregularStatus].join(' ').toLowerCase().includes(q));
+  renderRows(sortStudentList(list, document.getElementById('sortField').value, document.getElementById('sortDir').value));
+}
+
+async function loadStudents(){
+  const academicYear = yearEl.value;
+  const sessionYear = sessionEl.value.trim();
+  const maxMarks = maxEl.value || 5;
+  if(!academicYear){ showStatus(statusEl,'err','Academic year required.'); return; }
+  if(!sessionYear){ showStatus(statusEl,'err','Study Session required.'); return; }
+  showStatus(statusEl,'info','Loading session + year students...');
+  try{
+    const res = await geoApiGet('getAttendanceMarksData', { academicYear, sessionYear, maxMarks, sortField:document.getElementById('sortField').value, sortDir:document.getElementById('sortDir').value, _t: Date.now(), noCache:'1' });
+    students = Array.isArray(res.students) ? res.students : [];
+    applyFilter();
+    showStatus(statusEl,'ok',students.length + ' students loaded for ' + sessionYear + '. Enter দিলে সাথে সাথে নিচের cell-এ যাবে, save background-এ হবে।');
+  }catch(err){
+    showStatus(statusEl,'err',err.message);
+  }
+}
+
+async function saveAttendanceMarks(){
+  const academicYear = yearEl.value;
+  const sessionYear = sessionEl.value.trim();
+  const maxMarks = Number(maxEl.value || 5);
+  if(!academicYear){ showStatus(statusEl,'err','Academic year required.'); return; }
+  if(!sessionYear){ showStatus(statusEl,'err','Study Session required.'); return; }
+
+  const rows = [...document.querySelectorAll('#attMarksTable tr')].map(tr => getRowPayload(tr)).filter(r => r && r.attendanceMarks !== '');
+
+  if(!rows.length){ showStatus(statusEl,'err','No attendance marks entered.'); return; }
+
+  showStatus(statusEl,'info','Saving attendance marks...');
+  try{
+    const res = await geoApiPost({ action:'saveAttendanceMarks', academicYear, sessionYear, maxMarks, marks:rows });
+    showStatus(statusEl,res.success?'ok':'err',res.message || 'Saved');
+    rows.forEach(updateLocalStudent);
+    applyFilter();
+  }catch(err){
+    showStatus(statusEl,'err',err.message);
+  }
+}
+
+document.getElementById('loadStudents').addEventListener('click', loadStudents);
+document.getElementById('saveAttendanceMarks').addEventListener('click', saveAttendanceMarks);
+sessionEl.addEventListener('keydown', e=>{ if(e.key === 'Enter') loadStudents(); });
+searchEl.addEventListener('input', applyFilter);
+attachSortControls('sortField','sortDir', applyFilter);
+maxEl.addEventListener('input', applyFilter);
+</script>
+</body></html>

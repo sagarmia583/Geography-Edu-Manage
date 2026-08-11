@@ -1,0 +1,13 @@
+{
+  "name": "geography-department-web-portal-easy-fullscreen",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Ultra-lite static Geography Department web portal connected with Apps Script",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo Static site ready"
+  },
+  "devDependencies": {
+    "eslint": "^10.7.0"
+  }
+}

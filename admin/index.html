@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin Dashboard - Academic Management</title><link rel="stylesheet" href="../assets/site.css"></head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">🛠️</span><span>Admin Dashboard</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a class="active" href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="seminar-fee.html">💰 Seminar Fee Management</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-management.html">Students</a><a href="subject-management.html">Subjects</a><a href="exam-create.html">Exam</a><a href="attendance-sheet.html">Attendance</a><a href="marks-entry.html">Marks</a><a href="final-result.html">Result</a><a href="promotion-management.html">Promotion</a></div><section class="academic-banner"><h1>Admin Academic Management System</h1></section><div class="panel no-print preload-panel"><div class="panel-title"><div><h2>Fast Data Preload</h2></div><button id="refreshPreloadBtn" class="btn blue" type="button">Background Preload</button></div><div id="preloadStatusBox" class="status info hide"></div></div><div class="panel no-print safe-sheet-panel"><div class="panel-title"><div><h2>Safe Sheet Setup / Fast Load</h2><p class="muted">Missing sheet/header create হবে, আগের data delete হবে না।</p></div><button id="safeSheetSetupBtn" class="btn blue" type="button">Safe Sheet Optimize</button></div><div id="safeSheetStatusBox" class="status info hide"></div></div><section class="kpi-grid"><div class="card metric"><div class="card-body"><span class="tag">Students</span><div id="totalStudents" class="big">--</div></div></div><div class="card metric"><div class="card-body"><span class="tag">Subjects</span><div id="totalSubjects" class="big blue">--</div></div></div><div class="card metric"><div class="card-body"><span class="tag">Exams</span><div id="totalExams" class="big">--</div></div></div><div class="card metric"><div class="card-body"><span class="tag">Results</span><div id="totalResults" class="big red">--</div></div></div></section><section class="management-grid"><a class="management-card" href="student-management.html"><div class="m-icon">👥</div><h3>Student Management</h3><span class="btn primary">Manage Students</span></a><a class="management-card blue" href="subject-management.html"><div class="m-icon">📚</div><h3>Year-wise Subjects</h3><span class="btn blue">Manage Subjects</span></a><a class="management-card gold" href="exam-create.html"><div class="m-icon">📝</div><h3>Create Exam</h3><span class="btn ghost">Create Exam</span></a><a class="management-card gold" href="exam-schedule.html"><div class="m-icon">📅</div><h3>Exam Schedule</h3><span class="btn ghost">Schedule Exam</span></a><a class="management-card" href="attendance-sheet.html"><div class="m-icon">📄</div><h3>Attendance Sheet</h3><span class="btn primary">Attendance Sheet</span></a><a class="management-card" href="student-subject-entry.html"><div class="m-icon">📌</div><h3>Student Subjects</h3><span class="btn primary">Assign Subjects</span></a><a class="management-card blue" href="marks-entry.html"><div class="m-icon">✍️</div><h3>Subject Marks Entry</h3><span class="btn blue">Entry Marks</span></a><a class="management-card blue" href="incourse-result.html"><div class="m-icon">📈</div><h3>Incourse Average</h3><span class="btn blue">View Average</span></a><a class="management-card gold" href="result-upload.html"><div class="m-icon">⬆️</div><h3>Result Upload</h3><span class="btn ghost">Upload Result</span></a><a class="management-card blue" href="data-editor.html"><div class="m-icon">🧾</div><h3>All Data Edit</h3><span class="btn blue">Edit Data</span></a><a class="management-card gold" href="final-result.html"><div class="m-icon">🏆</div><h3>Final Result</h3><span class="btn ghost">Final Result</span></a><a class="management-card" href="promotion-management.html"><div class="m-icon">⬆️</div><h3>Promotion Management</h3><span class="btn primary">Promote Students</span></a><a class="management-card gold" href="admit-card-print.html"><div class="m-icon">🎫</div><h3>Admit Card Print</h3><span class="btn ghost">Print Admit Card</span></a><a class="management-card red" href="exam-block-management.html"><div class="m-icon">🚫</div><h3>Exam Block / Unblock</h3><span class="btn danger">Manage Block</span></a><a class="management-card" href="seminar-fee.html"><div class="m-icon">💰</div><h3>Seminar Fee Management</h3><span class="btn primary">Manage Fee</span></a><a class="management-card red" href="../student/index.html"><div class="m-icon">🎓</div><h3>Student Panel</h3><span class="btn danger">Open Student Panel</span></a></section><a class="dash-card" href="result-management.html"><div class="big-icon">📊</div><h2>Result Options</h2></a></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+const preloadStatusBox = document.getElementById('preloadStatusBox');
+
+function updateDashboardCounts(data){
+  const set=(id,v)=>{const el=document.getElementById(id); if(el) el.textContent=(v===undefined||v===null||v==='')?'0':v;};
+  set('totalStudents', data?.students);
+  set('totalSubjects', data?.subjects);
+  set('totalExams', data?.exams);
+  set('totalResults', data?.results);
+}
+
+async function loadDashboardCounts(){
+  try{
+    showStatus(preloadStatusBox,'info','Loading dashboard...');
+    const res = await geoApiGet('getDashboardCounts',{noCache:'1',_t:Date.now()});
+    if(res && res.success){
+      updateDashboardCounts(res);
+      showStatus(preloadStatusBox,'ok','Dashboard data loaded.');
+    }else{
+      showStatus(preloadStatusBox,'err',res?.message || 'Dashboard data load failed.');
+    }
+  }catch(err){
+    showStatus(preloadStatusBox,'err',err.message || 'Dashboard data load failed.');
+  }
+}
+
+showStatus(preloadStatusBox,'info','Loading dashboard...');
+loadDashboardCounts();
+
+document.getElementById('refreshPreloadBtn')?.addEventListener('click', async()=>{
+  clearGeoCache();
+  await loadDashboardCounts();
+});
+
+const safeSheetStatusBox=document.getElementById('safeSheetStatusBox');
+document.getElementById('safeSheetSetupBtn')?.addEventListener('click',async()=>{
+  if(!confirm('Safe Sheet Optimize চালাবেন? আগের data delete হবে কাশী, শুধু missing sheet/header add এবং extra blank row/column clean হবে।')) return;
+  const btn=document.getElementById('safeSheetSetupBtn');
+  const old=btn.textContent;
+  btn.disabled=true; btn.textContent='Optimizing...';
+  try{
+    showStatus(safeSheetStatusBox,'info','Safe sheet setup running...');
+    const res=await geoApiPost({action:'safeSheetSetup'});
+    if(res && res.success){
+      clearGeoCache();
+      showStatus(safeSheetStatusBox,'ok',`Done. Created: ${res.created||0}, Headers updated: ${res.updated||0}, Blank grid cleaned: ${res.trimmed||0}. Existing data not deleted.`);
+      await loadDashboardCounts();
+    }else{
+      showStatus(safeSheetStatusBox,'err',res?.message||'Safe sheet setup failed.');
+    }
+  }catch(err){
+    showStatus(safeSheetStatusBox,'err',err.message||'Safe sheet setup failed.');
+  }finally{
+    btn.disabled=false; btn.textContent=old;
+  }
+});
+
+</script>
+</body></html>

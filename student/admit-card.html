@@ -1,0 +1,82 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admit Card Print</title><link rel="stylesheet" href="../assets/site.css">
+<style>.admit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.admit-card{border:none!important;padding:10px;background:#fff;page-break-inside:avoid;min-height:132mm}.admit-head{text-align:center;border-bottom:1px solid #111;padding-bottom:5px;margin-bottom:7px}.admit-head h2{font-size:16px;margin:0}.admit-head h3{font-size:13px;margin:2px 0}.admit-title{font-weight:900;border:1px solid #111;display:inline-block;padding:2px 14px;margin-top:4px}.info-table{width:100%;border-collapse:collapse;margin-top:8px}.info-table td{border:1px solid #333;padding:5px;font-size:12px}.schedule-table{width:100%;border-collapse:collapse;margin-top:8px}.schedule-table th,.schedule-table td{border:1px solid #333;padding:4px;font-size:10.5px}.sign-row{display:flex;justify-content:space-between;margin-top:18mm;font-size:11px;font-weight:800}.sign-box{border-top:1px solid #111;width:42%;text-align:center;padding-top:3px}@media print{.no-print,.topbar,.panel-sidebar,.panel-mobile-tabs{display:none!important}.panel-layout{display:block!important}.panel-main{margin:0!important;padding:0!important}.admit-grid{grid-template-columns:1fr 1fr!important;gap:8px}.admit-card{break-inside:avoid;page-break-inside:avoid}body{background:#fff!important}@page{size:A4 portrait;margin:8mm}}.admit-card{box-sizing:border-box!important;overflow:visible!important}.info-table,.schedule-table{width:100%!important;max-width:100%!important;border-collapse:collapse!important;table-layout:fixed!important;border:1.2px solid #111!important}.info-table td,.schedule-table th,.schedule-table td{border:1.2px solid #111!important;box-sizing:border-box!important;overflow:hidden!important;word-break:break-word!important}.schedule-table th:nth-child(1),.schedule-table td:nth-child(1){width:15%!important}.schedule-table th:nth-child(2),.schedule-table td:nth-child(2){width:34%!important}.schedule-table th:nth-child(3),.schedule-table td:nth-child(3){width:19%!important}.schedule-table th:nth-child(4),.schedule-table td:nth-child(4){width:18%!important}.schedule-table th:nth-child(5),.schedule-table td:nth-child(5){width:14%!important}.admit-grid{display:block!important;width:100%!important}.admit-card{width:170mm!important;max-width:170mm!important;min-width:0!important;min-height:255mm!important;margin:0 auto 8mm auto!important;padding:7mm!important;box-sizing:border-box!important;border:none!important;overflow:hidden!important;page-break-after:always!important}.admit-card *{box-sizing:border-box!important;max-width:100%!important}.admit-head{width:100%!important}.info-table,.schedule-table{width:100%!important;max-width:100%!important;min-width:0!important;border-collapse:collapse!important;table-layout:fixed!important;border:1px solid #111!important}.info-table td,.schedule-table th,.schedule-table td{border:1px solid #111!important;padding:3.5px!important;word-break:break-word!important;overflow-wrap:anywhere!important;white-space:normal!important;overflow:hidden!important}.info-table td:first-child{width:28%!important}.info-table td:last-child{width:72%!important}.schedule-table th:nth-child(1),.schedule-table td:nth-child(1){width:15%!important}.schedule-table th:nth-child(2),.schedule-table td:nth-child(2){width:35%!important}.schedule-table th:nth-child(3),.schedule-table td:nth-child(3){width:18%!important}.schedule-table th:nth-child(4),.schedule-table td:nth-child(4){width:18%!important}.schedule-table th:nth-child(5),.schedule-table td:nth-child(5){width:14%!important}.schedule-table th,.schedule-table td{text-align:center!important;vertical-align:middle!important}.schedule-table tbody td:nth-child(2){text-align:left!important}@media print{body{background:#fff!important}.admit-card{width:170mm!important;max-width:170mm!important;min-height:255mm!important;margin:0 auto!important}@page{size:A4 portrait;margin:10mm}}.info-table td{text-align:left!important;vertical-align:middle!important}
+/* STUDENT ADMIT TABLE HEADER CENTER ALIGN FIX */
+.schedule-table th,.info-table th,table thead th{text-align:center!important;vertical-align:middle!important}
+
+/* ADMIT PAGE OUTER BORDER REMOVE */
+.admit-card{border:none!important}
+</style>
+<style>
+@media print{
+  table.print-align-table th,
+  table.print-align-table thead th,
+  table.print-align-table tr:first-child > th,
+  table.print-align-table tr:first-child > td{text-align:center!important;vertical-align:middle!important}
+  table.print-align-table td{text-align:center!important;vertical-align:middle!important}
+  table.print-align-table td.printable-name-cell{text-align:left!important}
+}
+</style>
+</head><body class="student-card-page"><header class="topbar student-topbar-full no-print student-card-topbar"><div class="inner"><a class="brand" href="index.html"><span class="brand-logo">🎫</span><span>Admit Card</span></a><button class="mobile-menu" data-mobile-menu>Menu</button><nav class="navlinks student-card-nav"><a href="index.html">Student Home</a><a href="result-check.html">Result Check</a><a class="active" href="admit-card.html">Admit Card</a><a href="profile-check.html">Profile Check</a><a href="seminar-library.html">Seminar Library</a><a class="nav-cta" href="../index.html">Main Login</a></nav></div></header><main class="page-pad student-card-main"><div class="container"><section class="academic-banner no-print"><h1>Admit Card Download / Print</h1><p>Roll / Registration দিয়ে নিজের Admit Card print করুন।</p></section><div class="panel no-print"><div class="filter-row" style="grid-template-columns:1fr 1fr 1.5fr auto"><label class="field"><span class="label">Session Year</span><select id="sessionSelect" class="input"></select></label><label class="field"><span class="label">Academic Year</span><select id="yearSelect" class="input"></select></label><label class="field"><span class="label">Exam Name</span><select id="examSelect" class="input"></select></label><button id="loadCardsBtn" class="btn primary" type="button">Load Admit Cards</button></div><div class="filter-row" style="grid-template-columns:1fr auto"><input id="searchInput" class="input" placeholder="Roll / Reg / Name search"><button id="printBtn" class="btn blue" type="button">Print</button></div><div id="admitStatus" class="status info hide"></div></div><div id="printArea"><div id="cardArea" class="admit-grid"><div class="empty">Select exam and load admit cards.</div></div></div></div></main>
+<script src="../assets/geography-api.js"></script><script src="../assets/site.js"></script><script>
+const examSelect=document.getElementById('examSelect'),sessionSelect=document.getElementById('sessionSelect'),yearSelect=document.getElementById('yearSelect'),cardArea=document.getElementById('cardArea'),statusEl=document.getElementById('admitStatus');let exams=[],data=null;
+function esc(v){return String(v??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+function examLabel(e){return e.DisplayName||e.ExamName||[e.SessionYear,e.AcademicYear,e.ExamType].filter(Boolean).join(' - ')||e.ExamID;}
+function fillSelectLocal(el,items,ph){el.innerHTML='<option value="">'+ph+'</option>'+items.map(x=>typeof x==='string'?`<option value="${esc(x)}">${esc(x)}</option>`:`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join('');}
+async function loadChoices(){showStatus(statusEl,'info','Loading exams...');const res=await geoApiGet('getPublishedAdmitExams',{});exams=Array.isArray(res.exams)?res.exams:[];const sessions=[...new Set(exams.map(e=>e.SessionYear).filter(Boolean))].sort();const years=[...new Set(exams.map(e=>e.AcademicYear).filter(Boolean))].sort();fillSelectLocal(sessionSelect,sessions,sessions.length?'Select session':'No session');fillSelectLocal(yearSelect,years,years.length?'All academic year':'No year');if(sessions.length)sessionSelect.value=sessions[sessions.length-1];fillExamSelect();showStatus(statusEl,exams.length?'ok':'err',exams.length+' published admit card exams loaded');}
+function fillExamSelect(){const sy=sessionSelect.value,ay=yearSelect.value;const list=exams.filter(e=>(!sy||e.SessionYear===sy)&&(!ay||e.AcademicYear===ay));fillSelectLocal(examSelect,list.map(e=>({value:e.ExamID,label:examLabel(e)})),list.length?'Select exam':'No exam');if(list.length){examSelect.value=list[0].ExamID;}else{examSelect.value='';}}
+function scheduleHtml(list){if(!list||!list.length)return '<p style="font-size:11px"><b>Schedule:</b> To be announced</p>';return '<table class="schedule-table"><thead><tr><th>Code</th><th>Subject</th><th>Date</th><th>Time</th><th>Room</th></tr></thead><tbody>'+list.map(s=>`<tr><td>${esc(s.SubjectCode)}</td><td>${esc(s.SubjectName)}</td><td>${esc(s.ExamDate)}</td><td>${esc(s.ExamTime)}</td><td>${esc(s.Room)}</td></tr>`).join('')+'</tbody></table>';}
+function instructionHtml(){const list=(data&&data.instructions)||[];return '<ul style="font-size:10px;margin-top:8px;padding-left:15px">'+list.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>';}
+function cardHtml(st){const exam=data.exam||{};return `<div class="admit-card"><div class="admit-head"><h2>${esc(data.college||'Kumudini Govt. College, Tangail')}</h2><h3>${esc(data.department||'Department of Geography and Environment')}</h3><div class="admit-title">ADMIT CARD</div></div><table class="info-table"><tr><td><b>Exam</b></td><td>${esc(examLabel(exam))}</td></tr><tr><td><b>Name</b></td><td>${esc(st.Name)}</td></tr><tr><td><b>Roll</b></td><td>${esc(st.Roll)}</td></tr><tr><td><b>Registration</b></td><td>${esc(st.RegistrationNumber)}</td></tr><tr><td><b>Session</b></td><td>${esc(st.StudySessionYear||st.SessionYear)}</td></tr><tr><td><b>Year</b></td><td>${esc(st.CurrentYear)}</td></tr></table>${scheduleHtml(st.Schedules||[])}${instructionHtml()}<div class="sign-row"><div class="sign-box">Student Signature</div><div class="sign-box">Head / Exam Controller</div></div></div>`;}
+function render(){if(!data)return;const q=document.getElementById('searchInput').value.toLowerCase().trim();let list=(data.students||[]).filter(s=>[s.Roll,s.RegistrationNumber,s.Name].join(' ').toLowerCase().includes(q));cardArea.innerHTML=list.length?list.map(cardHtml).join(''):'<div class="empty">No student found.</div>';showStatus(statusEl,list.length?'ok':'err',list.length+' admit cards ready');}
+function printAdmitCardsStable(){
+const area=document.getElementById('printArea');
+if(!area || !area.innerHTML.trim() || area.innerHTML.includes('Select exam and load admit cards') || area.innerHTML.includes('No student found')){
+  alert('আগে Admit Card load করুন।');
+  return;
+}
+if(window.applyPrintableTableAlignment) window.applyPrintableTableAlignment(document);
+const html=area.innerHTML;
+const printHtml=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Admit Card Print</title>
+<style>
+@page{size:A4 portrait;margin:10mm}
+html,body{margin:0!important;padding:0!important;background:#fff!important;color:#111!important;font-family:Arial,Helvetica,sans-serif!important}
+*{box-sizing:border-box!important}
+.admit-grid{display:block!important;width:100%!important}
+.admit-card{width:170mm!important;max-width:170mm!important;min-height:255mm!important;margin:0 auto 8mm auto!important;padding:7mm!important;border:none!important;background:#fff!important;page-break-after:always!important;break-inside:avoid!important;overflow:hidden!important}
+.admit-head{text-align:center!important;border-bottom:1px solid #111!important;padding-bottom:5px!important;margin-bottom:7px!important}
+.admit-head h2{font-size:16px!important;margin:0!important}
+.admit-head h3{font-size:13px!important;margin:2px 0!important}
+.admit-title{font-weight:900!important;border:1px solid #111!important;display:inline-block!important;padding:2px 14px!important;margin-top:4px!important}
+.info-table,.schedule-table{width:100%!important;max-width:100%!important;border-collapse:collapse!important;table-layout:fixed!important;border:1px solid #111!important}
+.info-table{margin-top:8px!important}
+.schedule-table{margin-top:8px!important}
+.info-table td,.schedule-table th,.schedule-table td{border:1px solid #111!important;padding:3.5px!important;font-size:10.5px!important;word-break:break-word!important;overflow-wrap:anywhere!important;white-space:normal!important;overflow:hidden!important}
+.info-table td{font-size:12px!important}
+.info-table td:first-child{width:28%!important}
+.info-table td:last-child{width:72%!important}
+.info-table td{text-align:left!important;vertical-align:middle!important}
+.schedule-table th,.schedule-table td{text-align:center!important;vertical-align:middle!important}
+.schedule-table tbody td:nth-child(2){text-align:left!important}
+.schedule-table th:nth-child(1),.schedule-table td:nth-child(1){width:15%!important}
+.schedule-table th:nth-child(2),.schedule-table td:nth-child(2){width:35%!important}
+.schedule-table th:nth-child(3),.schedule-table td:nth-child(3){width:18%!important}
+.schedule-table th:nth-child(4),.schedule-table td:nth-child(4){width:18%!important}
+.schedule-table th:nth-child(5),.schedule-table td:nth-child(5){width:14%!important}
+/* ADMIT INFO PRINT LEFT ALIGN FIX */
+.info-table td{text-align:left!important;vertical-align:middle!important}
+ul{font-size:10px!important;margin-top:8px!important;padding-left:15px!important}
+.sign-row{display:flex!important;justify-content:space-between!important;margin-top:18mm!important;font-size:11px!important;font-weight:800!important}
+.sign-box{border-top:1px solid #111!important;width:42%!important;text-align:center!important;padding-top:3px!important}
+table.print-align-table th,table.print-align-table thead th,table.print-align-table .print-header-cell,table.print-align-table tr:first-child>*{text-align:center!important;vertical-align:middle!important}
+table.print-align-table tbody td,table.print-align-table td.printable-center-cell{text-align:center!important;vertical-align:middle!important}
+table.print-align-table tbody td.printable-name-cell,table.print-align-table td.printable-name-cell{text-align:left!important}
+</style></head><body>${html}<script>window.onload=function(){setTimeout(function(){window.focus();window.print();},350)}<\/script></body></html>`;
+const w=window.open('','_blank');
+if(!w){alert('Popup blocked. Browser popup allow করে আবার Print দিন।');return;}
+w.document.open();
+w.document.write(printHtml);
+w.document.close();
+}
+async function loadCards(){const examId=examSelect.value;if(!examId){showStatus(statusEl,'err','Exam select করুন');return;}const q=document.getElementById('searchInput').value.trim();if(!q){showStatus(statusEl,'err','Roll / Registration required');return;}const btn=document.getElementById('loadCardsBtn');const old=btn.textContent;btn.disabled=true;btn.textContent='Loading...';try{showStatus(statusEl,'info','Fast loading admit card...');const res=await geoApiGet('getAdmitCardData',{examId,search:q,requirePublished:'1'});if(!res.success){showStatus(statusEl,'err',res.message||'Failed');return;}data=res;render();}finally{btn.disabled=false;btn.textContent=old;}}
+sessionSelect.addEventListener('change',fillExamSelect);yearSelect.addEventListener('change',fillExamSelect);document.getElementById('loadCardsBtn').addEventListener('click',loadCards);document.getElementById('printBtn').addEventListener('click',printAdmitCardsStable);document.getElementById('searchInput').addEventListener('input',render);loadChoices();
+</script></body></html>

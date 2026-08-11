@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Data Edit</title>
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.data-editor-table input{min-width:150px;width:100%}
+.data-editor-table th{white-space:nowrap}
+.data-editor-table td{vertical-align:top}
+</style>
+</head>
+<body>
+<header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">🛠️</span><span>All Data Edit</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header>
+<div class="panel-layout">
+<aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside>
+<main class="panel-main">
+<div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-management.html">Students</a><a href="result-upload.html">Result Upload</a><a href="data-editor.html">Data Edit</a><a href="marks-entry.html">Marks</a></div>
+<section class="academic-banner"><h1>All Data Edit</h1></section>
+<div class="panel">
+<div class="filter-row" style="grid-template-columns:1fr auto auto">
+<label class="field"><span class="label">Select Data Table</span><select id="sheetSelect">
+<option value="">Select table</option>
+<option>Admins</option><option>Students</option><option>ActualStudents</option><option>Subjects</option><option>StudentSubjects</option><option>NonMajorGroups</option><option>Exams</option><option>ExamSchedule</option><option>ExamBlocks</option><option>Marks</option><option>AttendanceMarks</option><option>Attendance</option><option>ResultSummary</option><option>FinalResults</option><option>ResultImports</option><option>Notices</option><option>Books</option><option>BookCopies</option><option>LibraryLogs</option><option>ClassRoutine</option><option>ClassAttendance</option><option>Teachers</option><option>StudentFees</option><option>Documents</option>
+</select></label>
+<button id="loadSheet" class="btn primary" type="button">Load Data</button>
+<button id="refreshSheet" class="btn ghost" type="button">Refresh</button>
+</div>
+<div id="editorStatus" class="status info hide"></div>
+</div>
+<div class="panel" style="margin-top:14px"><div class="panel-title"><div><h2 id="sheetTitle">Data Table</h2></div></div><div class="table-wrap"><table class="data-editor-table"><thead id="dataHead"><tr><th>Select a table</th></tr></thead><tbody id="dataBody"><tr><td class="empty">No data loaded.</td></tr></tbody></table></div></div>
+</main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+const sheetSelect = document.getElementById('sheetSelect');
+const head = document.getElementById('dataHead');
+const body = document.getElementById('dataBody');
+const statusEl = document.getElementById('editorStatus');
+let currentHeaders = [];
+function editorEsc(value){
+  return String(value == null ? '' : value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+async function loadData(){
+  const sheetName = sheetSelect.value;
+  if(!sheetName){ showStatus(statusEl,'err','Please select a table.'); return; }
+  showStatus(statusEl,'info','Loading ' + sheetName + '...');
+  try{
+    const res = await geoApiGet('getSheetData', { sheetName, forceFresh:'1' });
+    currentHeaders = Array.isArray(res.headers) ? res.headers : [];
+    document.getElementById('sheetTitle').textContent = sheetName;
+    head.innerHTML = '<tr><th>Action</th><th>Row ID</th>' + currentHeaders.map(h=>`<th>${editorEsc(h)}</th>`).join('') + '</tr>';
+    const rows = Array.isArray(res.rows) ? res.rows : [];
+    if(!rows.length){
+      body.innerHTML = '<tr><td colspan="'+(currentHeaders.length+2)+'" class="empty">No rows found.</td></tr>';
+      showStatus(statusEl,'ok','No rows found.');
+      return;
+    }
+    body.innerHTML = rows.map(r=>{
+      const values = Array.isArray(r.values) ? r.values : [];
+      return `<tr data-row="${editorEsc(r.rowNumber)}">
+        <td class="action-row"><button class="btn primary small-btn" type="button" onclick="saveRow('${editorEsc(r.rowNumber)}')">Save</button><button class="btn danger small-btn" type="button" onclick="deleteRow('${editorEsc(r.rowNumber)}')">Delete</button></td>
+        <td><b>${editorEsc(r.rowNumber)}</b></td>
+        ${currentHeaders.map((h,i)=>`<td><input data-col="${i}" value="${editorEsc(values[i])}"></td>`).join('')}
+      </tr>`;
+    }).join('');
+    showStatus(statusEl,'ok',rows.length + ' rows loaded.');
+  }catch(err){
+    head.innerHTML = '<tr><th>Data Table</th></tr>';
+    body.innerHTML = '<tr><td class="empty">Load failed.</td></tr>';
+    showStatus(statusEl,'err',err.message);
+  }
+}
+async function saveRow(rowNumber){
+  const tr = document.querySelector(`tr[data-row="${CSS.escape(String(rowNumber))}"]`);
+  if(!tr) return;
+  const values = [...tr.querySelectorAll('input[data-col]')].map(inp => inp.value);
+  showStatus(statusEl,'info','Updating row ' + rowNumber + '...');
+  try{
+    const res = await geoApiPost({ action:'updateSheetRow', sheetName:sheetSelect.value, rowNumber, values });
+    showStatus(statusEl,res.success?'ok':'err',res.message || 'Saved');
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+window.saveRow = saveRow;
+async function deleteRow(rowNumber){
+  if(!confirm('Delete row ' + rowNumber + '?')) return;
+  showStatus(statusEl,'info','Deleting row ' + rowNumber + '...');
+  try{
+    const res = await geoApiPost({ action:'deleteSheetRow', sheetName:sheetSelect.value, rowNumber });
+    showStatus(statusEl,res.success?'ok':'err',res.message || 'Deleted');
+    if(res.success) await loadData();
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+window.deleteRow = deleteRow;
+document.getElementById('loadSheet').addEventListener('click', loadData);
+document.getElementById('refreshSheet').addEventListener('click', loadData);
+sheetSelect.addEventListener('change', ()=>{ if(sheetSelect.value) loadData(); });
+</script>
+</body>
+</html>

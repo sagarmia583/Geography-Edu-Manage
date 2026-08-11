@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seat Plan</title>
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.seat-tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.room-row{display:grid;grid-template-columns:1.1fr .65fr .55fr 1.3fr .65fr auto;gap:8px;margin-bottom:8px;align-items:center}
+.room-plan{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff;margin-bottom:14px;break-inside:avoid;page-break-inside:avoid}
+.room-title{text-align:center;color:var(--primary);font-size:25px;margin:0 0 10px;font-weight:900}
+.column-layout{display:grid;gap:10px;align-items:start}
+.seat-column{border:1.4px solid #111;border-radius:12px;background:#fff;overflow:hidden;break-inside:avoid}
+.seat-column-title{text-align:center;background:#eef7f1;color:#0f5c3f;font-weight:900;padding:8px;border-bottom:1px solid #111}
+.column-table{width:100%;border-collapse:collapse;background:#fff}
+.column-table th,.column-table td{border:1px solid #333;padding:7px 5px;vertical-align:middle;text-align:center;font-size:11px;min-height:44px}
+.column-table th{background:#f4f7f5;color:#0f5c3f;font-weight:900}
+.bench-label{font-weight:900;background:#f8fbf9;color:#0f5c3f;white-space:nowrap;width:38px;text-align:center;font-size:12px}
+.roll-regi-cell{line-height:1.25;min-width:78px;height:44px;text-align:center}
+.roll-regi-cell b,.roll-regi-cell span{display:block;font-size:10px!important;color:#111!important;font-weight:700!important;line-height:1.25!important}
+.seat-card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6mm}
+.seat-card-page{display:grid;grid-template-columns:repeat(2,1fr);gap:6mm;break-after:page;page-break-after:always;margin-bottom:8mm}
+.seat-card-page:last-child{break-after:auto;page-break-after:auto}
+.seat-card-print-column{display:flex;flex-direction:column;gap:3mm}
+.seat-card.blank{visibility:hidden}
+
+.seat-card{border:1.2px solid #111;border-radius:8px;background:#fff;padding:7px;min-height:38mm;page-break-inside:avoid;break-inside:avoid;position:relative;font-size:13px}
+.seat-card-head{text-align:center;border-bottom:1px solid #111;padding-bottom:3px;margin-bottom:5px}
+.seat-card-head h2{font-size:15px;margin:0;color:#111;line-height:1.15}
+.seat-card-head h3{font-size:13px;margin:2px 0;color:#111;line-height:1.15}
+.seat-label{display:inline-block;border:1px solid #111;padding:2px 12px;font-weight:900;margin-top:3px;background:#f7faf7;font-size:11px}
+.seat-info{width:100%;border-collapse:collapse;margin-top:4px}
+.seat-info td{border:1px solid #333;padding:6px 5px;font-size:15px;line-height:1.25}
+.seat-info td:first-child{width:34%;font-weight:900;background:#f4f7f5;font-size:15px}
+.seat-big{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:5px}
+.seat-big div{border:1px solid #111;text-align:center;padding:3px;border-radius:4px;font-size:9.5px}
+.seat-big b{display:block;font-size:13px;color:#0f5c3f}
+@media print{
+  .no-print,.topbar,.panel-sidebar,.panel-mobile-tabs{display:none!important}
+  .panel-layout,.panel-main{display:block!important;margin:0!important;padding:0!important;width:100%!important}
+  body{background:#fff!important}
+  @page{size:A4 portrait;margin:7mm}
+  .seat-card-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:3.5mm!important}
+  .seat-card{height:36mm!important;min-height:36mm!important;padding:5px!important;border-radius:5px!important;overflow:hidden!important}
+  .seat-card:nth-child(14n){break-after:page!important;page-break-after:always!important}
+  .seat-card-head h2{font-size:12.4px!important}
+  .seat-card-head h3{font-size:11.2px!important}
+  .seat-info td{font-size:14px!important;padding:3.6px 4px!important;line-height:1.25!important;height:6.5mm!important}
+  .seat-info td:first-child{font-size:14px!important}
+  .seat-big{display:none!important}
+  .room-plan{border:0!important;border-radius:0!important;padding:0!important;margin:0 0 8mm!important}
+  .column-layout{display:grid!important;gap:7px!important}
+  .column-table th,.column-table td{font-size:8px!important;padding:2.5px!important;height:auto!important;min-height:10mm!important}
+  .column-table th,.room-plan table th,table thead th{text-align:center!important;vertical-align:middle!important}
+  .roll-regi-cell{height:auto!important;min-height:10mm!important;line-height:1.18!important;text-align:center!important}
+  .roll-regi-cell b,.roll-regi-cell span{font-size:7.8px!important;line-height:1.18!important;font-weight:700!important;color:#111!important}
+}
+
+.manual-seat-panel{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:14px;background:#fff}
+.manual-seat-grid{display:grid;grid-template-columns:1.2fr 1fr auto auto;gap:10px;align-items:end}
+.manual-seat-preview{margin-top:8px;font-size:13px;color:var(--primary);font-weight:800}
+@media(max-width:1000px){.manual-seat-grid{grid-template-columns:1fr}}
+@media(max-width:1000px){.seat-tools,.room-row{grid-template-columns:1fr}.seat-card-grid{grid-template-columns:1fr}}
+</style>
+
+<style>
+@media print{
+  table.print-align-table th,
+  table.print-align-table thead th,
+  table.print-align-table tr:first-child > th,
+  table.print-align-table tr:first-child > td{text-align:center!important;vertical-align:middle!important}
+  table.print-align-table td{text-align:center!important;vertical-align:middle!important}
+  table.print-align-table td.printable-name-cell{text-align:left!important}
+}
+</style>
+</head>
+<body>
+<header class="topbar no-print"><div class="inner"><a class="brand" href="index.html"><span class="brand-logo">🪑</span><span>Seat Plan</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header>
+<div class="panel-layout">
+<aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🪑</div><h3>Seat Plan</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a class="active" href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside>
+<main class="panel-main">
+<section class="academic-banner no-print"><h1>Seat Plan</h1><p>Column-wise seat count, roll/regi sort, exam-wise student seat plan।</p></section>
+
+<div class="panel no-print">
+  <div class="panel-title"><div><h2>Seat Plan Setup</h2></div><button id="loadStudentsBtn" type="button" class="btn blue">Load Exam Students</button></div>
+  <div class="seat-tools">
+    <label class="field"><span class="label">Session Year</span><select id="sessionSelect" class="input"></select></label>
+    <label class="field"><span class="label">Academic Year</span><select id="yearSelect" class="input"></select></label>
+    <label class="field"><span class="label">Exam</span><select id="examSelect" class="input"></select></label>
+    <label class="field"><span class="label">Sort Serial</span><select id="sortSelect" class="input"><option value="roll-asc">Roll Ascending</option><option value="roll-desc">Roll Descending</option><option value="reg-asc">Registration Ascending</option><option value="reg-desc">Registration Descending</option><option value="name-asc">Name Ascending</option></select></label>
+  </div>
+  <div class="seat-tools" style="margin-top:12px">
+    <label class="field"><span class="label">Seat Card Label</span><input id="seatCardLabelInput" class="input" placeholder="SEAT CARD"></label>
+    <label class="field"><span class="label">Room title format</span><input id="roomTitleInput" class="input" placeholder="Optional room title"></label>
+    <label class="field"><span class="label">Student Search</span><input id="studentSearch" class="input" placeholder="Roll / Registration / Name filter"></label>
+    <div></div>
+  </div>
+
+  <div class="manual-seat-panel">
+    <div class="panel-title" style="margin-bottom:8px"><div><h2>Manual Seat Plan from Excel</h2><p class="muted">Excel/CSV থেকে Roll, Registration, Name upload করে manual seat plan তৈরি করুন। Supabase data change হবে না।</p></div></div>
+    <div class="manual-seat-grid">
+      <label class="field"><span class="label">Manual Exam Name</span><input id="manualExamName" class="input" placeholder="Exam name for print"></label>
+      <label class="field"><span class="label">Roll / Regi / Name Excel</span><input id="manualSeatFile" class="input" type="file" accept=".xlsx,.xls,.csv"></label>
+      <button id="loadManualSeatBtn" class="btn primary" type="button">Load Manual Excel</button>
+      <button id="clearManualSeatBtn" class="btn ghost" type="button">Clear Manual</button>
+    </div>
+    <div id="manualSeatPreview" class="manual-seat-preview">No manual Excel loaded.</div>
+  </div>
+  <div class="panel" style="margin-top:14px">
+    <div class="panel-title"><div><h2>Column-wise Room / Bench Setup</h2><p class="muted">Column Seats এ comma দিয়ে দিন: যেমন 20,20,18। Empty রাখলে capacity সমানভাবে ভাগ হবে।</p></div><button id="addRoomBtn" type="button" class="btn ghost">Add Room</button></div>
+    <div class="room-row" style="font-weight:800;color:var(--primary)">
+      <div>Room Name</div><div>Capacity</div><div>Columns</div><div>Column Seats</div><div>Per Bench</div><div></div>
+    </div>
+    <div id="roomsBox"></div>
+  </div>
+  <div class="filter-row" style="grid-template-columns:1fr auto auto;margin-top:14px">
+    <div class="muted">Seat plan format: <b>Column A</b> → <b>B1</b> | Student 1 | Student 3 | Student 5</div>
+    <button id="generateBtn" class="btn primary" type="button">Generate Seat Plan</button>
+    <button id="printCardsBtn" class="btn blue" type="button">Print Seat Cards</button>
+    <button id="printPlanBtn" class="btn blue" type="button">Print Full Plan</button>
+  </div>
+  <div id="seatStatus" class="status info hide"></div>
+</div>
+
+<div id="seatPlanPrintArea" class="panel">
+  <div class="excel-title" style="text-align:center;margin-bottom:12px">
+    <h2 style="margin:0;color:var(--primary);font-size:28px;line-height:1.15">Geography and Environment Department</h2>
+    <h3 style="margin:5px 0;font-size:20px;line-height:1.15">Kumudini Govt. College, Tangail</h3>
+    <h4 id="planTitle" style="margin:5px 0;font-size:22px;line-height:1.15">Full Seat Plan</h4>
+  </div>
+  <div id="fullPlanOutput"><div class="empty">Select exam, load exam students and generate seat plan.</div></div>
+</div>
+
+<div id="seatCardPrintArea" class="panel" style="margin-top:14px">
+  <div id="seatCardOutput" class="seat-card-grid seat-card-pages"><div class="empty">Seat cards will appear here.</div></div>
+</div>
+</main>
+</div>
+
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER=requireAuth('admin');attachLogout();</script>
+<script>
+const sessionSelect=document.getElementById('sessionSelect');
+const yearSelect=document.getElementById('yearSelect');
+const examSelect=document.getElementById('examSelect');
+const statusEl=document.getElementById('seatStatus');
+const roomsBox=document.getElementById('roomsBox');
+const fullPlanOutput=document.getElementById('fullPlanOutput');
+const seatCardOutput=document.getElementById('seatCardOutput');
+let allStudents=[],allocated=[],allExams=[];
+let manualSeatMode=false, manualSeatExamName='';
+
+function esc(v){return String(v??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+function defaultYears(){return ['Honours 1st Year','Honours 2nd Year','Honours 3rd Year','Honours 4th Year','Masters'];}
+function defaultSessions(){const a=[];for(let y=2018;y<=2035;y++){a.push(`${y}-${String((y+1)%100).padStart(2,'0')}`)}return a;}
+function fillSelect(el,items,ph){el.innerHTML=`<option value="">${ph}</option>`+items.map(x=>typeof x==='string'?`<option value="${esc(x)}">${esc(x)}</option>`:`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join('');}
+function showMsg(type,msg){showStatus(statusEl,type,msg);}
+function examLabel(e){return e.DisplayName||e.ExamName||[e.ExamType,e.ExamYear||e.SessionYear,e.AcademicYear,e.SessionYear].filter(Boolean).join(' - ')||e.ExamID||'';}
+function selectedExam(){return allExams.find(e=>String(e.ExamID)===String(examSelect.value))||null;}
+function selectedExamName(){if(manualSeatMode) return manualSeatExamName || document.getElementById('manualExamName').value.trim() || 'Manual Seat Plan'; const e=selectedExam();return e?examLabel(e):(examSelect.options[examSelect.selectedIndex]?.textContent||'');}
+function columnName(n){let s='',x=Number(n);while(x>0){let r=(x-1)%26;s=String.fromCharCode(65+r)+s;x=Math.floor((x-1)/26)}return s||'A';}
+function normalizeReg(v){return String(v||'').replace(/\D/g,'');}
+
+async function loadExamChoices(){
+  try{
+    const res=await geoApiGet('getExams',{});
+    allExams=Array.isArray(res.exams)?res.exams:[];
+  }catch(e){allExams=[];}
+  const sessions=[...new Set(allExams.map(e=>e.SessionYear).filter(Boolean))].sort();
+  const years=[...new Set(allExams.map(e=>e.AcademicYear).filter(Boolean))].sort();
+  fillSelect(sessionSelect,sessions.length?sessions:defaultSessions(),'All Session');
+  fillSelect(yearSelect,years.length?years:defaultYears(),'All Year');
+  fillExamSelect();
+}
+function fillExamSelect(){
+  const sy=sessionSelect.value, ay=yearSelect.value;
+  const list=allExams.filter(e=>(!sy||e.SessionYear===sy)&&(!ay||e.AcademicYear===ay));
+  fillSelect(examSelect,list.map(e=>({value:e.ExamID,label:examLabel(e)})),list.length?'Select Exam':'All Exam');
+}
+function syncFromExam(){
+  const e=selectedExam();
+  if(!e)return;
+  if(e.SessionYear) sessionSelect.value=e.SessionYear;
+  if(e.AcademicYear) yearSelect.value=e.AcademicYear;
+}
+function clearSeatPlanAfterFilter(){
+  allStudents=[]; allocated=[];
+  fullPlanOutput.innerHTML='<div class="empty">Select exam, load exam students and generate seat plan.</div>';
+  seatCardOutput.innerHTML='<div class="empty">Seat cards will appear here.</div>';
+}
+function parseColumnSeats(text,columns,capacity){
+  const nums=String(text||'').split(',').map(x=>Number(x.trim())).filter(n=>n>0);
+  if(nums.length){
+    const arr=nums.slice(0,Math.max(columns,nums.length));
+    while(arr.length<columns)arr.push(0);
+    return arr;
+  }
+  columns=Math.max(1,Number(columns||1));
+  capacity=Math.max(0,Number(capacity||0));
+  const base=Math.floor(capacity/columns), extra=capacity%columns;
+  return Array.from({length:columns},(_,i)=>base+(i<extra?1:0));
+}
+function addRoom(name='',capacity='',columns=2,columnSeats='',perBench=3){
+  const div=document.createElement('div');
+  div.className='room-row';
+  div.innerHTML=`<input class="input room-name" placeholder="Room Name e.g. Room 101" value="${esc(name)}"><input class="input room-capacity" type="number" min="1" placeholder="Capacity" value="${esc(capacity)}"><input class="input room-columns" type="number" min="1" value="${esc(columns)}" placeholder="Columns"><input class="input room-column-seats" placeholder="Column Seats e.g. 20,20,18" value="${esc(columnSeats)}"><input class="input room-perbench" type="number" min="1" value="${esc(perBench)}" placeholder="Per Bench"><button type="button" class="btn danger room-remove">Remove</button>`;
+  div.querySelector('.room-remove').addEventListener('click',()=>div.remove());
+  div.querySelector('.room-column-seats').addEventListener('input',()=>{
+    const nums=String(div.querySelector('.room-column-seats').value||'').split(',').map(x=>Number(x.trim())).filter(n=>n>0);
+    if(nums.length){
+      div.querySelector('.room-columns').value=nums.length;
+      div.querySelector('.room-capacity').value=nums.reduce((a,b)=>a+b,0);
+    }
+  });
+  roomsBox.appendChild(div);
+}
+function getRooms(){
+  return [...roomsBox.querySelectorAll('.room-row')].map((r,i)=>{
+    const cap=Number(r.querySelector('.room-capacity').value||0);
+    const colText=r.querySelector('.room-column-seats').value.trim();
+    const parsed=String(colText||'').split(',').map(x=>Number(x.trim())).filter(n=>n>0);
+    const cols=Math.max(1,parsed.length || Number(r.querySelector('.room-columns').value||1));
+    const per=Math.max(1,Number(r.querySelector('.room-perbench').value||1));
+    const colSeats=parseColumnSeats(colText,cols,cap);
+    const total=colSeats.reduce((a,b)=>a+b,0);
+    return {name:r.querySelector('.room-name').value.trim()||`Room ${i+1}`,capacity:total||cap,columns:colSeats.length,perBench:per,columnSeats:colSeats};
+  }).filter(r=>r.capacity>0);
+}
+function sortStudents(rows){
+  const mode=document.getElementById('sortSelect').value||'roll-asc';
+  const dir=mode.endsWith('desc')?-1:1;
+  const key=mode.split('-')[0];
+  return [...rows].sort((a,b)=>{
+    let av,bv;
+    if(key==='reg'){av=normalizeReg(a.RegistrationNumber);bv=normalizeReg(b.RegistrationNumber);}
+    else if(key==='name'){av=String(a.Name||a.StudentName||'');bv=String(b.Name||b.StudentName||'');}
+    else {av=String(a.Roll||'');bv=String(b.Roll||'');}
+    return av.localeCompare(bv,undefined,{numeric:true})*dir;
+  });
+}
+async function loadStudents(){
+  manualSeatMode=false;
+  manualSeatExamName='';
+  const examId = examSelect.value;
+  if(!examId){
+    showMsg('err','আগে Exam select করুন।');
+    return;
+  }
+  const btn=document.getElementById('loadStudentsBtn');
+  if(btn){btn.disabled=true;btn.textContent='Loading...';}
+  showMsg('info','Loading selected exam students...');
+  try{
+    let res;
+    try{
+      res=await geoApiGet('getSeatPlanStudentsLite',{examId,search:document.getElementById('studentSearch').value||''});
+    }catch(e){
+      res=await geoApiGet('getAdmitCardData',{examId,search:document.getElementById('studentSearch').value||''});
+    }
+    let rows=Array.isArray(res.students)?res.students:[];
+    const schedules=Array.isArray(res.schedules)?res.schedules:[];
+    if(schedules.length){
+      rows=rows.filter(s=>Number(s.SubjectCount||0)>0);
+    }
+    allStudents=sortStudents(rows.map(s=>({
+      Roll:s.Roll||'',
+      RegistrationNumber:s.RegistrationNumber||'',
+      Name:s.Name||s.StudentName||'',
+      SessionYear:s.SessionYear||'',
+      StudySessionYear:s.StudySessionYear||s.CurrentStudySession||'',
+      CurrentYear:s.CurrentYear||s.AcademicYear||'',
+      SubjectCount:s.SubjectCount||0
+    })));
+    const ex=res.exam||selectedExam();
+    if(ex){
+      if(ex.SessionYear) sessionSelect.value=ex.SessionYear;
+      if(ex.AcademicYear) yearSelect.value=ex.AcademicYear;
+    }
+    showMsg(allStudents.length?'ok':'err',allStudents.length+' students loaded for selected exam.');
+  }catch(err){showMsg('err',err.message);}
+  finally{if(btn){btn.disabled=false;btn.textContent='Load Exam Students';}}
+}
+
+async function loadManualSeatStudents(){
+  const file=document.getElementById('manualSeatFile').files[0];
+  const preview=document.getElementById('manualSeatPreview');
+  const btn=document.getElementById('loadManualSeatBtn');
+  try{
+    if(btn){btn.disabled=true;btn.textContent='Loading...';}
+    showMsg('info','Reading manual Excel...');
+    const raw=await geoParseExcelFile(file);
+    const rows=geoNormalizeManualSeatRows(raw).map(r=>({
+      Roll:r.Roll||'',
+      RegistrationNumber:r.RegistrationNumber||'',
+      Name:r.Name||'',
+      SessionYear:sessionSelect.value||'',
+      StudySessionYear:sessionSelect.value||'',
+      CurrentYear:yearSelect.value||'',
+      SubjectCount:0,
+      ManualSeat:true
+    }));
+    if(!rows.length){showMsg('err','Excel file থেকে Roll/Registration/Name পাওয়া যায়নি।');preview.textContent='No valid row found.';return;}
+    manualSeatMode=true;
+    manualSeatExamName=document.getElementById('manualExamName').value.trim()||'Manual Seat Plan';
+    allStudents=sortStudents(rows);
+    allocated=[];
+    document.getElementById('planTitle').textContent=manualSeatExamName;
+    fullPlanOutput.innerHTML='<div class="empty">Manual Excel loaded. Now click Generate Seat Plan.</div>';
+    seatCardOutput.innerHTML='<div class="empty">Manual Excel loaded. Now click Generate Seat Plan.</div>';
+    preview.textContent=rows.length+' manual students loaded from Excel.';
+    showMsg('ok',rows.length+' manual students loaded. এখন Generate Seat Plan দিন।');
+  }catch(err){showMsg('err',err.message);preview.textContent='Manual Excel load failed.';}
+  finally{if(btn){btn.disabled=false;btn.textContent='Load Manual Excel';}}
+}
+function clearManualSeat(){
+  manualSeatMode=false;
+  manualSeatExamName='';
+  document.getElementById('manualSeatFile').value='';
+  document.getElementById('manualExamName').value='';
+  document.getElementById('manualSeatPreview').textContent='No manual Excel loaded.';
+  clearSeatPlanAfterFilter();
+  showMsg('info','Manual seat plan cleared.');
+}
+function filteredStudents(){
+  const q=document.getElementById('studentSearch').value.trim().toLowerCase();
+  let rows=sortStudents(allStudents);
+  if(q) rows=rows.filter(s=>[s.Roll,s.RegistrationNumber,s.Name,s.StudentName,s.CurrentYear,s.AcademicYear].join(' ').toLowerCase().includes(q));
+  return rows;
+}
+function generateSeatPlan(){
+  const rooms=getRooms();
+  if(!allStudents.length){showMsg('err','আগে Exam students load করুন অথবা Manual Excel load করুন।');return;}
+  if(!rooms.length){showMsg('err','কমপক্ষে 1টা room capacity দিন।');return;}
+  const students=filteredStudents();
+  const totalCap=rooms.reduce((s,r)=>s+r.capacity,0);
+  if(students.length>totalCap){showMsg('err',`Student ${students.length}, কিন্তু room capacity ${totalCap}. Capacity বাড়ান।`);return;}
+  allocated=[];
+  let idx=0;
+  rooms.forEach(room=>{
+    for(let col=1;col<=room.columns;col++){
+      const colCap=Number(room.columnSeats[col-1]||0);
+      const benchCount=Math.ceil(colCap/room.perBench);
+      // Fill one student in B1, then B2, then B3... after all benches, start again from B1.
+      for(let pos=1;pos<=room.perBench;pos++){
+        for(let bench=1;bench<=benchCount;bench++){
+          if(idx>=students.length)return;
+          const seatInColumn=((bench-1)*room.perBench)+pos;
+          if(seatInColumn>colCap)continue;
+          const st=students[idx++];
+          allocated.push({student:st,room:room.name,roomCapacity:room.capacity,columnNo:col,columnName:columnName(col),columnCapacity:colCap,benchNo:bench,benchSeat:pos,perBench:room.perBench,columns:room.columns,displayOrder:seatInColumn});
+        }
+      }
+    }
+  });
+  renderFullPlan();
+  renderSeatCards();
+  showMsg('ok',allocated.length+' exam students seat allocated.');
+}
+function rollRegiCell(x){
+  if(!x)return '<td class="roll-regi-cell blank-seat"></td>';
+  const name = x.student.Name || x.student.StudentName || '';
+  const roll = x.student.Roll || '';
+  const regi = x.student.RegistrationNumber || '';
+  return `<td class="roll-regi-cell"><b>${esc(name)}</b><span>${esc(roll)}</span><span>${esc(regi)}</span></td>`;
+}
+function renderFullPlan(){
+  const byRoom={};
+  allocated.forEach(x=>{(byRoom[x.room]||(byRoom[x.room]=[])).push(x);});
+  const exam=selectedExamName()||'Seat Plan';
+  document.getElementById('planTitle').textContent=exam;
+  fullPlanOutput.innerHTML=Object.keys(byRoom).map(room=>{
+    const rows=byRoom[room];
+    const cols={};
+    rows.forEach(x=>{(cols[x.columnNo]||(cols[x.columnNo]=[])).push(x);});
+    const colCount=rows[0]?.columns||Object.keys(cols).length||1;
+    const roomTitle=document.getElementById('roomTitleInput').value.trim();
+    return `<section class="room-plan"><h2 class="room-title">${esc(roomTitle||room)} <small style="font-size:13px;color:#555">(Capacity: ${rows[0]?.roomCapacity||rows.length})</small></h2><div class="column-layout" style="grid-template-columns:repeat(${colCount},minmax(0,1fr))">`+
+      Object.keys(cols).sort((a,b)=>Number(a)-Number(b)).map(c=>{
+        const list=cols[c].sort((a,b)=>{
+          if(a.benchNo!==b.benchNo) return a.benchNo-b.benchNo;
+          return a.benchSeat-b.benchSeat;
+        });
+        const per=list[0]?.perBench||3;
+        const benches={};
+        list.forEach(x=>{(benches[x.benchNo]||(benches[x.benchNo]=[])).push(x);});
+        return `<div class="seat-column"><div class="seat-column-title">Column ${esc(columnName(c))} <small>(${list[0]?.columnCapacity||list.length} seats)</small></div><table class="column-table"><tbody>`+
+          Object.keys(benches).sort((a,b)=>Number(a)-Number(b)).map(b=>{
+            const students=benches[b].sort((a,b)=>a.benchSeat-b.benchSeat);
+            return `<tr><td class="bench-label">B${esc(b)}</td>`+
+              Array.from({length:per},(_,i)=>rollRegiCell(students[i])).join('')+
+              `</tr>`;
+          }).join('')+
+          `</tbody></table></div>`;
+      }).join('')+
+    `</div></section>`;
+  }).join('') || '<div class="empty">No seat plan generated.</div>';
+}
+function seatCardPages(list){
+  const perPage=14, cols=2, rows=7;
+  const pageCount=Math.max(1,Math.ceil((list||[]).length/perPage));
+  const pages=Array.from({length:pageCount},()=>Array.from({length:cols},()=>Array(rows).fill(null)));
+  let idx=0;
+  for(let col=0;col<cols;col++){
+    for(let row=0;row<rows;row++){
+      for(let page=0;page<pageCount;page++){
+        if(idx>=list.length) return pages;
+        pages[page][col][row]=list[idx++];
+      }
+    }
+  }
+  return pages;
+}
+function seatCardHtml(x,label,exam,blank=false){
+  if(blank || !x) return `<div class="seat-card blank"></div>`;
+  return `<div class="seat-card">
+    <div class="seat-card-head"><h2>Geography and Environment Department</h2><h3>${esc(exam)}</h3><div class="seat-label">${esc(label)}</div></div>
+    <table class="seat-info">
+      <tr><td>Name</td><td>${esc(x.student.Name||x.student.StudentName||'')}</td></tr>
+      <tr><td>Roll</td><td>${esc(x.student.Roll||'')}</td></tr>
+      <tr><td>Regi</td><td>${esc(x.student.RegistrationNumber||'')}</td></tr>
+    </table>
+  </div>`;
+}
+function renderSeatCards(){
+  const label=document.getElementById('seatCardLabelInput').value.trim()||'SEAT CARD';
+  const exam=selectedExamName()||'Exam';
+  const pages=seatCardPages(allocated);
+  seatCardOutput.innerHTML=allocated.length?pages.map((page,pageIndex)=>`<section class="seat-card-page" data-page="${pageIndex+1}">
+    <div class="seat-card-print-column">${page[0].map(x=>seatCardHtml(x,label,exam,!x)).join('')}</div>
+    <div class="seat-card-print-column">${page[1].map(x=>seatCardHtml(x,label,exam,!x)).join('')}</div>
+  </section>`).join(''):'<div class="empty">No seat card generated.</div>';
+}
+function printArea(id,title){
+  const el=document.getElementById(id);
+  if(!el || !el.innerText.trim() || el.innerText.includes('will appear') || el.innerText.includes('generate seat plan')){
+    alert('আগে Generate Seat Plan করুন।');
+    return;
+  }
+  const isCard=id==='seatCardPrintArea';
+  const clone=el.cloneNode(true);
+  if(isCard) clone.querySelectorAll('.excel-title').forEach(x=>x.remove());
+  clone.querySelectorAll('.empty,.no-print,button,input,select,textarea').forEach(x=>x.remove());
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(title)}</title>
+<style>
+@page{size:A4 portrait;margin:7mm}
+html,body{background:#fff!important;margin:0!important;padding:0!important;color:#111!important;font-family:Arial,Helvetica,sans-serif!important}
+*{box-sizing:border-box!important}
+.excel-title{text-align:center!important;margin:0 0 6px 0!important}
+.excel-title h2{margin:0!important;font-size:22px!important;color:#0f5c3f!important;line-height:1.15!important}
+.excel-title h3{margin:3px 0!important;font-size:16px!important;color:#111!important;line-height:1.15!important}
+.excel-title h4{margin:3px 0!important;font-size:18px!important;color:#111!important;line-height:1.15!important}
+.seat-card-pages{display:block!important}
+.seat-card-page{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:3.5mm!important;page-break-after:always!important;break-after:page!important;margin:0!important}
+.seat-card-page:last-child{page-break-after:auto!important;break-after:auto!important}
+.seat-card-print-column{display:flex!important;flex-direction:column!important;gap:2.8mm!important}
+.seat-card{border:1.1px solid #111!important;border-radius:5px!important;background:#fff!important;padding:5px!important;height:36mm!important;min-height:36mm!important;overflow:hidden!important;page-break-inside:avoid!important;break-inside:avoid!important;font-size:11px!important}
+.seat-card.blank{visibility:hidden!important}
+.seat-card-head{text-align:center!important;border-bottom:1px solid #111!important;padding-bottom:2px!important;margin-bottom:3px!important}
+.seat-card-head h2{font-size:12.4px!important;margin:0!important;line-height:1.1!important;color:#111!important}
+.seat-card-head h3{font-size:11.2px!important;margin:1px 0!important;line-height:1.1!important;color:#111!important}
+.seat-label{display:inline-block!important;border:1px solid #111!important;padding:1.5px 9px!important;font-weight:900!important;margin-top:2px!important;background:#f7faf7!important;font-size:9.5px!important}
+.seat-info{width:100%!important;border-collapse:collapse!important;margin-top:4px!important}
+.seat-info td{border:1px solid #333!important;padding:3.6px 4px!important;font-size:11px!important;line-height:1.25!important;height:6.5mm!important}
+.seat-info td:first-child{width:28%!important;font-weight:900!important;background:#f4f7f5!important}
+.seat-big{display:none!important}
+.room-plan{border:0!important;border-radius:0!important;padding:0!important;margin:0 0 8mm!important;page-break-inside:avoid!important;break-inside:avoid!important}
+.room-title{text-align:center!important;color:#0f5c3f!important;font-size:21px!important;margin:0 0 7px!important;font-weight:900!important}
+.column-layout{display:grid!important;gap:6px!important;align-items:start!important}
+.seat-column{border:1.2px solid #111!important;border-radius:8px!important;background:#fff!important;overflow:hidden!important;break-inside:avoid!important}
+.seat-column-title{text-align:center!important;background:#eef7f1!important;color:#0f5c3f!important;font-weight:900!important;padding:5px!important;border-bottom:1px solid #111!important}
+.column-table{width:100%!important;border-collapse:collapse!important;background:#fff!important}
+.column-table th,.column-table td{border:1px solid #333!important;padding:3px 2px!important;vertical-align:middle!important;text-align:center!important;font-size:8.2px!important;height:auto!important;min-height:9mm!important}
+.bench-label{font-weight:900!important;background:#f8fbf9!important;color:#0f5c3f!important;white-space:nowrap!important;width:24px!important;text-align:center!important;font-size:8.4px!important}
+.roll-regi-cell{line-height:1.18!important;min-width:44px!important;min-height:9mm!important;text-align:center!important}
+.roll-regi-cell b,.roll-regi-cell span{display:block!important;font-size:7.8px!important;line-height:1.18!important;color:#111!important;font-weight:700!important}
+${isCard?'.room-plan,.column-layout,.column-table{display:none!important}':'.seat-card-page,.seat-card-pages{display:none!important}'}
+/* SEAT PRINT HEADER CENTER ALIGN FIX */
+.column-table th,.room-plan table th,table thead th{text-align:center!important;vertical-align:middle!important}
+</style></head><body>${clone.innerHTML}<script>window.onload=function(){setTimeout(function(){window.focus();window.print();},350)}<\/script></body></html>`;
+  const w=window.open('','_blank');
+  if(!w){alert('Popup blocked. Browser popup allow করে আবার Print দিন।');return;}
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+sessionSelect.addEventListener('change',()=>{fillExamSelect();clearSeatPlanAfterFilter();});
+yearSelect.addEventListener('change',()=>{fillExamSelect();clearSeatPlanAfterFilter();});
+examSelect.addEventListener('change',()=>{syncFromExam();clearSeatPlanAfterFilter();});
+document.getElementById('sortSelect').addEventListener('change',()=>{if(allStudents.length){allStudents=sortStudents(allStudents);if(allocated.length)generateSeatPlan();}});
+document.getElementById('addRoomBtn').addEventListener('click',()=>addRoom('',40,2,'20,20',3));
+document.getElementById('loadStudentsBtn').addEventListener('click',loadStudents);
+document.getElementById('loadManualSeatBtn').addEventListener('click',loadManualSeatStudents);
+document.getElementById('clearManualSeatBtn').addEventListener('click',clearManualSeat);
+document.getElementById('generateBtn').addEventListener('click',generateSeatPlan);
+document.getElementById('printCardsBtn').addEventListener('click',()=>printArea('seatCardPrintArea','Seat Cards'));
+document.getElementById('printPlanBtn').addEventListener('click',()=>printArea('seatPlanPrintArea','Full Seat Plan'));
+addRoom('Room 101',40,2,'20,20',3);
+addRoom('Room 102',40,2,'20,20',3);
+loadExamChoices();
+</script>
+</body>
+</html>

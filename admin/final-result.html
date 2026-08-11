@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Final Result - Academic Management</title><link rel="stylesheet" href="../assets/site.css"></head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">🛠️</span><span>Final Result</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-management.html">Students</a><a href="subject-management.html">Subjects</a><a href="exam-create.html">Exam</a><a href="attendance-sheet.html">Attendance</a><a href="marks-entry.html">Marks</a><a href="final-result.html">Result</a><a href="promotion-management.html">Promotion</a></div><section class="academic-banner"><h1>Final Result Entry</h1></section><div class="panel"><div class="filter-row"><label class="field"><span class="label">Academic Year</span><select id="academicYear"></select></label><label class="field"><span class="label">Filter Roll / Regi</span><input id="studentFilter" class="input" placeholder="Roll / Registration / Name"></label><label class="field"><span class="label">Sort By</span><select id="sortField" class="input"><option value="roll">Roll</option><option value="reg">Regi No</option><option value="name">Name</option><option value="session">Session</option><option value="type">Type</option></select></label><label class="field"><span class="label">Order</span><select id="sortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label><button id="loadFinalStudents" class="btn primary" type="button">Load Students</button><button id="saveFinalResults" class="btn blue" type="button">Save Final Result</button></div><div id="finalStatus" class="status info hide"></div></div><div class="table-wrap"><table><thead><tr><th>SL</th><th>Roll</th><th>Regi No</th><th>Name</th><th>Session</th><th>Type</th><th>Final Marks</th><th>GPA</th><th>Result Status</th><th>Remarks</th></tr></thead><tbody id="finalTable"><tr><td colspan="10" class="empty">Select year.</td></tr></tbody></table></div></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+fillSelect(document.getElementById('academicYear'), currentAcademicYears(), 'Select year');
+const table = document.getElementById('finalTable');
+const statusEl = document.getElementById('finalStatus');
+let students = [];
+let visibleStudents = [];
+function typeBadge(s){
+  const type = s.StudentType || s.IrregularStatus || 'Regular';
+  const cls = type === 'Irregular' ? 'irregular' : 'regular';
+  const title = s.IrregularReason ? ` title="${s.IrregularReason}"` : '';
+  return `<span class="student-type-badge ${cls}"${title}>${type}</span>`;
+}
+function renderStudentRows(list){
+  visibleStudents = list;
+  if(!list.length){ table.innerHTML='<tr><td colspan="10" class="empty">No student found.</td></tr>'; return; }
+  table.innerHTML = list.map((s,i)=>`<tr>
+      <td>${i+1}</td><td>${s.Roll||s.RollID||''}</td><td>${s.RegistrationNumber||''}</td><td>${s.Name||s.FullName||''}</td>
+      <td>${s.SessionYear||''}</td><td>${typeBadge(s)}</td>
+      <td><input class="mini-input total" type="number" data-session="${s.SessionYear||''}" data-roll="${s.Roll||s.RollID||''}" data-reg="${s.RegistrationNumber||''}" data-name="${(s.Name||s.FullName||'').replace(/"/g,'&quot;')}"></td>
+      <td><input class="mini-input gpa" type="number" step="0.01" min="0" max="4"></td>
+      <td><select class="mini-input result"><option>Promoted</option><option>Not Promoted</option><option>Failed</option><option>Improvement</option></select></td>
+      <td><input class="input remarks" placeholder="Optional remarks"></td>
+    </tr>`).join('');
+}
+function applyStudentFilter(){
+  const q = document.getElementById('studentFilter').value.toLowerCase().trim();
+  const list = students.filter(s => [s.Roll,s.RollID,s.RegistrationNumber,s.Name,s.FullName,s.SessionYear,s.StudentType,s.IrregularStatus].join(' ').toLowerCase().includes(q));
+  renderStudentRows(sortStudentList(list, document.getElementById('sortField').value, document.getElementById('sortDir').value));
+}
+async function loadStudents(){
+  const academicYear = document.getElementById('academicYear').value;
+  if(!academicYear){ showStatus(statusEl,'err','Year required.'); return; }
+  showStatus(statusEl,'info','Loading year-wise students...');
+  try{
+    const res = await geoApiGet('getStudents', { academicYear, sortField:document.getElementById('sortField').value, sortDir:document.getElementById('sortDir').value });
+    students = Array.isArray(res.students)?res.students:[];
+    applyStudentFilter();
+    showStatus(statusEl,'ok',students.length+' students loaded year-wise.');
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+async function saveResults(){
+  const academicYear = document.getElementById('academicYear').value;
+  const rows = [...table.querySelectorAll('tr')].map(tr=>{
+    const total = tr.querySelector('.total');
+    if(!total) return null;
+    return { sessionYear: total.dataset.session, roll: total.dataset.roll, name: total.dataset.name, registrationNumber: total.dataset.reg, finalMarks: total.value, totalMarks: total.value, gpa: tr.querySelector('.gpa').value, resultStatus: tr.querySelector('.result').value, remarks: tr.querySelector('.remarks').value };
+  }).filter(Boolean);
+  if(!rows.length){ showStatus(statusEl,'err','No result data found.'); return; }
+  showStatus(statusEl,'info','Saving final results...');
+  try{
+    const res = await geoApiPost({ action:'saveFinalResults', academicYear, results: rows });
+    showStatus(statusEl,res.success?'ok':'err',res.message || 'Saved');
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+document.getElementById('loadFinalStudents').addEventListener('click', loadStudents);
+document.getElementById('studentFilter').addEventListener('input', applyStudentFilter);
+attachSortControls('sortField','sortDir', applyStudentFilter);
+document.getElementById('saveFinalResults').addEventListener('click', saveResults);
+</script>
+</body></html>

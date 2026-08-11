@@ -1,0 +1,299 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Subject Wise Missing Marks List</title><link rel="stylesheet" href="../assets/site.css">
+ <style>.missing-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}.missing-summary-box{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow-soft)}.missing-summary-box span{display:block;color:#64748b;font-weight:700}.missing-summary-box b{display:block;font-size:2rem;color:var(--primary);margin-top:4px}.subject-missing-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:16px;margin-top:14px;box-shadow:var(--shadow-soft);break-inside:avoid}.subject-missing-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px}.subject-missing-head h2{margin:0;color:var(--primary);font-size:1.25rem}.missing-count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:90px;padding:8px 12px;border-radius:999px;font-weight:900;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}.complete-badge{background:#dcfce7;color:#166534;border-color:#bbf7d0}.missing-print-title{display:none}@media print{@page{size:A4 portrait;margin:0.25in}.topbar,.panel-sidebar,.panel-mobile-tabs,.no-print,.academic-banner,.panel:not(.print-panel),.footer{display:none!important}.panel-layout,.panel-main{display:block!important}.panel-main{padding:0!important}body{background:#fff!important}.missing-print-title{display:block;text-align:center;margin-bottom:12px;font-family:"Times New Roman",serif;color:#000}.subject-missing-card{box-shadow:none;border:1px solid #000;border-radius:0;margin-top:10px;padding:10px}.subject-missing-head{border-bottom:1px solid #000}table{font-size:12px!important}th,td{padding:5px!important}}.subject-summary-table td,.subject-summary-table th{white-space:nowrap}.subject-summary-table .subject-name-cell{white-space:normal;min-width:260px}.subject-summary-table .missing-num{font-weight:900;color:#b91c1c}.subject-summary-table .complete-num{font-weight:900;color:#166534}</style>
+</head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">⚠️</span><span>Missing Marks List</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">⚠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a class="active" href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><section class="academic-banner no-print"><h1>Full Exam Missing Marks Entry List</h1></section><div class="panel no-print"><div class="panel-title"><div><h2>Filter Missing Marks</h2></div><button class="btn ghost" type="button" onclick="window.print()">Print List</button></div><div class="filter-row" style="grid-template-columns:1fr 1fr auto 1.5fr 1.2fr 1fr auto"><label class="field"><span class="label">Session Year</span><select id="sessionYear" class="input"></select></label><label class="field"><span class="label">Academic Year</span><select id="academicYear"></select></label><label class="field"><span class="label">Exam</span><select id="examSelect"></select></label><label class="field"><span class="label">Subject (Optional)</span><select id="subjectSelect"></select></label><label class="field"><span class="label">Search</span><input id="searchBox" class="input" placeholder="Roll / Regi / Name"></label><button id="loadMissingBtn" class="btn primary" type="button">Load Full Exam Missing List</button></div><div id="missingStatus" class="status info hide"></div></div><div class="missing-print-title"><h2>Geography and Environment Department</h2><h3>Kumudini Govt. College, Tangail</h3><h3 id="printExamTitle">Subject Wise Missing Marks List</h3></div><div id="summaryWrap" class="missing-summary-grid no-print"><div class="missing-summary-box"><span>Total Subject</span><b id="sumSubject">0</b></div><div class="missing-summary-box"><span>Assigned Entries</span><b id="sumAssigned">0</b></div><div class="missing-summary-box"><span>Entered Marks</span><b id="sumEntered">0</b></div><div class="missing-summary-box"><span>Missing Marks</span><b id="sumMissing">0</b></div></div><section id="missingListWrap" class="print-panel" style="margin-top:14px"><div class="panel"></div></section></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+const sessionEl = document.getElementById('sessionYear');
+const yearEl = document.getElementById('academicYear');
+const examSelect = document.getElementById('examSelect');
+const subjectSelect = document.getElementById('subjectSelect');
+const searchBox = document.getElementById('searchBox');
+const statusEl = document.getElementById('missingStatus');
+const wrap = document.getElementById('missingListWrap');
+let exams = [], filteredExams = [];
+
+
+function examStudySessionValue(e){return String(e?.CurrentStudySession || e?.StudySessionYear || e?.SessionYear || '').trim();}
+function examMatchesStudySession(e, sessionYear){
+  const s = String(sessionYear || '').trim();
+  if(!s) return true;
+  return [e?.CurrentStudySession, e?.StudySessionYear, e?.SessionYear].map(x=>String(x||'').trim()).includes(s);
+}
+function fillMissingSessionSelectSafe(){
+  const preset = String(getParam('studySessionYear') || getParam('currentStudySession') || '').trim();
+  const sessions=[...new Set(exams.flatMap(e=>[e.CurrentStudySession,e.StudySessionYear,e.SessionYear]).map(x=>String(x||'').trim()).filter(Boolean).concat(preset?[preset]:[]))].sort().reverse();
+  fillSelect(sessionEl,sessions.map(s=>({value:s,label:s})),'Select session');
+}
+
+function esc(v){return String(v ?? '').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+function displayName(e){return e.DisplayName || e.ExamName || [e.SessionYear,e.AcademicYear,e.ExamType].filter(Boolean).join(' - ') || e.ExamID;}
+function getMissingStudySessionYear(){
+  const exam = exams.find(e=>e.ExamID === examSelect.value) || {};
+  return String((sessionEl && sessionEl.value) || getParam('studySessionYear') || getParam('currentStudySession') || exam.CurrentStudySession || exam.StudySessionYear || exam.SessionYear || '').trim();
+}
+function marksEntryHref(examId, subjectCode){
+  const qs = new URLSearchParams({ examId:String(examId || ''), subjectCode:String(subjectCode || ''), studySessionYear:getMissingStudySessionYear() });
+  return 'marks-entry.html?' + qs.toString();
+}
+
+function clearMissingExam(msg='Select exam and load missing marks list.'){
+  examSelect.innerHTML='<option value="">Select exam</option>';
+  subjectSelect.innerHTML='<option value="">Full exam - all subjects</option>';
+  wrap.innerHTML = `<div class="panel"></div>`;
+}
+function loadFilteredExams(){
+  const sessionYear = sessionEl.value.trim();
+  const academicYear = yearEl.value;
+  if(!sessionYear || !academicYear){
+    clearMissingExam('');
+    showStatus(statusEl,'err','Required.');
+    return [];
+  }
+  filteredExams = exams.filter(e => examMatchesStudySession(e, sessionYear) && String(e.AcademicYear||'').trim() === academicYear);
+  fillSelect(examSelect, filteredExams.map(e=>({value:e.ExamID,label:displayName(e)})), 'Select exam');
+  subjectSelect.innerHTML='<option value="">Full exam - all subjects</option>';
+  if(!filteredExams.length) showStatus(statusEl,'err','No exam found for selected Session + Year.');
+  else showStatus(statusEl,'ok',filteredExams.length + ' exam loaded.');
+  return filteredExams;
+}
+function setText(id, v){document.getElementById(id).textContent = v;}
+const MISSING_MARKS_REFRESH_KEY = 'geo_missing_marks_refresh_needed';
+function clearMissingRefreshFlag(){
+  try{ sessionStorage.removeItem(MISSING_MARKS_REFRESH_KEY); }catch(e){}
+  try{ localStorage.removeItem(MISSING_MARKS_REFRESH_KEY); }catch(e){}
+}
+function setMissingRefreshFlag(){
+  try{ sessionStorage.setItem(MISSING_MARKS_REFRESH_KEY, '1'); }catch(e){}
+  try{ localStorage.setItem(MISSING_MARKS_REFRESH_KEY, '1'); }catch(e){}
+}
+function hasMissingRefreshFlag(){
+  try{ if(sessionStorage.getItem(MISSING_MARKS_REFRESH_KEY) === '1') return true; }catch(e){}
+  try{ if(localStorage.getItem(MISSING_MARKS_REFRESH_KEY) === '1') return true; }catch(e){}
+  return false;
+}
+let __missingLastAutoRefresh = 0;
+function refreshMissingListIfNeeded(force=false){
+  if(!examSelect.value) return;
+  const flagged = hasMissingRefreshFlag();
+  const now = Date.now();
+  if(!force && !flagged && now - __missingLastAutoRefresh < 2500) return;
+  __missingLastAutoRefresh = now;
+  clearMissingRefreshFlag();
+  setTimeout(()=>loadMissing(), 120);
+  setTimeout(()=>{ if(examSelect.value) loadMissing(); }, 1400);
+}
+
+async function init(){
+  try{
+    fillSelect(yearEl, currentAcademicYears(), 'Select year');
+    const res = await geoApiGet('getExams', { _t: Date.now() });
+    exams = Array.isArray(res.exams) ? res.exams : [];
+    fillMissingSessionSelectSafe();
+    clearMissingExam('');
+    const preset = getParam('examId');
+    if(preset){
+      const ex = exams.find(e=>e.ExamID === preset);
+      if(ex){
+        sessionEl.value = getParam('studySessionYear') || getParam('currentStudySession') || ex.CurrentStudySession || ex.StudySessionYear || ex.SessionYear || '';
+        yearEl.value = ex.AcademicYear || '';
+        loadFilteredExams();
+        examSelect.value = preset;
+        await loadSubjects();
+      }
+    }
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+
+async function loadSubjects(){
+  const exam = exams.find(e=>e.ExamID === examSelect.value);
+  fillSelect(subjectSelect, [], 'All subjects');
+  if(!exam) return;
+
+  showStatus(statusEl,'info','Loading subjects...');
+  try{
+    const res = await geoApiGet('getSubjects', { academicYear: exam.AcademicYear, _t:Date.now() });
+    let subjects = Array.isArray(res.subjects) ? res.subjects : [];
+    subjects = subjects.filter(s => subjectAllowedForExamLocal(exam, s));
+    fillSelect(subjectSelect, subjects.map(s=>({value:s.SubjectCode,label:s.SubjectCode + ' - ' + s.SubjectName})), 'Full exam - all subjects');
+    subjectSelect.value = '';
+    showStatus(statusEl,'ok','Subject loaded.');
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+
+function subjectAllowedForExamLocal(exam, subject){
+  const examType = String(exam.ExamType || '').trim();
+  const academicYear = String(exam.AcademicYear || '').trim();
+  const code = String(subject.SubjectCode || '').trim();
+  const name = String(subject.SubjectName || '').toLowerCase();
+  const type = String(subject.SubjectType || '').toLowerCase();
+
+  if(examType === '1st Incourse' || examType === '2nd Incourse' || examType === 'Test Examination'){
+    if(type === 'practical' || name.includes('practical')) return false;
+  }
+  if(academicYear === 'Honours 2nd Year' && code === '221109' && examType !== 'Test Examination') return false;
+  return true;
+}
+
+function renderMissing(res){
+  const exam = res.exam || {};
+  const groups = Array.isArray(res.subjects) ? res.subjects : [];
+  const summary = res.summary || {};
+  const singleSubjectMode = !!subjectSelect.value;
+
+  setText('sumSubject', summary.subjectCount || 0);
+  setText('sumAssigned', summary.assignedCount || 0);
+  setText('sumEntered', summary.enteredCount || 0);
+  setText('sumMissing', summary.missingCount || 0);
+  document.getElementById('printExamTitle').textContent = displayName(exam);
+
+  const ms = res.markingSystem || {};
+  const modeText = singleSubjectMode ? 'Single Subject Missing List' : 'Full Exam Subject Summary';
+  showStatus(statusEl,'ok',`${modeText}: ${summary.missingCount || 0} missing found.`);
+
+  if(!groups.length){
+    wrap.innerHTML = '<div class="panel"></div>';
+    return;
+  }
+  if(!singleSubjectMode){
+    const subjectCards = groups.map((g,gi)=>{
+      const missing = Array.isArray(g.MissingStudents) ? g.MissingStudents : [];
+      const rows = missing.length ? missing.map((s,i)=>`<tr>
+        <td>${i+1}</td>
+        <td>${esc(s.Roll)}</td>
+        <td>${esc(s.RegistrationNumber)}</td>
+        <td>${esc(s.Name)}</td>
+        <td>${esc(s.SessionYear || '')}</td>
+        <td>${esc(s.StudySessionYear || '')}</td>
+        <td>${esc(s.StudentType || '')}</td>
+        <td>${esc(s.Reason || '')}</td>
+      </tr>`).join('') : `<tr><td colspan="8" class="empty">No missing mark for this subject.</td></tr>`;
+
+      return `<div class="subject-missing-card">
+        <div class="subject-missing-head">
+          <div>
+            <h2>${esc(g.SubjectCode)} - ${esc(g.SubjectName)}</h2>
+            <p class="muted">Assigned: ${g.AssignedCount || 0} | Entered: ${g.EnteredCount || 0} | Missing: ${g.MissingCount || 0}</p>
+          </div>
+          <span class="${(g.MissingCount||0)>0?'missing-count-badge':'missing-count-badge complete-badge'}">${(g.MissingCount||0)>0?'Missing '+(g.MissingCount||0):'Complete'}</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>SL</th><th>Roll</th><th>Regi No</th><th>Name</th><th>Original Session</th><th>Study Session</th><th>Type</th><th>Reason</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="right-actions no-print" style="margin-top:10px">
+          <a class="btn small-btn primary" href="${marksEntryHref(exam.ExamID, g.SubjectCode)}">Open Marks Entry</a>
+        </div>
+      </div>`;
+    }).join('');
+
+    wrap.innerHTML = `<div class="subject-missing-card">
+      <div class="subject-missing-head">
+        <div>
+          <h2>Full Exam Missing Marks Summary</h2>
+          <p class="muted">Below list shows which students' marks are missing subject-wise.</p>
+        </div>
+        <span class="missing-count-badge">Missing ${summary.missingCount || 0}</span>
+      </div>
+      <div class="table-wrap">
+        <table class="subject-summary-table">
+          <thead>
+            <tr>
+              <th>SL</th><th>Subject Code</th><th class="subject-name-cell">Subject Name</th>
+              <th>Assigned</th><th>Entered</th><th>Missing</th><th>Entry</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${groups.map((g,i)=>`<tr>
+              <td>${i+1}</td>
+              <td><b>${esc(g.SubjectCode)}</b></td>
+              <td class="subject-name-cell">${esc(g.SubjectName)}</td>
+              <td>${g.AssignedCount || 0}</td>
+              <td class="complete-num">${g.EnteredCount || 0}</td>
+              <td class="${(g.MissingCount||0)>0?'missing-num':'complete-num'}">${g.MissingCount || 0}</td>
+              <td><a class="btn small-btn primary" href="${marksEntryHref(exam.ExamID, g.SubjectCode)}">Entry</a></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>${subjectCards}`;
+    return;
+  }
+
+  wrap.innerHTML = groups.map(g=>{
+    const missing = Array.isArray(g.MissingStudents) ? g.MissingStudents : [];
+    const badgeClass = missing.length ? 'missing-count-badge' : 'missing-count-badge complete-badge';
+    const body = missing.length ? missing.map((s,i)=>`<tr>
+      <td>${i+1}</td>
+      <td>${esc(s.Roll)}</td>
+      <td>${esc(s.RegistrationNumber)}</td>
+      <td>${esc(s.Name)}</td>
+      <td>${esc(s.SessionYear || '')}</td>
+      <td>${esc(s.StudySessionYear || '')}</td>
+      <td>${esc(s.StudentType || '')}</td>
+      <td>${esc(s.Reason || '')}</td>
+    </tr>`).join('') : `<tr><td colspan="8" class="empty">All marks entered for this subject.</td></tr>`;
+
+    return `<div class="subject-missing-card">
+      <div class="subject-missing-head">
+        <div>
+          <h2>${esc(g.SubjectCode)} - ${esc(g.SubjectName)}</h2>
+          
+        </div>
+        <span class="${badgeClass}">${missing.length ? 'Missing ' + missing.length : 'Complete'}</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>SL</th><th>Roll</th><th>Regi No</th><th>Name</th><th>Original Session</th><th>Study Session</th><th>Type</th><th>Reason</th></tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>
+      <div class="right-actions no-print" style="margin-top:10px">
+        <a class="btn small-btn primary" href="${marksEntryHref(exam.ExamID, g.SubjectCode)}">Open Marks Entry</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadMissing(){
+  const examId = examSelect.value;
+  if(!examId){ showStatus(statusEl,'err','Exam required.'); return; }
+  showStatus(statusEl,'info','Loading missing marks list...');
+  try{
+    const res = await geoApiGet('getMissingMarksList', {
+      examId,
+      subjectCode:subjectSelect.value,
+      studySessionYear:getMissingStudySessionYear(),
+      currentStudySession:getMissingStudySessionYear(),
+      search:searchBox.value,
+      _t:Date.now(),
+      noCache:'1'
+    });
+    if(!res.success){ showStatus(statusEl,'err',res.message || 'Load failed'); return; }
+    renderMissing(res);
+    clearMissingRefreshFlag();
+    // renderMissing already shows summary status.
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+
+sessionEl.addEventListener('change', loadFilteredExams);
+yearEl.addEventListener('change', loadFilteredExams);
+examSelect.addEventListener('change', loadSubjects);
+document.getElementById('loadMissingBtn').addEventListener('click', loadMissing);
+searchBox.addEventListener('keydown', e=>{ if(e.key === 'Enter') loadMissing(); });
+document.addEventListener('click', e=>{
+  const a = e.target && e.target.closest ? e.target.closest('a[href*="marks-entry.html"]') : null;
+  if(a) setMissingRefreshFlag();
+}, true);
+window.addEventListener('pageshow', ()=>refreshMissingListIfNeeded(false));
+window.addEventListener('focus', ()=>refreshMissingListIfNeeded(false));
+window.addEventListener('storage', e=>{ if(e && e.key === MISSING_MARKS_REFRESH_KEY) refreshMissingListIfNeeded(true); });
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshMissingListIfNeeded(false); });
+init();
+</script>
+</body></html>

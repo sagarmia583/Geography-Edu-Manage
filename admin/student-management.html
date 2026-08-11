@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Management - Academic Management</title>
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.manual-entry-panel{margin:14px 0;padding:14px;border:1px solid var(--border);border-radius:14px;background:#fff}
+.manual-entry-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.manual-entry-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end}
+.manual-preview-box{margin-top:10px;max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:12px;background:#fff}
+.manual-preview-box table{width:100%;border-collapse:collapse}
+.manual-preview-box th,.manual-preview-box td{padding:7px 8px;border-bottom:1px solid var(--border);font-size:12px;text-align:left}
+.manual-preview-box th{background:#f4faf6;color:var(--primary);position:sticky;top:0}
+@media(max-width:1000px){.manual-entry-grid{grid-template-columns:1fr}.manual-entry-head{display:block}}
+</style>
+</head>
+<body>
+<header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">🛠️</span><span>Student Management</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header>
+<div class="panel-layout">
+<aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a class="active" href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside>
+<main class="panel-main">
+<div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-management.html">Students</a><a href="subject-management.html">Subjects</a><a href="exam-create.html">Exam</a><a href="attendance-sheet.html">Attendance</a><a href="marks-entry.html">Marks</a><a href="final-result.html">Result</a><a href="promotion-management.html">Promotion</a></div>
+<section class="academic-banner"><h1>Student Management</h1></section>
+<div class="adminbar">
+  <div><h2>Registered Students</h2></div>
+  <div class="toolbar">
+    <input id="studentSearch" class="input" placeholder="Filter by Roll / Regi / Name">
+    <select id="yearFilter"></select>
+    <select id="sortField" class="input"><option value="roll">Sort: Roll</option><option value="reg">Sort: Regi No</option><option value="name">Sort: Name</option><option value="session">Sort: Session</option><option value="type">Sort: Type</option></select>
+    <select id="sortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select>
+    <button id="refreshBtn" class="btn ghost" type="button">Load Year List</button>
+    <button id="manualStudentToggleBtn" class="btn blue" type="button">Manual Student Excel Entry</button>
+    <a class="btn primary" href="../pages/student-registration.html">+ Add Student</a>
+  </div>
+</div>
+
+<div id="manualStudentPanel" class="manual-entry-panel hide">
+  <div class="manual-entry-head">
+    <div>
+      <h2 style="margin:0;color:var(--primary)">Manual Student Excel Entry</h2>
+      <p class="muted" style="margin:4px 0 0">Excel/CSV থেকে column auto match করে student add/update হবে। Same Roll/Regi থাকলে নতুন row হবে না, আগের row update হবে। Year dropdown থেকে যাবে, শুধু Session manual দিতে হবে।</p>
+    </div>
+    <button id="manualStudentCloseBtn" class="btn ghost" type="button">Close</button>
+  </div>
+  <div class="manual-entry-grid">
+    <label class="field"><span class="label">Session Year</span><input id="manualSessionYear" class="input" placeholder="2023-2024 / 2024-25"></label>
+    <label class="field"><span class="label">Academic Year</span><select id="manualAcademicYear" class="input"></select></label>
+    <label class="field"><span class="label">Excel / CSV File</span><input id="manualStudentFile" class="input" type="file" accept=".xlsx,.xls,.csv,.html"></label>
+    <div class="field"><span class="label">Auto Match</span><div class="muted" style="padding:10px 0">Class Roll, Student Name, Masters/Hons Reg. No, Phone, Father/Mother auto detect হবে।</div></div>
+  </div>
+  <div class="toolbar" style="margin-top:10px">
+    <button id="manualPreviewBtn" class="btn ghost" type="button">Preview Excel</button>
+    <button id="manualImportBtn" class="btn primary" type="button">Import / Update Students</button>
+  </div>
+  <div id="manualStudentStatus" class="status info hide"></div>
+  <div id="manualStudentPreview" class="manual-preview-box hide"></div>
+</div>
+
+<div id="studentStatus" class="status info">Loading students...</div>
+<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>SL</th><th>Name</th><th>Roll</th><th>Regi No</th><th>Session</th><th>Study Session</th><th>Year</th><th>Type</th><th>Non-Major Group</th><th>Father</th><th>Mother</th><th>Student Phone</th><th>Guardian Phone</th><th>Non-Major</th><th>Status</th><th>Action</th></tr></thead><tbody id="studentTable"><tr><td colspan="16" class="empty">Loading...</td></tr></tbody></table></div>
+</main>
+</div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+fillSelect(document.getElementById('yearFilter'), currentAcademicYears(), 'Select year');
+fillSelect(document.getElementById('manualAcademicYear'), currentAcademicYears(), 'Select year');
+let allStudents = [];
+let manualRows = [];
+const tbody = document.getElementById('studentTable');
+const statusEl = document.getElementById('studentStatus');
+const searchEl = document.getElementById('studentSearch');
+const manualPanel = document.getElementById('manualStudentPanel');
+const manualStatus = document.getElementById('manualStudentStatus');
+const manualPreview = document.getElementById('manualStudentPreview');
+function typeBadge(s){
+  const type = s.StudentType || s.IrregularStatus || 'Regular';
+  const cls = type === 'Irregular' ? 'irregular' : 'regular';
+  const title = s.IrregularReason ? ` title="${String(s.IrregularReason).replace(/"/g,'&quot;')}"` : '';
+  return `<span class="student-type-badge ${cls}"${title}>${type}</span>`;
+}
+function renderStudents(list){
+  if(!list.length){ tbody.innerHTML='<tr><td colspan="16" class="empty">No student found.</td></tr>'; return; }
+  tbody.innerHTML = list.map((s,i)=>`<tr>
+    <td>${i+1}</td><td><b>${s.Name||s.FullName||''}</b></td><td>${s.Roll||s.RollID||''}</td>
+    <td>${s.RegistrationNumber||''}</td><td>${s.SessionYear||''}</td><td>${s.StudySessionYear||s.CurrentStudySession||''}</td><td>${s.CurrentYear||s.AcademicLevel||s.AcademicYear||''}</td><td>${typeBadge(s)}</td><td>${s.NonMajorGroup||''}</td>
+    <td>${s.FatherName||''}</td><td>${s.MotherName||''}</td>
+    <td>${s.StudentPhone||s.StudentMobile||s.Phone||''}</td><td>${s.GuardianPhone||s.GuardianMobile||''}</td>
+    <td>${s.NonMajor1||''}<br>${s.NonMajor2||''}</td>
+    <td><span class="pill green">${s.Status||'Active'}</span></td>
+    <td><a class="btn primary small-btn" href="student-profile-edit.html?student=${encodeURIComponent(s.Roll||s.RegistrationNumber||'')}">Edit</a></td>
+  </tr>`).join('');
+}
+async function loadStudents(){
+  showStatus(statusEl,'info','Loading students...');
+  try{
+    const year = document.getElementById('yearFilter').value;
+    if(!year){ allStudents=[]; renderStudents([]); showStatus(statusEl,'info','Please select year.'); return; }
+    const res = await geoApiGet('getStudents', { academicYear: year, sortField:document.getElementById('sortField').value, sortDir:document.getElementById('sortDir').value });
+    allStudents = Array.isArray(res.students)?res.students:[];
+    applyFilter();
+    showStatus(statusEl,'ok',allStudents.length+' students loaded.');
+  }catch(err){ renderStudents([]); showStatus(statusEl,'err',err.message); }
+}
+function applyFilter(){
+  const q = searchEl.value.toLowerCase().trim();
+  const filtered = allStudents.filter(s => [s.Name,s.FullName,s.Roll,s.RollID,s.RegistrationNumber,s.SessionYear,s.StudySessionYear,s.CurrentStudySession,s.CurrentYear,s.StudentPhone,s.Phone,s.GuardianPhone,s.StudentType,s.IrregularStatus].join(' ').toLowerCase().includes(q));
+  renderStudents(sortStudentList(filtered, document.getElementById('sortField').value, document.getElementById('sortDir').value));
+}
+function manualDefaults(){
+  const session = document.getElementById('manualSessionYear').value.trim();
+  return {
+    sessionYear: session,
+    studySessionYear: session,
+    currentStudySession: session,
+    academicYear: document.getElementById('manualAcademicYear').value
+  };
+}
+function renderManualPreview(rows){
+  manualPreview.classList.remove('hide');
+  if(!rows.length){ manualPreview.innerHTML='<div class="empty">No valid row found.</div>'; return; }
+  manualPreview.innerHTML = `<table><thead><tr><th>SL</th><th>Name</th><th>Roll</th><th>Registration</th><th>Session</th><th>Study Session</th><th>Year</th><th>Phone</th></tr></thead><tbody>`+
+    rows.slice(0,100).map((r,i)=>`<tr><td>${i+1}</td><td>${r.name||''}</td><td>${r.roll||''}</td><td>${r.registrationNumber||''}</td><td>${r.sessionYear||''}</td><td>${r.studySessionYear||''}</td><td>${r.academicYear||''}</td><td>${r.studentPhone||''}</td></tr>`).join('')+
+    `</tbody></table>${rows.length>100?`<div class="muted" style="padding:8px">First 100 rows showing, total ${rows.length}</div>`:''}`;
+}
+async function previewManualStudents(){
+  try{
+    const file = document.getElementById('manualStudentFile').files[0];
+    showStatus(manualStatus,'info','Reading Excel file...');
+    const raw = await geoParseExcelFile(file);
+    const metaSession = raw.find(r => r.__metaSessionYear)?.__metaSessionYear || '';
+    if(!document.getElementById('manualSessionYear').value.trim() && metaSession){
+      document.getElementById('manualSessionYear').value = metaSession;
+    }
+    manualRows = geoNormalizeManualStudentRows(raw, manualDefaults());
+    renderManualPreview(manualRows);
+    showStatus(manualStatus, manualRows.length?'ok':'err', manualRows.length+' valid student row found.');
+  }catch(err){ manualRows=[]; manualPreview.classList.add('hide'); showStatus(manualStatus,'err',err.message); }
+}
+async function importManualStudents(){
+  const btn = document.getElementById('manualImportBtn');
+  try{
+    if(!manualRows.length) await previewManualStudents();
+    if(!manualRows.length){ showStatus(manualStatus,'err','No valid student row found.'); return; }
+    if(btn){ btn.disabled=true; btn.textContent='Importing...'; }
+    showStatus(manualStatus,'info','Saving students to Supabase...');
+    const res = await geoApiPost({action:'importManualStudents', rows:manualRows, defaults:manualDefaults()});
+    if(res && res.failedCount){
+      showStatus(manualStatus,'err',res.message || 'Some rows failed.');
+      console.table(res.failed || []);
+    }else{
+      showStatus(manualStatus,'ok',(res && res.message) || 'Students saved successfully.');
+    }
+    const year = document.getElementById('manualAcademicYear').value;
+    if(year) document.getElementById('yearFilter').value = year;
+    await loadStudents();
+  }catch(err){ showStatus(manualStatus,'err',err.message); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='Import / Update Students'; } }
+}
+searchEl.addEventListener('input', applyFilter);
+attachSortControls('sortField','sortDir', applyFilter);
+document.getElementById('refreshBtn').addEventListener('click', loadStudents);
+document.getElementById('yearFilter').addEventListener('change', loadStudents);
+document.getElementById('manualStudentToggleBtn').addEventListener('click',()=>manualPanel.classList.toggle('hide'));
+document.getElementById('manualStudentCloseBtn').addEventListener('click',()=>manualPanel.classList.add('hide'));
+document.getElementById('manualPreviewBtn').addEventListener('click', previewManualStudents);
+document.getElementById('manualImportBtn').addEventListener('click', importManualStudents);
+document.getElementById('manualStudentFile').addEventListener('change',()=>{manualRows=[]; manualPreview.classList.add('hide'); manualStatus.classList.add('hide');});
+loadStudents();
+</script>
+</body>
+</html>

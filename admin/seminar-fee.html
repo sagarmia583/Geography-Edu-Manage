@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seminar Fee Management - Admin Dashboard</title>
+    <link rel="stylesheet" href="../assets/site.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Form & Print minimal adjustment */
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+        .form-group label { font-weight: 700; font-size: 14px; color: var(--primary); }
+        .chk-group { flex-direction: row; align-items: center; margin-top: 30px; }
+        .chk-group input { width: 18px; height: 18px; }
+
+        /* ---- Liquid glass green buttons ---- */
+        .panel-main .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 11px 26px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.45);
+            color: #fff;
+            background: linear-gradient(145deg, rgba(64,190,110,0.95), rgba(20,110,60,0.95));
+            box-shadow:
+                0 4px 16px rgba(20,110,60,0.35),
+                inset 0 1px 1px rgba(255,255,255,0.55),
+                inset 0 -2px 4px rgba(0,0,0,0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+        }
+        .panel-main .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+            box-shadow:
+                0 8px 22px rgba(20,110,60,0.45),
+                inset 0 1px 1px rgba(255,255,255,0.6),
+                inset 0 -2px 4px rgba(0,0,0,0.15);
+        }
+        .panel-main .btn:active { transform: translateY(0); filter: brightness(0.98); }
+
+        .panel-main .btn.ghost {
+            color: #12492b;
+            background: linear-gradient(145deg, rgba(255,255,255,0.65), rgba(210,240,220,0.55));
+            border: 1px solid rgba(20,110,60,0.35);
+            box-shadow:
+                0 4px 14px rgba(20,110,60,0.12),
+                inset 0 1px 1px rgba(255,255,255,0.8);
+        }
+        .panel-main .btn.blue {
+            background: linear-gradient(145deg, rgba(64,190,110,0.95), rgba(20,110,60,0.95));
+        }
+
+        /* ---- Rounded, softly-tinted input fields ---- */
+        .panel-main .form-control {
+            border-radius: 14px;
+            border: 1px solid rgba(20,110,60,0.25);
+            background: linear-gradient(160deg, rgba(255,255,255,0.95), rgba(232,248,238,0.65));
+            padding: 11px 16px;
+            font-size: 14px;
+            color: #123;
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+        .panel-main .form-control:hover { border-color: rgba(20,110,60,0.4); }
+        .panel-main .form-control:focus {
+            outline: none;
+            border-color: rgba(20,110,60,0.65);
+            background: linear-gradient(160deg, #ffffff, rgba(220,246,230,0.75));
+            box-shadow: 0 0 0 4px rgba(64,190,110,0.22);
+        }
+        .panel-main .form-control[readonly] { background: rgba(230,240,235,0.6); color: #456; }
+        .panel-main .form-control.locked-field,
+        .panel-main select.form-control:disabled {
+            background: rgba(220,235,228,0.75);
+            color: #345;
+            cursor: not-allowed;
+            border-color: rgba(20,110,60,0.15);
+        }
+
+        .panel-main select.form-control { cursor: pointer; }
+        .tab-note { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+        
+        /* TOP PANELS SIDE-BY-SIDE CSS */
+        .top-panels-wrapper {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .top-panels-wrapper .panel {
+            margin-bottom: 0; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+        }
+        @media (max-width: 1024px) { .top-panels-wrapper { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px) { .top-panels-wrapper { grid-template-columns: 1fr; } }
+
+        /* EXCEL PREVIEW TABLE CSS */
+        .preview-table-wrapper {
+            max-height: 350px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 1px solid rgba(20,110,60,0.25);
+            border-radius: 8px;
+            background: #fff;
+        }
+        .preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .preview-table th, .preview-table td { border: 1px solid #eee; padding: 8px 10px; text-align: left; }
+        .preview-table th { background: rgba(232,248,238,0.9); font-weight: bold; position: sticky; top: 0; color: var(--primary); }
+
+        #print-area-receipt { display: none; }
+
+        /* ---- Receipt slip visuals ---- */
+        .print-area, #print-area-receipt { width: 100%; font-family: 'Times New Roman', Georgia, serif; }
+        .slips-row { display: flex; flex-direction: row; gap: 10px; align-items: stretch; }
+        .slips-row.two-col .slip { width: calc((100% - 10px) / 2); }
+        .slips-row.two-col .slip.env { display: none; }
+
+        .slip {
+            width: calc((100% - 10px) / 2);
+            box-sizing: border-box;
+            border: 2px solid #1f5c2e;
+            border-radius: 10px;
+            padding: 10px 12px 8px 12px;
+            position: relative;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #111;
+            background: #fff;
+            margin-top: 15px; /* FIXED: Prevent copy badge from getting cut off at top */
+        }
+        .slip[data-first="true"]::before { content: "\2702"; position: absolute; top: -4px; left: -10px; font-size: 13px; color: #444; background: #fff; transform: rotate(-90deg); }
+        .slip.env      { border-color: #1f5c2e; }
+        .slip.dept     { border-color: #17418f; }
+        .slip.student  { border-color: #6a1f9e; }
+
+        .copy-badge { position: absolute; top: -9px; right: 14px; background: #fff; border: 1.5px solid #999; border-radius: 4px; padding: 1px 8px; font-size: 9.5px; font-weight: bold; letter-spacing: 0.3px; }
+        .slip.env .copy-badge     { color: #1f5c2e; border-color: #1f5c2e; }
+        .slip.dept .copy-badge    { color: #17418f; border-color: #17418f; }
+        .slip.student .copy-badge{ color: #6a1f9e; border-color: #6a1f9e; }
+
+        .slip .header { text-align: center; padding-bottom: 4px; margin-bottom: 6px; }
+        
+        /* Updated Logo (Seal) CSS to keep original shape */
+        .slip .header .seal { 
+            height: 48px; 
+            margin: 0 auto 3px auto; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: transparent; 
+        }
+        .slip .header .seal img { 
+            height: 100%; 
+            width: auto; 
+            object-fit: contain; 
+        }
+        
+        .slip .header h3 { margin: 0; font-size: 13px; letter-spacing: 0.3px; }
+        .slip.env .header h3     { color: #1f5c2e; }
+        .slip.dept .header h3    { color: #17418f; }
+        .slip.student .header h3 { color: #6a1f9e; }
+        .slip .header p.college { margin: 1px 0 0 0; font-size: 9.5px; font-weight: bold; letter-spacing: 0.3px; }
+        .divider-env { text-align: center; font-size: 10px; letter-spacing: 3px; color: #1f5c2e; margin: 4px 0 8px 0; }
+        
+        .receipt-bar { text-align: center; font-weight: bold; font-size: 11px; color: #fff; padding: 3px 0; margin-bottom: 7px; border-radius: 2px; }
+        .slip.dept .receipt-bar    { background: #17418f; }
+        .slip.student .receipt-bar{ background: #6a1f9e; }
+
+        .slip .row-p { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted #bbb; margin: 4px 0; padding-bottom: 2px; }
+        .slip .row-p span.label { font-weight: bold; font-size: 11.5px; }
+        .slip .row-p strong { font-weight: 600; font-size: 14.5px; color: #000; }
+        .receipt-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-bottom: 6px; }
+        .receipt-meta .rno { color: #c0392b; font-weight: bold; font-size: 12px; }
+        .receipt-meta strong { font-size: 14px; font-weight: 600; color: #000; }
+
+        .amount-box { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-weight: bold; font-size: 11px; }
+        .amount-box .box { border: 1px solid #333; min-width: 80px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .words-box { border: 1px solid #333; border-radius: 2px; margin-top: 6px; padding: 6px 8px; min-height: 28px; font-size: 13.5px; }
+        .words-box .lbl { font-weight: bold; display: block; margin-bottom: 3px; font-size: 11px; }
+        .words-box span:not(.lbl) { font-weight: 600; color: #000; display: block; }
+
+        .footer-sign { margin-top: 25px; text-align: center; border-top: 1px solid #000; width: 100px; float: right; font-size: 11px; padding-top: 4px; }
+        .clearfix::after { content: ""; display: table; clear: both; }
+        .print-note { width: 100%; text-align: center; color: #c0392b; font-weight: bold; font-size: 11px; margin-top: 10px; }
+
+        /* PERFECT PRINT CSS FIX: Guarantee No White Page */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; width: 100%; height: auto; }
+
+            /* RECEIPT MODE */
+            body.print-mode-receipt .topbar,
+            body.print-mode-receipt .panel-layout { display: none !important; }
+            
+            body.print-mode-receipt #print-area-receipt { display: block !important; position: relative; width: 100%; }
+            body.print-mode-receipt .slips-row {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 10px !important;
+                align-items: stretch !important;
+                page-break-inside: avoid !important;
+                flex-wrap: wrap !important;
+            }
+            body.print-mode-receipt .slip {
+                page-break-inside: avoid !important;
+                background: #fff !important;
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+            }
+            body.print-mode-receipt .slips-row.two-col .slip { width: calc((100% - 10px) / 2) !important; }
+            body.print-mode-receipt .slips-row.two-col .slip.env { display: none !important; }
+            body.print-mode-receipt .slips-row:not(.two-col) .slip { width: calc((100% - 10px) / 2) !important; }
+            body.print-mode-receipt .print-note { page-break-before: avoid !important; }
+
+            /* REPORT MODE */
+            body.print-mode-report .topbar,
+            body.print-mode-report .panel-sidebar,
+            body.print-mode-report .academic-banner,
+            body.print-mode-report .top-panels-wrapper,
+            body.print-mode-report #excel_preview_panel,
+            body.print-mode-report .panel:not(#report-panel) { display: none !important; }
+            
+            body.print-mode-report .panel-layout, 
+            body.print-mode-report .panel-main { display: block !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+            body.print-mode-report #report-panel { display: block !important; box-shadow: none !important; border: none !important; margin: 0 !important; }
+            body.print-mode-report #report_header { display: block !important; }
+            body.print-mode-report .report-table { width: 100% !important; border-collapse: collapse !important; }
+            body.print-mode-report .report-table th, 
+            body.print-mode-report .report-table td { border: 1px solid #000 !important; padding: 6px !important; }
+            
+            /* Common hidden elements */
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar no-print">
+    <div class="inner">
+        <a class="brand" href="../admin/index.html"><span class="brand-logo">🛠️</span><span>Admin Dashboard</span></a>
+        <button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button>
+        <nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav>
+    </div>
+</header>
+
+<div class="panel-layout">
+    <aside class="panel-sidebar no-print">
+        <div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div>
+        <nav class="panel-menu">
+            <a href="index.html">🏠 Dashboard</a>
+            <a href="student-management.html">👥 Student Management</a>
+            <a href="actual-student-management.html">👤 Actual Students</a>
+            <a href="exam-create.html">📝 Create/Edit Exam</a>
+            <a href="exam-schedule.html">🗓️ Exam Schedule</a>
+            <a href="attendance-sheet.html">📄 Attendance Sheet</a>
+            <a href="seat-plan.html">🪑 Seat Plan</a>
+            <a href="student-subject-entry.html">📌 Student Subjects</a>
+            <a href="marks-entry.html">✍️ Subject Marks Entry</a>
+            <a href="missing-marks-list.html">⚠️ Missing Marks Entry</a>
+            <a href="incourse-result.html">📊 Incourse Average</a>
+            <a href="attendance-marks-entry.html">✅ Attendance Marks</a>
+            <a href="result-management.html">📊 Result Options</a>
+            <a href="admit-card-print.html">🎫 Admit Card</a>
+            <a href="exam-block-management.html">🚫 Exam Block</a>
+            <a href="result-upload.html">⬆️ Final Result Import</a>
+            <a href="library-management.html">📚 Seminar Library</a>
+            <a class="active" href="seminar-fee.html">💰 Seminar Fee Management</a>
+            <a href="../student/index.html">🎓 Student Panel</a>
+        </nav>
+    </aside>
+
+    <main class="panel-main">
+        <section class="academic-banner no-print"><h1>Fee Management — Seminar &amp; Land Use</h1></section>
+
+        <div class="top-panels-wrapper no-print">
+            <div class="panel">
+                <div class="panel-title" style="margin-bottom: 10px;"><h2>Fee Type</h2></div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Select Fee Type</label>
+                    <select id="fee_type" class="form-control" onchange="onFeeTypeChange()">
+                        <option value="Seminar">Seminar Fee (at Admission)</option>
+                        <option value="LandUse">Land Use Fee (at Form Fill-up — 4th Year &amp; Masters only)</option>
+                    </select>
+                    <p class="tab-note" id="feeTypeNote" style="margin-top: 10px;"></p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title" style="margin-bottom: 10px;"><h2>Search Student</h2></div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Search Value</label>
+                    <input type="text" id="search_value" class="form-control" placeholder="Enter Admission Roll / Class Roll / Regi No">
+                </div>
+                <div class="form-group">
+                    <button class="btn primary" style="width: 100%;" onclick="searchStudent()">Search</button>
+                </div>
+                <div id="statusBox" class="status hide" style="margin-top:8px;"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title" style="margin-bottom: 10px;"><h2>Manual Excel Entry</h2></div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Select Excel/CSV File</label>
+                    <input type="file" id="excel_file" class="form-control" accept=".xlsx, .xls, .csv">
+                </div>
+                <div class="form-group">
+                    <button class="btn blue" style="width: 100%;" onclick="previewExcelData()">Preview Excel Data</button>
+                </div>
+            </div>
+        </div> <div class="panel hide no-print" id="excel_preview_panel" style="display: none;">
+            <div class="panel-title" style="margin-bottom: 10px;">
+                <h2>Excel Data Preview</h2>
+            </div>
+            <div class="preview-table-wrapper">
+                <table class="preview-table" id="preview_table">
+                    <thead>
+                        <tr id="preview_table_head"></tr>
+                    </thead>
+                    <tbody id="preview_table_body"></tbody>
+                </table>
+            </div>
+            <div style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn ghost" onclick="cancelExcel()">Cancel</button>
+                <button class="btn" onclick="uploadExcelData()">Confirm & Upload</button>
+            </div>
+        </div>
+
+        <div class="panel" id="report-panel" style="margin-top: 20px;">
+            <div id="report_header" style="display: none; text-align: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; font-size: 22px;">Kumudini Government College</h2>
+                <h3 style="margin: 5px 0; font-size: 18px; color: #333;">Department of Geography and Environment</h3>
+                <h4 style="margin: 5px 0; font-size: 16px; text-decoration: underline;" id="print_report_title">Seminar & Land Use Fee Report</h4>
+            </div>
+
+            <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>Recent Transactions</h2>
+                <button class="btn ghost no-print" onclick="printReport()">🖨️ Print Report</button>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table class="report-table preview-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Ad. Roll</th>
+                            <th>Name</th>
+                            <th>Year</th>
+                            <th>Fee Type</th>
+                            <th>Amount</th>
+                            <th class="no-print">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transaction_body">
+                        <tr><td colspan="6" style="text-align: center; color: #666;">No recent records found.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    function onFeeTypeChange() {
+        const type = document.getElementById('fee_type').value;
+        const note = document.getElementById('feeTypeNote');
+        if (type === 'Seminar') {
+            note.textContent = "Applicable for 1st Year / Fresh Admissions.";
+        } else {
+            note.textContent = "Applicable during form fill-up (4th Year & Masters).";
+        }
+    }
+
+    function searchStudent() {
+        // Search logic goes here
+        console.log("Searching student...");
+    }
+
+    function previewExcelData() {
+        document.getElementById('excel_preview_panel').style.display = 'block';
+        // Excel parsing logic using XLSX goes here
+    }
+
+    function cancelExcel() {
+        document.getElementById('excel_file').value = "";
+        document.getElementById('excel_preview_panel').style.display = 'none';
+    }
+
+    function uploadExcelData() {
+        // Supabase bulk upload logic goes here
+        console.log("Uploading data...");
+    }
+
+    function printReport() {
+        document.body.classList.add('print-mode-report');
+        window.print();
+        // Remove class after print dialog closes
+        setTimeout(() => {
+            document.body.classList.remove('print-mode-report');
+        }, 500);
+    }
+
+    // Initialize UI on load
+    window.onload = () => {
+        onFeeTypeChange();
+    };
+</script>
+</body>
+</html>

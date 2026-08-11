@@ -1,0 +1,973 @@
+<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Result Options - Admin Panel</title><link rel="stylesheet" href="../assets/site.css">
+ <style>.result-box{background:#fff;border:1px solid #dbe5ee;border-radius:22px;padding:18px;box-shadow:0 10px 26px rgba(15,23,42,.08)}.result-grid{display:grid;grid-template-columns:1fr 1fr 1.5fr 1.2fr auto;gap:10px;align-items:end}.result-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:14px 0 4px}.result-actions .btn{min-height:42px}.publish-pill{display:inline-flex;align-items:center;border-radius:999px;padding:9px 13px;font-weight:900;font-size:13px}.publish-pill.yes{background:#dcfce7;color:#166534}.publish-pill.no{background:#fee2e2;color:#991b1b}#failOptions{display:none;text-align:center;margin-top:8px}#failOptions .btn{margin:3px}.result-output{background:#fff;border:0;padding:24px;margin-top:14px;font-family:"Times New Roman",serif;color:#111;box-shadow:none}.result-header{text-align:center;border-bottom:3px double #111;margin-bottom:16px;padding-bottom:10px}.result-header h1{font-size:28px;margin:0;color:#064e3b}.result-header h2{font-size:20px;margin:5px 0}.result-header h3{font-size:16px;margin:4px 0;text-decoration:underline}.result-output table{width:100%;border-collapse:collapse;table-layout:fixed}.result-output th,.result-output td{border:1px solid #111;padding:7px 5px;font-size:13px;line-height:1.25;word-wrap:break-word}.result-output th{background:#eef7f5;font-weight:900;text-align:center}.student-info-box{display:grid;grid-template-columns:1fr 1fr;gap:8px;border:0;padding:8px 0;margin-bottom:16px;font-size:15px}.text-center{text-align:center}.text-left{text-align:left}.fail-text{color:#b91c1c!important;font-weight:900}.pass-status{color:#166534;font-weight:900}.footer-signatures{margin-top:55px;display:flex;justify-content:space-between}.sig-box{width:210px;text-align:center;border-top:1.2px solid #111;padding-top:5px;font-weight:900;font-size:14px}.operator-info{margin-top:30px;padding-top:8px;border-top:0;text-align:right;font-size:11px;color:#666}@media(max-width:1050px){.result-grid{grid-template-columns:1fr}.student-info-box{grid-template-columns:1fr}.result-output{padding:12px}.result-output th,.result-output td{font-size:11px;padding:5px 3px}}@media print{@page{size:A4 portrait;margin:10mm}html,body{margin:0!important;padding:0!important;background:#fff!important}.topbar,.panel-sidebar,.academic-banner,.result-box,.print-actions,.no-print{display:none!important}.panel-layout{display:block!important}.panel-main{padding:0!important}#displayWrapper{display:block!important}.result-output{border:0!important;box-shadow:none!important;margin:0!important;padding:0!important}.result-header h1{font-size:27px!important}.result-header h2{font-size:20px!important}.result-header h3{font-size:15px!important}.result-output th,.result-output td{font-size:12px!important;padding:6px 4px!important}}#restoreMarksFromResultBtn,#restoreOldMarksBtn,#checkSourcesBtn,#convertBtn,#directBackupOneRowBtn,#forceBackupOneRowBtn,#allBackupAllExamBtn,#debugBtn,#forceOldFormatBtn,#restoreMarksBackupBtn{display:none!important}.result-output{background:#ffffff!important;border:2px solid #064e3b!important;border-radius:0!important;padding:20px 22px!important;color:#0f172a!important;print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}.result-header{text-align:center!important;border:2px solid #064e3b!important;border-bottom:0!important;margin:0 0 14px 0!important;padding:0!important;background:#f8fffb!important}.result-header h1{background:#064e3b!important;color:#ffffff!important;font-size:26px!important;font-weight:900!important;letter-spacing:.2px!important;margin:0!important;padding:9px 8px!important;text-transform:uppercase!important}.result-header h2{text-align:center!important;font-size:18px!important;margin:0!important;padding:7px 8px!important;color:#064e3b!important;font-weight:900!important;border-top:1px solid #b7d7c7!important}.result-header h3{text-align:center!important;font-size:15px!important;margin:0!important;padding:7px 8px!important;color:#111827!important;text-decoration:none!important;font-weight:900!important;border-top:1px solid #b7d7c7!important}#listTitle{background:#0f766e!important;color:#ffffff!important;border-top:0!important;font-size:18px!important;letter-spacing:.4px!important}.student-info-box{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:0!important;border:1.5px solid #064e3b!important;margin:10px 0 14px!important;padding:0!important;font-size:13px!important;background:#ffffff!important}.student-info-box>div{text-align:center!important;border:1px solid #b7d7c7!important;padding:8px 5px!important;font-weight:700!important}.student-info-box b{display:block!important;color:#064e3b!important;font-weight:900!important;margin-bottom:3px!important}.result-output table{width:100%!important;border-collapse:collapse!important;table-layout:fixed!important;margin-top:8px!important;border:1.5px solid #064e3b!important}.result-output th{background:#064e3b!important;color:#ffffff!important;border:1px solid #064e3b!important;text-align:center!important;font-size:12.5px!important;font-weight:900!important;padding:7px 5px!important}.result-output td{border:1px solid #9db9ad!important;font-size:12.5px!important;padding:6px 5px!important;vertical-align:middle!important}.result-output tbody tr:nth-child(even) td{background:#f4fbf7!important}.result-output td:nth-child(1),.result-output td:nth-child(2),.result-output td:nth-child(3),.result-output td:nth-child(5),.result-output td:nth-child(6),.result-output td:nth-child(7),.result-output td:nth-child(8){text-align:center!important}.result-output td:nth-child(4){text-align:left!important;font-weight:700!important}.result-output table th:nth-child(1){width:7%!important}.result-output table th:nth-child(2){width:13%!important}.result-output table th:nth-child(3){width:16%!important}.result-output table th:nth-child(5){width:10%!important}.result-output table th:nth-child(6){width:10%!important}.result-output table th:nth-child(7){width:11%!important}.pass-status{color:#166534!important;font-weight:900!important}.fail-text{color:#b91c1c!important;font-weight:900!important}.footer-signatures{display:flex!important;justify-content:space-between!important;gap:30px!important;margin-top:54px!important}.sig-box{width:230px!important;text-align:center!important;border-top:1.5px solid #064e3b!important;color:#064e3b!important;padding-top:6px!important;font-weight:900!important;font-size:13px!important}.operator-info{margin-top:26px!important;text-align:center!important;color:#475569!important;border-top:1px solid #d5e4dc!important;padding-top:8px!important;font-size:11px!important;font-style:italic!important}@media print{@page{size:A4 portrait;margin:8mm!important}.result-output{width:100%!important;max-width:100%!important;border:2px solid #064e3b!important;padding:7mm!important;margin:0!important;box-sizing:border-box!important}.result-header h1{font-size:22px!important;padding:8px!important}.result-header h2{font-size:16px!important;padding:6px!important}.result-header h3{font-size:13px!important;padding:5px!important}#listTitle{font-size:16px!important}.student-info-box{grid-template-columns:repeat(4,1fr)!important;font-size:11.5px!important}.student-info-box>div{padding:6px 3px!important}.result-output th,.result-output td{font-size:10.7px!important;padding:4.8px 3.5px!important;line-height:1.22!important}.result-output td{word-break:break-word!important}.footer-signatures{margin-top:40px!important}}.nu-result-sheet{width:100%;max-width:930px;margin:0 auto;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif;padding:0}.nu-logo{width:54px;height:54px;border-radius:50%;margin:0 auto 8px;background:linear-gradient(135deg,#0b7fc7,#1b8f3a);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;border:3px solid #dbeafe}.nu-main-title{text-align:center;font-size:28px;color:#1377bd;font-weight:900;letter-spacing:.3px}.nu-sub-title{text-align:center;font-size:17px;font-weight:900;color:#505050;margin-top:5px}.nu-online-title{text-align:center;font-size:18px;color:#111;margin-top:5px;font-weight:700}.nu-blue-line{height:4px;background:#0b79bd;margin:14px 0 12px}.nu-info-table,.nu-course-table{width:100%;border-collapse:collapse;table-layout:fixed;border:2px solid #111}.nu-info-table th,.nu-info-table td,.nu-course-table th,.nu-course-table td{border:1.4px solid #111;padding:7px 6px;font-size:15px;line-height:1.24;vertical-align:middle}.nu-info-table th{background:#e8f1fb;font-weight:900;text-align:left;width:18%;color:#111}.nu-info-table td{font-weight:600}.nu-center{text-align:center!important}.nu-roll{font-size:17px;font-weight:900!important}.nu-reg-cell{display:flex;align-items:stretch;padding:0!important}.nu-reg-box{flex:1;min-width:26px;text-align:center;padding:8px 0;border-right:1.4px solid #111;font-size:17px;font-weight:900}.nu-reg-box:last-child{border-right:0}.empty-reg{padding:8px 10px!important;text-align:left!important}.nu-pass{font-weight:900;color:#166534!important}.nu-fail{font-weight:900;color:#b91c1c!important}.nu-course-title{margin-top:8px;text-align:center;background:#e8f1fb;border:2px solid #111;border-bottom:0;padding:8px;font-size:17px;font-weight:900}.nu-course-table th{background:#e8f1fb;text-align:center;font-weight:900;font-size:15px}.nu-course-table td:nth-child(1){width:16%;text-align:center}.nu-course-table td:nth-child(2){width:auto}.nu-course-table td:nth-child(3){width:10%;text-align:center}.nu-course-table td:nth-child(4){width:15%;text-align:center}.nu-course-table tbody tr:nth-child(even) td{background:#f6f7f9}.nu-grade{font-size:16px;font-weight:900}.nu-sign-area{min-height:150px;display:grid;grid-template-columns:1fr 1fr;align-items:end;margin-top:28px}.nu-controller{text-align:center;font-size:16px;line-height:1.45}.nu-result-footer{margin-top:70px;font-size:13px;color:#555;line-height:1.5}@media print{.nu-result-sheet{max-width:100%!important;padding:0!important}.nu-logo{width:48px!important;height:48px!important;font-size:16px!important;margin-bottom:6px!important}.nu-main-title{font-size:25px!important}.nu-sub-title{font-size:16px!important}.nu-online-title{font-size:17px!important}.nu-info-table th,.nu-info-table td,.nu-course-table th,.nu-course-table td{font-size:13.2px!important;padding:6px 5px!important}.nu-reg-box{font-size:15px!important;padding:7px 0!important}.nu-course-title{font-size:15px!important;padding:7px!important}.nu-sign-area{min-height:130px!important}.nu-result-footer{margin-top:60px!important;font-size:12px!important}}
+/* OLD TEXT + UPLOADED RESULT LAYOUT FIX */
+.old-text-result-sheet .nu-main-title{
+  color:#1377bd!important;
+  background:#fff!important;
+  font-size:28px!important;
+  text-transform:none!important;
+  padding:0!important;
+}
+.old-text-result-sheet .nu-sub-title{
+  color:#4b5563!important;
+  font-size:17px!important;
+}
+.old-text-result-sheet .nu-online-title{
+  color:#111!important;
+  font-size:18px!important;
+}
+.old-text-result-sheet .nu-info-table th{
+  background:#e8f1fb!important;
+  color:#111!important;
+  text-align:left!important;
+}
+.old-text-result-sheet .nu-course-title{
+  background:#e8f1fb!important;
+  color:#111!important;
+}
+.old-text-marks-table th{
+  background:#e8f1fb!important;
+  color:#111!important;
+}
+.old-text-marks-table td:nth-child(1){width:13%!important;text-align:center!important}
+.old-text-marks-table td:nth-child(2){width:auto!important;text-align:left!important}
+.old-text-marks-table td:nth-child(3){width:12%!important;text-align:center!important}
+.old-text-marks-table td:nth-child(4){width:10%!important;text-align:center!important}
+.old-text-marks-table td:nth-child(5){width:10%!important;text-align:center!important}
+.old-text-marks-table td:nth-child(6){width:13%!important;text-align:center!important}
+
+
+/* RESULT AUTO FIT + REG SINGLE CELL + SIGNATURE FIX */
+.nu-result-sheet,.marksheet-view,.result-output{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}
+.nu-info-table,.nu-course-table,.old-text-marks-table,.result-output table{
+  table-layout:auto!important;
+  width:100%!important;
+}
+.nu-info-table th{white-space:nowrap!important;width:1%!important}
+.nu-info-table td{width:auto!important}
+.nu-reg-cell{
+  display:table-cell!important;
+  padding:7px 6px!important;
+}
+.nu-reg-single{
+  display:inline-block!important;
+  letter-spacing:.5px!important;
+  font-weight:900!important;
+  text-align:left!important;
+  width:auto!important;
+}
+.nu-reg-box{display:inline!important;border:0!important;padding:0!important;min-width:0!important}
+.old-text-marks-table tbody td,
+.nu-course-table.old-text-marks-table tbody td{
+  background:#f4f7fb!important;
+}
+.old-text-marks-table tbody tr:nth-child(even) td,
+.nu-course-table.old-text-marks-table tbody tr:nth-child(even) td{
+  background:#eef3f8!important;
+}
+.old-text-marks-table th:nth-child(1){white-space:nowrap!important;width:1%!important}
+.old-text-marks-table th:nth-child(2){width:auto!important}
+.old-text-marks-table th:nth-child(3),
+.old-text-marks-table th:nth-child(4),
+.old-text-marks-table th:nth-child(5),
+.old-text-marks-table th:nth-child(6){white-space:nowrap!important;width:1%!important}
+.old-text-marks-table td:nth-child(1),
+.old-text-marks-table td:nth-child(3),
+.old-text-marks-table td:nth-child(4),
+.old-text-marks-table td:nth-child(5),
+.old-text-marks-table td:nth-child(6){white-space:nowrap!important;text-align:center!important}
+.old-text-marks-table td:nth-child(2){width:auto!important;white-space:normal!important;text-align:left!important}
+.result-output th,.result-output td{white-space:normal!important}
+.result-output td:nth-child(1),
+.result-output td:nth-child(2),
+.result-output td:nth-child(3),
+.result-output td:nth-child(5),
+.result-output td:nth-child(6),
+.result-output td:nth-child(7){white-space:nowrap!important}
+.nu-sign-area{
+  grid-template-columns:1fr 1fr!important;
+  gap:80px!important;
+  align-items:end!important;
+}
+.nu-left-sign{text-align:left!important}
+.nu-right-sign{text-align:right!important}
+.nu-controller span{font-size:12px!important;font-weight:500!important;color:#111!important}
+.nu-result-footer{display:none!important}
+@media print{
+  .nu-info-table,.nu-course-table,.old-text-marks-table,.result-output table{table-layout:auto!important}
+  .nu-reg-cell{display:table-cell!important;padding:6px 5px!important}
+  .nu-reg-single{letter-spacing:.4px!important}
+  .old-text-marks-table td:nth-child(2){white-space:normal!important}
+  .nu-sign-area{gap:55px!important;margin-top:70px!important}
+  .nu-controller span{font-size:10.5px!important}
+}
+
+
+/* RESULT MARKSHEET FINAL ALIGN + PRINT COMMAND FIX */
+.old-text-result-sheet .nu-info-table th,
+.old-text-result-sheet .nu-info-table td{
+  text-align:center!important;
+  vertical-align:middle!important;
+}
+.old-text-result-sheet .nu-info-table th{
+  white-space:nowrap!important;
+  width:1%!important;
+  background:#e8f1fb!important;
+}
+.old-text-result-sheet .nu-info-table td{
+  font-weight:800!important;
+}
+.old-text-result-sheet .nu-info-table td[colspan="3"]{
+  text-align:left!important;
+  padding-left:10px!important;
+}
+.nu-reg-cell,.nu-reg-single{
+  display:inline!important;
+  border:0!important;
+  padding:0!important;
+  letter-spacing:.5px!important;
+  font-weight:900!important;
+}
+.old-text-marks-table{
+  table-layout:auto!important;
+  width:100%!important;
+}
+.old-text-marks-table th{
+  background:#e8f1fb!important;
+  color:#111!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+}
+.old-text-marks-table tbody td{
+  background:#f4f7fb!important;
+}
+.old-text-marks-table tbody tr:nth-child(even) td{
+  background:#eef3f8!important;
+}
+.old-text-marks-table th:nth-child(1),
+.old-text-marks-table th:nth-child(3),
+.old-text-marks-table th:nth-child(4),
+.old-text-marks-table th:nth-child(5){
+  width:1%!important;
+}
+.old-text-marks-table th:nth-child(2){width:auto!important}
+.old-text-marks-table td:nth-child(1),
+.old-text-marks-table td:nth-child(3),
+.old-text-marks-table td:nth-child(4),
+.old-text-marks-table td:nth-child(5){
+  text-align:center!important;
+  white-space:nowrap!important;
+}
+.old-text-marks-table td:nth-child(2){
+  text-align:left!important;
+  white-space:normal!important;
+  width:auto!important;
+}
+.nu-sign-area{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:80px!important;
+  border-top:2px solid #111!important;
+  padding-top:8px!important;
+  margin-top:70px!important;
+  align-items:start!important;
+}
+.nu-left-sign{
+  text-align:left!important;
+}
+.nu-right-sign{
+  text-align:right!important;
+}
+.nu-left-sign b,.nu-right-sign b{
+  font-size:13px!important;
+}
+.nu-right-sign span{
+  font-size:10.5px!important;
+  color:#111!important;
+  font-weight:500!important;
+}
+.nu-result-footer{display:none!important}
+@media print{
+  @page{size:A4 portrait;margin:8mm!important}
+  .nu-sign-area{
+    margin-top:70px!important;
+    gap:55px!important;
+  }
+  .old-text-result-sheet .nu-info-table th,
+  .old-text-result-sheet .nu-info-table td{
+    text-align:center!important;
+  }
+}
+
+
+.old-text-result-sheet .nu-info-table td[colspan="3"]{text-align:center!important;padding-left:6px!important}
+
+/* RESULT SIGNATURE + EXAM NAME ALIGN FINAL */
+.old-text-result-sheet .nu-info-table tr:first-child td[colspan="3"]{
+  text-align:left!important;
+  padding-left:10px!important;
+}
+.old-text-result-sheet .nu-sign-area{
+  border-top:0!important;
+  padding-top:0!important;
+  margin-top:70px!important;
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:30px!important;
+  align-items:start!important;
+}
+.old-text-result-sheet .nu-left-sign{
+  text-align:left!important;
+  justify-self:start!important;
+}
+.old-text-result-sheet .nu-right-sign{
+  text-align:right!important;
+  justify-self:end!important;
+  margin-left:auto!important;
+}
+.old-text-result-sheet .nu-right-sign b,
+.old-text-result-sheet .nu-right-sign span{
+  display:block!important;
+  text-align:right!important;
+}
+@media print{
+  .old-text-result-sheet .nu-sign-area{
+    border-top:0!important;
+    padding-top:0!important;
+    margin-top:70px!important;
+    gap:25px!important;
+  }
+  .old-text-result-sheet .nu-right-sign{
+    justify-self:end!important;
+    text-align:right!important;
+  }
+}
+
+
+/* RESULT LIST + FORM FILLUP AUTO FIT FINAL */
+.result-output table,
+.result-list-table{
+  table-layout:auto!important;
+  width:100%!important;
+}
+.result-output th,
+.result-output td,
+.result-list-table th,
+.result-list-table td{
+  width:auto!important;
+  white-space:normal!important;
+  word-break:normal!important;
+}
+.result-list-table th:nth-child(1),
+.result-list-table td:nth-child(1),
+.result-list-table th:nth-child(2),
+.result-list-table td:nth-child(2),
+.result-list-table th:nth-child(3),
+.result-list-table td:nth-child(3),
+.result-list-table th:nth-child(5),
+.result-list-table td:nth-child(5),
+.result-list-table th:nth-child(6),
+.result-list-table td:nth-child(6),
+.result-list-table th:nth-child(7),
+.result-list-table td:nth-child(7),
+.result-list-table th:nth-child(8),
+.result-list-table td:nth-child(8){
+  white-space:nowrap!important;
+  text-align:center!important;
+}
+.result-list-table th:nth-child(4),
+.result-list-table td:nth-child(4){
+  width:auto!important;
+  text-align:left!important;
+}
+@media print{
+  .result-output table,.result-list-table{table-layout:auto!important}
+  .result-list-table th,.result-list-table td{font-size:10.7px!important;padding:4.5px 4px!important}
+}
+
+
+/* RESULT PRINT COLUMNS FINAL FORCE FIX */
+.result-output table,
+.result-list-table{
+  table-layout:auto!important;
+  width:100%!important;
+  max-width:100%!important;
+  border-collapse:collapse!important;
+}
+.result-output th,
+.result-output td,
+.result-list-table th,
+.result-list-table td{
+  width:auto!important;
+  max-width:none!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  word-break:normal!important;
+  overflow-wrap:normal!important;
+}
+.result-list-table th:nth-child(1),.result-list-table td:nth-child(1),
+.result-list-table th:nth-child(2),.result-list-table td:nth-child(2),
+.result-list-table th:nth-child(3),.result-list-table td:nth-child(3),
+.result-list-table th:nth-child(5),.result-list-table td:nth-child(5),
+.result-list-table th:nth-child(6),.result-list-table td:nth-child(6),
+.result-list-table th:nth-child(7),.result-list-table td:nth-child(7),
+.result-list-table th:nth-child(8),.result-list-table td:nth-child(8){
+  white-space:nowrap!important;
+  text-align:center!important;
+}
+.result-list-table th:nth-child(4),.result-list-table td:nth-child(4){
+  width:auto!important;
+  text-align:left!important;
+}
+.result-type-form th:nth-child(4),.result-type-form td:nth-child(4){
+  min-width:220px!important;
+}
+.result-type-passRank th:nth-child(4),.result-type-passRank td:nth-child(4){
+  min-width:135px!important;
+}
+@media print{
+  .result-output table,.result-list-table{table-layout:auto!important}
+  .result-output th,.result-output td,.result-list-table th,.result-list-table td{
+    width:auto!important;max-width:none!important;white-space:normal!important;
+    font-size:10.2px!important;padding:4px 3.5px!important;line-height:1.15!important;
+  }
+  .result-list-table td:nth-child(1),.result-list-table td:nth-child(2),.result-list-table td:nth-child(3),
+  .result-list-table td:nth-child(5),.result-list-table td:nth-child(6),.result-list-table td:nth-child(7),.result-list-table td:nth-child(8){
+    white-space:nowrap!important;
+  }
+}
+
+
+/* FORM FILLUP EXACT COLUMNS FINAL */
+.result-type-form,
+.result-list-table{
+  table-layout:auto!important;
+  width:100%!important;
+}
+.result-type-form th,.result-type-form td{
+  width:auto!important;
+  white-space:normal!important;
+}
+.result-type-form th:nth-child(1),.result-type-form td:nth-child(1),
+.result-type-form th:nth-child(2),.result-type-form td:nth-child(2),
+.result-type-form th:nth-child(3),.result-type-form td:nth-child(3),
+.result-type-form th:nth-child(5),.result-type-form td:nth-child(5),
+.result-type-form th:nth-child(6),.result-type-form td:nth-child(6),
+.result-type-form th:nth-child(7),.result-type-form td:nth-child(7),
+.result-type-form th:nth-child(8),.result-type-form td:nth-child(8){
+  text-align:center!important;
+  white-space:nowrap!important;
+}
+.result-type-form th:nth-child(4),.result-type-form td:nth-child(4){
+  text-align:left!important;
+  min-width:220px!important;
+}
+@media print{
+  .result-type-form,.result-list-table{table-layout:auto!important}
+}
+
+
+/* RESULT INFO LABEL LEFT ALIGN FINAL */
+.old-text-result-sheet .nu-info-table th{
+  text-align:left!important;
+  padding-left:8px!important;
+  white-space:nowrap!important;
+}
+.old-text-result-sheet .nu-info-table td{
+  text-align:center!important;
+}
+.old-text-result-sheet .nu-info-table tr:first-child td[colspan="3"]{
+  text-align:left!important;
+  padding-left:10px!important;
+}
+@media print{
+  .old-text-result-sheet .nu-info-table th{
+    text-align:left!important;
+    padding-left:7px!important;
+  }
+}
+
+</style>
+
+<style>
+@media print{
+  table.print-align-table th,
+  table.print-align-table thead th,
+  table.print-align-table tr:first-child > th,
+  table.print-align-table tr:first-child > td{text-align:center!important;vertical-align:middle!important}
+  table.print-align-table td{text-align:center!important;vertical-align:middle!important}
+  table.print-align-table td.printable-name-cell{text-align:left!important}
+}
+#printArea table.print-align-table th,
+#printArea table.print-align-table thead th,
+#printArea table.print-align-table tr:first-child > th,
+#printArea table.print-align-table tr:first-child > td{text-align:center!important;vertical-align:middle!important}
+#printArea table.print-align-table tbody td{ text-align:center!important; vertical-align:middle!important; }
+#printArea table.print-align-table tbody td.printable-name-cell,
+#printArea .result-list-table tbody td:nth-child(4),
+#printArea .nu-course-table tbody td:nth-child(2),
+#printArea .old-text-marks-table tbody td:nth-child(2){text-align:left!important}
+#printArea .result-list-table thead th:nth-child(4),
+#printArea .nu-course-table thead th:nth-child(2),
+#printArea .old-text-marks-table thead th:nth-child(2){text-align:center!important}
+</style>
+</head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="index.html"><span class="brand-logo">📊</span><span>Result Options</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">📊</div><h3>Result Options</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a class="active" href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><section class="academic-banner"><h1>Result Options</h1></section><section class="result-box no-print"><div class="result-grid"><label class="field"><span class="label">Session Year</span><select id="sessionSelect" class="input"></select></label><label class="field"><span class="label">Academic Year</span><select id="yearSelect" class="input"></select></label><label class="field"><span class="label">Exam Name</span><select id="examSelect" class="input"></select></label><label class="field"><span class="label">Roll / Registration</span><input id="searchInput" class="input" placeholder="Roll or Registration"></label><button class="btn primary" id="searchBtn" type="button">Search</button></div><div class="result-actions result-sort-controls"><label class="field" style="max-width:180px"><span class="label">Sort By</span><select id="resultSortField" class="input"><option value="roll">Roll</option><option value="reg">Registration</option></select></label><label class="field" style="max-width:180px"><span class="label">Order</span><select id="resultSortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label></div><div class="result-actions"><span id="publishPill" class="publish-pill no">Select Exam</span><button class="btn green" id="publishBtn" type="button">Publish Result</button><button class="btn red" id="unpublishBtn" type="button">Unpublish Result</button><button class="btn" style="background:#0f766e;color:#fff" id="updateSummaryBtn" type="button">Update Summary</button><button class="btn ghost" id="refreshBtn" type="button">Refresh</button></div><div class="result-actions"><button class="btn btn-indigo" id="comprehensiveBtn" type="button">Comprehensive</button><button class="btn btn-sky" id="masterBtn" type="button">Master Sheet</button><button class="btn btn-dark2" id="fullBtn" type="button">Full List</button><button class="btn btn-green2" id="passRankBtn" type="button">Pass Rank</button><button class="btn red" id="failListsBtn" type="button">Fail Lists</button><button class="btn btn-orange2" id="supplementaryBtn" type="button">Supplementary</button><button class="btn btn-purple2" id="formFillupBtn" type="button">Form Fill-up</button></div><div id="failOptions"></div><div id="resultStatus" class="status info hide"></div></section><section id="displayWrapper" class="hide"><div class="right-actions print-actions no-print" style="margin:12px 0"><button class="btn ghost" onclick="hideResult()">Back</button><button class="btn primary" onclick="printResultClean()">Print</button></div><div class="result-output" id="printArea"><div class="result-header"><h1>Kumudini Govt. College, Tangail</h1><h2>Geography and Environment Department</h2><h3 id="printExamTitle">Exam Result</h3><h2 id="listTitle">Result Sheet</h2></div><div id="dynamicContent"></div><div class="footer-signatures"><div class="sig-box">Head of the Department</div><div class="sig-box">Course Teacher</div></div><div class="operator-info">Generated by Sagar Ahmed, Computer Operator, Geography</div></div></section></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+const AUTH_USER = requireAuth('admin'); attachLogout();
+
+let allExams=[], currentExamList=[], allData=null;
+const sessionSelect=document.getElementById('sessionSelect');
+const yearSelect=document.getElementById('yearSelect');
+const examSelect=document.getElementById('examSelect');
+const searchInput=document.getElementById('searchInput');
+const statusEl=document.getElementById('resultStatus');
+const publishPill=document.getElementById('publishPill');
+const resultSortField=document.getElementById('resultSortField');
+const resultSortDir=document.getElementById('resultSortDir');
+
+function esc(v){return String(v ?? '').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+function unique(arr){return [...new Set((arr||[]).filter(Boolean))].sort();}
+function isPublished(e){const v=String(e?.ResultPublished||e?.Published||e?.PublishStatus||'').toLowerCase();return v==='yes'||v==='published'||v==='true'||v==='1';}
+function examLabel(e){return e.DisplayName || e.ExamName || [e.SessionYear,e.AcademicYear,e.ExamType].filter(Boolean).join(' - ') || e.ExamID;}
+function selectedExam(){return currentExamList.find(e=>String(e.ExamID)===String(examSelect.value)) || allExams.find(e=>String(e.ExamID)===String(examSelect.value)) || {};}
+function params(extra={}){
+  const e=selectedExam();
+  return Object.assign({
+    examId:e.ExamID || examSelect.value,
+    sessionYear:sessionSelect.value,
+    academicYear:yearSelect.value || e.AcademicYear || '',
+    examType:e.ExamType || '',
+    examName:examLabel(e),
+    _t:Date.now(),
+    noCache:'1'
+  }, extra || {});
+}
+function requireExam(){
+  if(!sessionSelect.value){showStatus(statusEl,'err','Session select করুন');return false;}
+  if(!examSelect.value){showStatus(statusEl,'err','Exam select করুন');return false;}
+  return true;
+}
+function setOutput(html){
+  document.getElementById('displayWrapper').classList.remove('hide');
+  const box=document.getElementById('dynamicContent');
+  box.innerHTML=html;
+  try{ if(window.applyPrintableTableAlignment) window.applyPrintableTableAlignment(box); }catch(e){}
+}
+function naturalValue(v){
+  const t=String(v??'').trim();
+  const n=Number(t.replace(/[^0-9.]/g,''));
+  return Number.isFinite(n)&&t.replace(/[^0-9]/g,'')!==''?n:t.toLowerCase();
+}
+function resultCompare(a,b,field,dir){
+  const av=naturalValue(field==='reg'?(a.reg||a.RegistrationNumber):(a.roll||a.Roll));
+  const bv=naturalValue(field==='reg'?(b.reg||b.RegistrationNumber):(b.roll||b.Roll));
+  let r=0;
+  if(typeof av==='number'&&typeof bv==='number') r=av-bv;
+  else r=String(av).localeCompare(String(bv),undefined,{numeric:true,sensitivity:'base'});
+  return (dir==='desc'?-1:1)*r;
+}
+function sortResultRows(rows){
+  const field=(resultSortField&&resultSortField.value)||'roll';
+  const dir=(resultSortDir&&resultSortDir.value)||'asc';
+  return (rows||[]).slice().sort((a,b)=>resultCompare(a,b,field,dir));
+}
+function passRankNumber(row,fallback){
+  const r=Number(row && (row.rank ?? row.Rank));
+  return Number.isFinite(r) && r>0 ? r : fallback;
+}
+function rankDisplay(row){
+  const r=Number(row && (row.rank ?? row.Rank ?? row.RankText));
+  return Number.isFinite(r) && r>0 ? String(r) : '-';
+}
+
+function fmtMark(v){
+  const raw=String(v??'').trim();
+  if(raw==='') return '';
+  const up=raw.toUpperCase();
+  if(up==='A'||up==='AB'||up==='ABSENT') return 'A';
+  const n=Number(raw.replace(/[^0-9.\-]/g,''));
+  return Number.isFinite(n)?String(Math.round(n)):raw;
+}
+function fmtGpa(v){
+  const raw=String(v??'').trim();
+  if(raw==='') return '';
+  if(raw.toUpperCase()==='FAIL') return 'FAIL';
+  const n=Number(raw.replace(/[^0-9.\-]/g,''));
+  return Number.isFinite(n)?n.toFixed(2):raw;
+}
+function sortPassRankRows(rows){
+  return (rows||[]).slice().sort((a,b)=>{
+    const ar=Number(a && (a.rank ?? a.Rank));
+    const br=Number(b && (b.rank ?? b.Rank));
+    const av=Number.isFinite(ar) && ar>0;
+    const bv=Number.isFinite(br) && br>0;
+    if(av && bv && ar!==br) return ar-br;
+    if(av && !bv) return -1;
+    if(!av && bv) return 1;
+    const at=Number(a && (a.total ?? a.TotalMarks ?? a.Total))||0;
+    const bt=Number(b && (b.total ?? b.TotalMarks ?? b.Total))||0;
+    if(bt!==at) return bt-at;
+    return resultCompare(a,b,'roll','asc');
+  });
+}
+function isAssignedResultSubject(st,sub){
+  const code=String((sub&& (sub.code||sub.SubjectCode))||'').trim();
+  const map=st&&st.assignedSubjects;
+  if(!code || !map) return true;
+  if(Array.isArray(map)) return map.map(String).map(x=>x.trim()).includes(code);
+  if(Object.prototype.hasOwnProperty.call(map,code)) return !!map[code];
+  return Object.keys(map).length ? false : true;
+}
+function masterCellHtml(st,sub){
+  const code=String((sub&& (sub.code||sub.SubjectCode))||'').trim();
+  if(!isAssignedResultSubject(st,sub)) return '<span class="fail-text">X</span>';
+  const v=st&&st.marks?st.marks[code]:'';
+  return esc(fmtMark(v===undefined||v===null?'':v));
+}
+function hideResult(){document.getElementById('displayWrapper').classList.add('hide');}
+function updateTitle(){
+  const e=selectedExam();
+  document.getElementById('printExamTitle').textContent=examLabel(e) || 'Exam Result';
+  if(!e.ExamID){publishPill.className='publish-pill no';publishPill.textContent='Select Exam';return;}
+  if(isPublished(e)){publishPill.className='publish-pill yes';publishPill.textContent='Published';}
+  else{publishPill.className='publish-pill no';publishPill.textContent='Unpublished';}
+}
+function fillFilters(){
+  const oldS=sessionSelect.value, oldY=yearSelect.value, oldE=examSelect.value;
+  const sessions=unique(allExams.map(e=>e.SessionYear));
+  const years=unique(allExams.map(e=>e.AcademicYear));
+  fillSelect(sessionSelect, sessions, sessions.length?'All Session':'No Session');
+  fillSelect(yearSelect, years, years.length?'All Year':'All Year');
+  if(oldS && sessions.includes(oldS)) sessionSelect.value=oldS;
+  else sessionSelect.value='';
+  if(oldY && years.includes(oldY)) yearSelect.value=oldY;
+  else yearSelect.value='';
+  fillExams(oldE);
+}
+function fillExams(oldExam=''){
+  const sy=String(sessionSelect.value||'').trim();
+  const yr=String(yearSelect.value||'').trim();
+  currentExamList=allExams.filter(e=>(!sy||String(e.SessionYear||'').trim()===sy)&&(!yr||String(e.AcademicYear||'').trim()===yr));
+  fillSelect(examSelect,currentExamList.map(e=>({value:e.ExamID,label:examLabel(e)})),currentExamList.length?'Select Exam':'No Exam');
+  if(oldExam && currentExamList.some(e=>String(e.ExamID)===String(oldExam))) examSelect.value=oldExam;
+  else if(currentExamList.length) examSelect.value=currentExamList[0].ExamID;
+  allData=null; updateTitle();
+}
+async function loadChoices(){
+  showStatus(statusEl,'info','Loading exams...');
+  try{
+    const res=await geoApiGet('getEasyResultChoices',{});
+    if(!res||res.success===false){showStatus(statusEl,'err',res?.message||'Load failed');return;}
+    allExams=(res.exams||[]).filter(e=>e && (e.ExamID||e.DisplayName||e.ExamName));
+    fillFilters();
+    showStatus(statusEl,allExams.length?'ok':'err',allExams.length?allExams.length+' exam loaded':'No exam found');
+  }catch(err){showStatus(statusEl,'err',err.message);}
+}
+async function updateSummary(){
+  showStatus(statusEl,'info','Updating summary...');
+  try{
+    const res=await geoApiGet('refreshAllResultSummaryFromMarks',params({_t:Date.now(),noCache:'1'}));
+    allData=null;
+    showStatus(statusEl,res&&res.success?'ok':'err',res&&res.success?('Summary updated: '+(res.summaryRows||0)+' rows, '+(res.exams||0)+' exams, '+(res.students||0)+' students'):(res.message||'Failed'));
+    if(res && res.success){ await renderList('passRank'); }
+  }catch(err){showStatus(statusEl,'err',err.message);}
+}
+async function setPublish(publish){
+  if(!requireExam()) return;
+  const e=selectedExam();
+  if(!confirm(publish?'Publish this result?':'Unpublish this result?')) return;
+  showStatus(statusEl,'info',publish?'Publishing...':'Unpublishing...');
+  try{
+    const res=await geoApiPost({
+      action:'publishResultClean',
+      examId:e.ExamID,
+      sessionYear:e.SessionYear||sessionSelect.value,
+      academicYear:e.AcademicYear||yearSelect.value,
+      examType:e.ExamType||'',
+      examName:examLabel(e),
+      publish:publish?'Yes':'No'
+    });
+    showStatus(statusEl,res&&res.success?'ok':'err',res?.message||'Done');
+    if(res && res.success){
+      e.ResultPublished = res.resultPublished;
+      e.Published = res.resultPublished;
+      e.PublishStatus = res.resultPublished;
+      allExams.forEach(x=>{ if(String(x.ExamID)===String(e.ExamID)){ x.ResultPublished=res.resultPublished; x.Published=res.resultPublished; x.PublishStatus=res.resultPublished; } });
+      currentExamList.forEach(x=>{ if(String(x.ExamID)===String(e.ExamID)){ x.ResultPublished=res.resultPublished; x.Published=res.resultPublished; x.PublishStatus=res.resultPublished; } });
+      updateTitle();
+      allData=null;
+    }
+    await loadChoices();
+  }catch(err){showStatus(statusEl,'err',err.message);}
+}
+function findLoadedResultStudent(q){
+  const data=allData;
+  const query=String(q||'').trim().toLowerCase();
+  const digits=String(q||'').replace(/\D/g,'');
+  if(!data || !query) return null;
+  return (data.all||[]).find(s=>{
+    const roll=String(s.roll||s.Roll||'').trim().toLowerCase();
+    const reg=String(s.reg||s.RegistrationNumber||'').replace(/\D/g,'');
+    const name=String(s.name||s.StudentName||'').trim().toLowerCase();
+    return roll===query || (digits && reg===digits) || roll.includes(query) || (digits && reg.includes(digits)) || name.includes(query);
+  }) || null;
+}
+function loadedStudentPayload(st){
+  const data=allData || {};
+  return {
+    success:true, found:true, mode:'loaded-sheet-local-result', exam:data.exam || selectedExam(),
+    roll:st.roll||st.Roll||'', reg:st.reg||st.RegistrationNumber||'', name:st.name||st.StudentName||'',
+    total:fmtMark(st.total||st.TotalMarks||0), cgpa:fmtGpa(st.cgpa||st.GPA||''), status:(st.cgpa||st.GPA)==='FAIL'?'Failed':'Pass',
+    rank:st.rank||st.Rank||'', failedCodes:st.failedCodes||st.FailedCodes||'',
+    nonMajorGroup:st.nonMajorGroup||st.groupText||st.NonMajorGroup||'', groupText:st.groupText||st.nonMajorGroup||st.NonMajorGroup||'',
+    passed:st.passed||0, failed:st.failed||0, marks:st.markDetails||[], markDetails:st.markDetails||[]
+  };
+}
+async function searchResult(){
+  if(!requireExam()) return;
+  const q=searchInput.value.trim();
+  if(!q){showStatus(statusEl,'err','Roll/Registration দিন');return;}
+  if(!allData){showStatus(statusEl,'err','আগে Full List/Master Sheet load করুন, তারপর loaded sheet থেকে search করুন।');return;}
+  const st=findLoadedResultStudent(q);
+  if(!st){setOutput('<div class="empty">Result not found in loaded sheet.</div>');showStatus(statusEl,'err','Student not found in loaded sheet');return;}
+  document.getElementById('listTitle').textContent='Individual Result Sheet';
+  showStudent(loadedStudentPayload(st));
+  showStatus(statusEl,'ok','Loaded from current result sheet data.');
+}
+async function loadData(){
+  if(!requireExam()) return null;
+  if(allData) return allData;
+  const res=await geoApiGet('getEasyResultListSafe',params({lite:'1'}));
+  if(!res||res.success===false){showStatus(statusEl,'err',res?.message||'Result load failed');return null;}
+  allData=res;
+  return res;
+}
+
+function componentMarksTableHtml(rows){
+  rows = rows || [];
+  const hasComponent = rows.some(m => m.testGrade || m.incourseGrade || m.attendanceGrade || m.componentGrade);
+  if (hasComponent) {
+    return '<table><thead><tr><th>Code</th><th>Subject</th><th>Total</th><th>Final Grade</th><th>Test Grade</th><th>Incourse Grade</th><th>Attendance Grade</th><th>Status</th></tr></thead><tbody>' +
+      rows.map(m => `<tr><td>${esc(m.code)}</td><td>${esc(m.subject)}</td><td>${esc(fmtMark(m.mark))}</td><td>${esc(m.grade)} ${esc(m.gradePercent||'')}</td><td>${esc(fmtMark(m.testMark!==undefined?m.testMark:''))} ${esc(m.testGrade||m.componentGrade||'')} ${esc(m.testPercent||m.componentPercent||'')}</td><td>${esc(fmtMark(m.incourseAverage!==undefined?m.incourseAverage:''))} ${esc(m.incourseGrade||'')} ${esc(m.incoursePercent||'')}</td><td>${esc(fmtMark(m.attendanceMark!==undefined?m.attendanceMark:''))} ${esc(m.attendanceGrade||'')} ${esc(m.attendancePercent||'')}</td><td>${esc(m.status)}</td></tr>`).join('') +
+      '</tbody></table>';
+  }
+  return '<table><thead><tr><th>Code</th><th>Subject</th><th>Marks</th><th>Grade</th><th>GP</th><th>Status</th></tr></thead><tbody>' +
+    rows.map(m => `<tr><td>${esc(m.code)}</td><td>${esc(m.subject)}</td><td>${esc(fmtMark(m.mark))}</td><td>${esc(m.grade)} ${esc(m.gradePercent||'')}</td><td>${esc(fmtGpa(m.gp))}</td><td>${esc(m.status)}</td></tr>`).join('') +
+    '</tbody></table>';
+}
+
+
+function deepComponentTable(rows){
+  rows = rows || [];
+  const has = rows.some(m => m.testGrade || m.incourseGrade || m.attendanceGrade || m.componentGrade);
+  if (has) {
+    return '<table><thead><tr><th>Code</th><th>Subject</th><th>Total</th><th>Final Grade</th><th>Test Grade</th><th>Incourse Grade</th><th>Attendance Grade</th><th>Status</th></tr></thead><tbody>' +
+      rows.map(m => `<tr><td>${esc(m.code)}</td><td>${esc(m.subject)}</td><td class="text-center">${esc(fmtMark(m.mark))}</td><td class="text-center">${esc(m.grade)} ${esc(m.gradePercent||'')}</td><td class="text-center">${esc(fmtMark(m.testMark!==undefined?m.testMark:''))} ${esc(m.testGrade||m.componentGrade||'')} ${esc(m.testPercent||m.componentPercent||'')}</td><td class="text-center">${esc(fmtMark(m.incourseAverage!==undefined?m.incourseAverage:''))} ${esc(m.incourseGrade||'')} ${esc(m.incoursePercent||'')}</td><td class="text-center">${esc(fmtMark(m.attendanceMark!==undefined?m.attendanceMark:''))} ${esc(m.attendanceGrade||'')} ${esc(m.attendancePercent||'')}</td><td class="text-center">${esc(m.status)}</td></tr>`).join('') +
+      '</tbody></table>';
+  }
+  return componentMarksTableHtml ? componentMarksTableHtml(rows) : '<table><thead><tr><th>Code</th><th>Subject</th><th>Marks</th><th>Grade</th><th>GP</th><th>Status</th></tr></thead><tbody>' + rows.map(m => `<tr><td>${esc(m.code)}</td><td>${esc(m.subject)}</td><td>${esc(fmtMark(m.mark))}</td><td>${esc(m.grade)}</td><td>${esc(fmtGpa(m.gp))}</td><td>${esc(m.status)}</td></tr>`).join('') + '</tbody></table>';
+}
+
+
+
+function formatDateDMY(d){
+  const dt = d ? new Date(d) : new Date();
+  if(Number.isNaN(dt.getTime())) return String(d||'');
+  const dd = String(dt.getDate()).padStart(2,'0');
+  const mm = String(dt.getMonth()+1).padStart(2,'0');
+  const yy = dt.getFullYear();
+  return `${dd}/${mm}/${yy}`;
+}
+
+function regDigitBoxesHtml(reg){ return `<span class="nu-reg-single">${esc(reg || '')}</span>`; }
+function courseWiseGradeTableHtml(rows){
+  rows = rows || [];
+  return `<table class="nu-course-table">
+    <thead>
+      <tr><th>Course Code</th><th>Title of Course</th><th>Credit</th><th>Letter Grade</th></tr>
+    </thead>
+    <tbody>
+      ${rows.length ? rows.map(m=>{
+        const code = m.code || m.SubjectCode || '';
+        const title = m.subject || m.SubjectName || '';
+        const credit = m.credit || m.Credit || m.credits || m.Credits || '';
+        const grade = m.grade || m.Grade || '';
+        return `<tr>
+          <td class="nu-center">${esc(code)}</td>
+          <td>${esc(title)}</td>
+          <td class="nu-center">${esc(credit)}</td>
+          <td class="nu-center nu-grade">${esc(grade)}</td>
+        </tr>`;
+      }).join('') : `<tr><td colspan="4" class="nu-center">No course data found</td></tr>`}
+    </tbody>
+  </table>`;
+}
+function oldTextMarksTableHtml(rows){
+  rows = rows || [];
+  return `<table class="nu-course-table old-text-marks-table">
+    <thead>
+      <tr><th>Code</th><th>Subject</th><th>Marks</th><th>Grade</th><th>GPA</th></tr>
+    </thead>
+    <tbody>
+      ${rows.length ? rows.map(m=>{
+        const code = m.code || m.SubjectCode || '';
+        const subject = m.subject || m.SubjectName || '';
+        const mark = m.mark ?? m.Marks ?? '';
+        const grade = m.grade || m.Grade || '';
+        const gp = m.gp ?? m.GP ?? '';
+        return `<tr>
+          <td class="nu-center">${esc(code)}</td>
+          <td class="printable-name-cell text-left">${esc(subject)}</td>
+          <td class="nu-center">${esc(fmtMark(mark))}</td>
+          <td class="nu-center nu-grade">${esc(grade)}</td>
+          <td class="nu-center">${esc(fmtGpa(gp))}</td>
+        </tr>`;
+      }).join('') : `<tr><td colspan="5" class="nu-center">No marks data found</td></tr>`}
+    </tbody>
+  </table>`;
+}
+
+function nuIndividualResultHtml(res){
+  const rows = res.marks || res.markDetails || [];
+  const exam = res.exam || selectedExam() || {};
+  const examName = exam.ExamName || exam.DisplayName || selectedExamNameForResult?.() || 'Exam Result';
+  const resultStatus = res.cgpa === 'FAIL' ? 'FAILED' : 'PASS';
+  return `<div class="nu-result-sheet old-text-result-sheet">
+    <div class="nu-main-title">Kumudini Govt. College, Tangail</div>
+    <div class="nu-sub-title">Department of Geography and Environment</div>
+    <div class="nu-online-title">Individual Result Marksheet</div>
+    <div class="nu-blue-line"></div>
+
+    <table class="nu-info-table">
+      <tr>
+        <th>Exam Name</th>
+        <td colspan="3">${esc(examName)}</td>
+      </tr>
+      <tr>
+        <th>Name</th>
+        <td class="printable-name-cell text-left">${esc(res.name)}</td>
+        <th>Roll</th>
+        <td>${esc(res.roll)}</td>
+      </tr>
+      <tr>
+        <th>Registration</th>
+        <td>${regDigitBoxesHtml(res.reg)}</td>
+        <th>Session</th>
+        <td>${esc(exam.SessionYear || '')}</td>
+      </tr>
+      <tr>
+        <th>Academic Year</th>
+        <td>${esc(exam.AcademicYear || '')}</td>
+        <th>Result</th>
+        <td class="${res.cgpa==='FAIL'?'nu-fail':'nu-pass'}">${esc(resultStatus)}</td>
+      </tr>
+      <tr>
+        <th>Total Marks</th>
+        <td>${esc(fmtMark(res.total))}</td>
+        <th>GPA</th>
+        <td class="${res.cgpa==='FAIL'?'nu-fail':'nu-pass'}">${esc(fmtGpa(res.cgpa))}</td>
+      </tr>
+      <tr>
+        <th>Rank</th>
+        <td>${esc(res.rank || '-')}</td>
+        <th>Non Major Group</th>
+        <td>${esc(res.groupText || res.nonMajorGroup || '-')}</td>
+      </tr>
+    </table>
+
+    <div class="nu-course-title">Subject-wise Marks Details</div>
+    ${oldTextMarksTableHtml(rows)}
+
+    <div class="nu-sign-area">
+      <div class="nu-controller nu-left-sign"><b>Head of the Department</b></div>
+      <div class="nu-controller nu-right-sign">
+        <b>Course Teacher</b><br>
+        <span>Generated by: Sagar Ahmed, Computer Operator, Geography</span><br>
+        <span>Generated on: ${esc(formatDateDMY())}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function showStudent(res){
+  if(!res||!res.found){setOutput(`<div class="empty">${esc(res?.message||'Result not found')}</div>`);return;}
+  document.getElementById('listTitle').textContent='Individual Result Sheet';
+  setOutput(nuIndividualResultHtml(res));
+}
+async function renderList(type,count){
+  const data=await loadData();
+  if(!data) return;
+  const all=data.all||[];
+  let list=all, title='Full List';
+  if(type==='passRank'){list=sortPassRankRows(data.passed||[]);title='Pass Rank List';}
+  if(type==='fail'){list=(data.allFailed||[]);title='Fail List';}
+  if(type==='failCount'){list=(data.failed && (data.failed[String(count)]||data.failed[count])) || [];title='Fail List - '+count;}
+  if(type==='supplementary'){list=(data.allFailed||[]);title='Supplementary Attendance';}
+  if(type==='form'){list=all;title='Form Fill-up List';}
+  if(type==='comprehensive'){list=all;title='Comprehensive Result List';}
+  if(type==='master'){return renderMaster(data);}
+  if(type!=='passRank') list=sortResultRows(list);
+  document.getElementById('listTitle').textContent=title;
+
+  const yText = String((data.exam&&data.exam.AcademicYear)||yearSelect?.value||selectedExam()?.AcademicYear||'').toLowerCase();
+  const showGroup = type==='form' && (yText.includes('1st') || yText.includes('2nd'));
+
+  let html='<table class="result-list-table result-type-'+type+'"><thead><tr>';
+  if(type==='supplementary'){
+    html+='<th>SL</th><th>Roll</th><th>Registration</th><th>Name</th><th>Failed Codes</th><th>Signature</th></tr></thead><tbody>';
+    if(!list.length) html+='<tr><td colspan="6" class="text-center">No data found</td></tr>';
+    list.forEach((s,i)=>html+=`<tr style="height:42px"><td class="text-center">${i+1}</td><td class="text-center">${esc(s.roll)}</td><td class="text-center">${esc(s.reg)}</td><td class="printable-name-cell text-left">${esc(s.name)}</td><td class="fail-text">${esc(s.failedCodes)}</td><td></td></tr>`);
+  }else if(type==='form'){
+    if(showGroup){
+      html+='<th>SL</th><th>Roll</th><th>Registration</th><th>Name</th><th>Group</th><th>Amount</th><th>FF</th><th>Transaction</th></tr></thead><tbody>';
+      if(!list.length) html+='<tr><td colspan="8" class="text-center">No data found</td></tr>';
+      list.forEach((s,i)=>html+=`<tr><td class="text-center">${i+1}</td><td class="text-center">${esc(s.roll)}</td><td class="text-center">${esc(s.reg)}</td><td class="printable-name-cell text-left">${esc(s.name)}</td><td class="text-center">${esc(s.groupText||s.nonMajorGroup||'')}</td><td></td><td></td><td></td></tr>`);
+    }else{
+      html+='<th>SL</th><th>Roll</th><th>Registration</th><th>Name</th><th>Amount</th><th>FF</th><th>Transaction</th></tr></thead><tbody>';
+      if(!list.length) html+='<tr><td colspan="7" class="text-center">No data found</td></tr>';
+      list.forEach((s,i)=>html+=`<tr><td class="text-center">${i+1}</td><td class="text-center">${esc(s.roll)}</td><td class="text-center">${esc(s.reg)}</td><td class="printable-name-cell text-left">${esc(s.name)}</td><td></td><td></td><td></td></tr>`);
+    }
+  }else if(type==='passRank'){
+    html+='<th>Rank</th><th>Roll</th><th>Registration</th><th>Name</th><th>Total</th><th>GPA</th><th>Status</th></tr></thead><tbody>';
+    if(!list.length) html+='<tr><td colspan="7" class="text-center">No data found</td></tr>';
+    list.forEach((s,i)=>{
+      const fail=s.cgpa==='FAIL';
+      html+=`<tr><td class="text-center">${passRankNumber(s,i+1)}</td><td class="text-center">${esc(s.roll)}</td><td class="text-center">${esc(s.reg)}</td><td class="printable-name-cell text-left">${esc(s.name)}</td><td class="text-center">${esc(fmtMark(s.total))}</td><td class="text-center ${fail?'fail-text':'pass-status'}">${esc(fmtGpa(s.cgpa))}</td><td class="text-center ${fail?'fail-text':'pass-status'}">${fail?'FAILED':'PASS'}</td></tr>`;
+    });
+  }else{
+    html+='<th>SL</th><th>Roll</th><th>Registration</th><th>Name</th><th>Total</th><th>GPA</th><th>Status</th><th>Failed Codes</th><th>Rank</th></tr></thead><tbody>';
+    if(!list.length) html+='<tr><td colspan="9" class="text-center">No data found</td></tr>';
+    list.forEach((s,i)=>{
+      const fail=s.cgpa==='FAIL';
+      html+=`<tr><td class="text-center">${i+1}</td><td class="text-center">${esc(s.roll)}</td><td class="text-center">${esc(s.reg)}</td><td class="printable-name-cell text-left">${esc(s.name)}</td><td class="text-center">${esc(fmtMark(s.total))}</td><td class="text-center ${fail?'fail-text':'pass-status'}">${esc(fmtGpa(s.cgpa))}</td><td class="text-center ${fail?'fail-text':'pass-status'}">${fail?'FAILED':'PASS'}</td><td class="fail-text">${esc(s.failedCodes||'-')}</td><td class="text-center">${rankDisplay(s)}</td></tr>`;
+    });
+  }
+  html+='</tbody></table>';
+  setOutput(html);
+  showStatus(statusEl,'ok',list.length+' students loaded');
+}
+function masterSubjectHead(sub){
+  const code=sub.code||sub.SubjectCode||'';
+  const name=sub.name||sub.SubjectName||'';
+  return `<span>${esc(code)}</span>${name?`<br><small>${esc(name)}</small>`:''}`;
+}
+function renderMaster(data){
+  document.getElementById('listTitle').textContent='Master Sheet';
+  const subjects=data.subjects||[];
+  let html='<table><thead><tr><th>Roll</th><th>Name</th>';
+  subjects.forEach(sub=>html+=`<th>${masterSubjectHead(sub)}</th>`);
+  html+='<th>Total</th><th>GPA</th><th>Rank</th></tr></thead><tbody>';
+  sortResultRows(data.all||[]).forEach(s=>{
+    html+=`<tr><td class="text-center">${esc(s.roll)}</td><td class="printable-name-cell text-left">${esc(s.name)}</td>`;
+    subjects.forEach(sub=>html+=`<td class="text-center">${masterCellHtml(s,sub)}</td>`);
+    html+=`<td class="text-center">${esc(fmtMark(s.total))}</td><td class="text-center ${s.cgpa==='FAIL'?'fail-text':'pass-status'}">${esc(fmtGpa(s.cgpa))}</td><td class="text-center">${rankDisplay(s)}</td></tr>`;
+  });
+  html+='</tbody></table>';
+  setOutput(html);
+  showStatus(statusEl,'ok',(data.all||[]).length+' students loaded');
+}
+function showFailOptions(){
+  const div=document.getElementById('failOptions');
+  div.innerHTML='';
+  for(let i=1;i<=10;i++) div.innerHTML += `<button class="btn red" onclick="renderList('failCount',${i})">Fail ${i}</button>`;
+  div.style.display = div.style.display==='block'?'none':'block';
+}
+
+function sanitizeResultTablesBeforePrint(){
+  const title = (document.getElementById('listTitle')?.textContent || '').toLowerCase();
+  const table = document.querySelector('#printArea table, .result-output table');
+  if(!table) return;
+  const headers = [...table.querySelectorAll('thead th')].map(th=>th.textContent.trim().toLowerCase());
+
+  function removeColumnByName(name){
+    const idx=[...table.querySelectorAll('thead th')].findIndex(th=>th.textContent.trim().toLowerCase()===name.toLowerCase());
+    if(idx<0) return;
+    table.querySelectorAll('tr').forEach(tr=>{
+      const cells=[...tr.children];
+      if(cells[idx]) cells[idx].remove();
+    });
+  }
+
+  if(title.includes('pass rank')) removeColumnByName('failed codes');
+
+  if(title.includes('form fill')){
+    const dataRows=((window.lastLoadedResultData&&window.lastLoadedResultData.all)||(typeof allData!=='undefined'&&allData&&allData.all)||[]);
+    const yearText = String(selectedExam()?.AcademicYear || yearSelect?.value || '').toLowerCase();
+    const needGroup = yearText.includes('1st') || yearText.includes('2nd');
+    const desired = needGroup ? ['SL','Roll','Registration','Name','Group','Amount','FF','Transaction'] : ['SL','Roll','Registration','Name','Amount','FF','Transaction'];
+
+    const bodyRows=[...table.querySelectorAll('tbody tr')];
+    const oldRows=bodyRows.map((tr,ri)=>{
+      const cells=[...tr.children].map(td=>td.textContent.trim());
+      const h=[...table.querySelectorAll('thead th')].map(th=>th.textContent.trim().toLowerCase());
+      const get=(name)=>{const idx=h.indexOf(name.toLowerCase());return idx>=0?(cells[idx]||''):'';};
+      const source=dataRows[ri]||{};
+      return {
+        sl:get('sl')||String(ri+1),
+        roll:get('roll')||source.roll||'',
+        reg:get('registration')||source.reg||'',
+        name:get('name')||source.name||'',
+        group:get('group')||source.groupText||source.nonMajorGroup||'',
+        amount:get('amount')||'',
+        ff:get('ff')||'',
+        transaction:get('transaction')||''
+      };
+    });
+
+    const headRow=table.querySelector('thead tr');
+    headRow.innerHTML=desired.map(h=>`<th>${h}</th>`).join('');
+    const tbody=table.querySelector('tbody');
+    tbody.innerHTML=oldRows.map(r=>{
+      if(needGroup){
+        return `<tr><td class="text-center">${esc(r.sl)}</td><td class="text-center">${esc(r.roll)}</td><td class="text-center">${esc(r.reg)}</td><td class="printable-name-cell text-left">${esc(r.name)}</td><td class="text-center">${esc(r.group)}</td><td></td><td></td><td></td></tr>`;
+      }
+      return `<tr><td class="text-center">${esc(r.sl)}</td><td class="text-center">${esc(r.roll)}</td><td class="text-center">${esc(r.reg)}</td><td class="printable-name-cell text-left">${esc(r.name)}</td><td></td><td></td><td></td></tr>`;
+    }).join('');
+  }
+}
+
+function printResultClean(){
+  try{ sanitizeResultTablesBeforePrint(); }catch(e){}
+  const area=document.getElementById('printArea');
+  const content=area?.innerHTML || '';
+  if(!content.trim()){alert('Print করার মতো result নেই');return;}
+  stableDirectPrint(area,'Result Print',`
+    @page{size:A4 portrait;margin:8mm}
+    .stable-print-target .old-text-result-sheet{background:#fff!important;width:100%!important;max-width:100%!important}
+    .stable-print-target table{border-collapse:collapse!important}
+    .stable-print-target table thead th,.stable-print-target table tr:first-child th,.stable-print-target th{text-align:center!important;vertical-align:middle!important}
+    .stable-print-target table tbody td{text-align:center!important;vertical-align:middle!important}
+    .stable-print-target table tbody td.printable-name-cell,
+    .stable-print-target .result-list-table tbody td:nth-child(4),
+    .stable-print-target .nu-course-table tbody td:nth-child(2),
+    .stable-print-target .old-text-marks-table tbody td:nth-child(2){text-align:left!important}
+    .stable-print-target .result-list-table thead th:nth-child(4),
+    .stable-print-target .nu-course-table thead th:nth-child(2),
+    .stable-print-target .old-text-marks-table thead th:nth-child(2){text-align:center!important}
+    /* RESULT PRINT HEADER CENTER ALIGN FIX */
+  `);
+}
+
+sessionSelect.addEventListener('change',()=>fillExams());
+yearSelect.addEventListener('change',()=>fillExams());
+examSelect.addEventListener('change',()=>{allData=null;updateTitle();});
+document.getElementById('refreshBtn').addEventListener('click',loadChoices);
+document.getElementById('updateSummaryBtn').addEventListener('click',updateSummary);
+document.getElementById('publishBtn').addEventListener('click',()=>setPublish(true));
+document.getElementById('unpublishBtn').addEventListener('click',()=>setPublish(false));
+document.getElementById('searchBtn').addEventListener('click',searchResult);
+searchInput.addEventListener('keydown',e=>{if(e.key==='Enter') searchResult();});
+document.getElementById('comprehensiveBtn').addEventListener('click',()=>renderList('comprehensive'));
+document.getElementById('masterBtn').addEventListener('click',()=>renderList('master'));
+document.getElementById('fullBtn').addEventListener('click',()=>renderList('all'));
+document.getElementById('passRankBtn').addEventListener('click',()=>renderList('passRank'));
+document.getElementById('failListsBtn').addEventListener('click',showFailOptions);
+document.getElementById('supplementaryBtn').addEventListener('click',()=>renderList('supplementary'));
+document.getElementById('formFillupBtn').addEventListener('click',()=>renderList('form'));
+[resultSortField,resultSortDir].forEach(el=>{if(el)el.addEventListener('change',()=>{const t=(document.getElementById('listTitle')?.textContent||'').toLowerCase(); if(!allData||document.getElementById('displayWrapper').classList.contains('hide')) return; if(t.includes('master')) renderMaster(allData); else if(t.includes('pass rank')) renderList('passRank'); else if(t.includes('comprehensive')) renderList('comprehensive'); else if(t.includes('fail list')) renderList('fail'); else if(t.includes('supplementary')) renderList('supplementary'); else if(t.includes('form fill')) renderList('form'); else renderList('all');});});
+loadChoices();
+</script>
+</body></html>

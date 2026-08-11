@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Issued Book Check - Student Panel</title>
+  <link rel="stylesheet" href="../assets/site.css">
+  <style>
+    .issue-check-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow-soft);margin-top:14px}
+    .issue-count-box{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:center;background:var(--primary-soft);border:1px solid rgba(6,95,70,.18);border-radius:18px;padding:18px;margin-top:14px}
+    .issue-count-number{font-size:3rem;line-height:1;font-weight:900;color:var(--primary);text-align:center}
+    .student-meta-line{line-height:1.8;color:var(--muted)}
+    .student-meta-line b{color:var(--primary)}
+    @media(max-width:700px){.issue-count-box{grid-template-columns:1fr;text-align:center}.filter-row.issue-search{grid-template-columns:1fr!important}}
+  </style>
+</head>
+<body class="student-card-page">
+<header class="topbar student-topbar-full no-print student-card-topbar">
+  <div class="inner">
+    <a class="brand" href="index.html"><span class="brand-logo">📚</span><span>Issued Book Check</span></a>
+    <button class="mobile-menu" data-mobile-menu>Menu</button>
+    <nav class="navlinks student-card-nav">
+      <a href="index.html">Student Home</a>
+      <a href="result-check.html">Result Check</a>
+      <a href="profile-check.html">Profile Check</a>
+      <a class="active" href="seminar-library.html">Issued Book Check</a>
+      <a class="nav-cta" href="../index.html">Main Login</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page-pad student-card-main">
+  <div class="container">
+    <section class="public-student-hero">
+      <h1>Issued Book Check</h1>
+      <p class="muted">Roll অথবা Registration Number দিয়ে বর্তমানে কয়টি book issue আছে দেখুন।</p>
+    </section>
+
+    <div class="panel no-print">
+      <div class="filter-row issue-search" style="grid-template-columns:1fr auto">
+        <input id="studentSearch" class="input" placeholder="Enter Roll or Registration Number">
+        <button id="checkBtn" class="btn primary" type="button">Check Issued Books</button>
+      </div>
+      <div id="issueStatus" class="status info hide"></div>
+    </div>
+
+    <section id="resultArea" class="hide">
+      <div class="issue-check-card">
+        <div class="issue-count-box">
+          <div>
+            <div id="issueCount" class="issue-count-number">0</div>
+            <div class="muted text-center">Currently Issued</div>
+          </div>
+          <div>
+            <h2 id="studentName" style="margin:0;color:var(--primary)">Student Name</h2>
+            <div id="studentMeta" class="student-meta-line"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="issue-check-card">
+        <h2 style="color:var(--primary);margin-top:0">Currently Issued Books</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>SL</th>
+                <th>Book No</th>
+                <th>Book Title</th>
+                <th>Issue Date</th>
+                <th>Due/Return Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="issuedTable">
+              <tr><td colspan="6" class="empty">No currently issued book.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+const statusEl = document.getElementById('issueStatus');
+const resultArea = document.getElementById('resultArea');
+const searchInput = document.getElementById('studentSearch');
+
+const q = new URLSearchParams(location.search);
+const preset = q.get('roll') || q.get('reg') || q.get('search') || '';
+searchInput.value = preset;
+
+function esc(v){
+  return String(v ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+
+function showMsg(type, msg){
+  showStatus(statusEl, type, msg);
+}
+
+async function checkIssuedBooks(){
+  const search = searchInput.value.trim();
+  if(!search){
+    resultArea.classList.add('hide');
+    showMsg('err', 'Roll or Registration Number required.');
+    return;
+  }
+
+  showMsg('info', 'Checking issued books...');
+
+  try{
+    const res = await geoApiGet('getLibraryPublicStatus', { search });
+
+    if(!res || !res.found){
+      resultArea.classList.add('hide');
+      showMsg('err', (res && res.message) ? res.message : 'Student not found.');
+      return;
+    }
+
+    const s = res.student || {};
+    const current = Array.isArray(res.currentIssued) ? res.currentIssued : [];
+
+    document.getElementById('studentName').textContent = s.Name || s.StudentName || '';
+    document.getElementById('studentMeta').innerHTML =
+      'Roll: <b>' + esc(s.Roll || '') + '</b> | Registration: <b>' + esc(s.RegistrationNumber || '') + '</b><br>' +
+      'Session: <b>' + esc(s.SessionYear || '') + '</b> | Study Session: <b>' + esc(s.StudySessionYear || s.CurrentStudySession || s.SessionYear || '') + '</b> | Year: <b>' + esc(s.CurrentYear || s.AcademicYear || '') + '</b>';
+
+    document.getElementById('issueCount').textContent = current.length;
+
+    document.getElementById('issuedTable').innerHTML = current.length ? current.map((b, i) => {
+      const bookNo = b.BookNo || b.CopyCode || b.CopyID || b.BookCode || '';
+      const title = b.BookTitle || b.Title || '';
+      return '<tr>' +
+        '<td>' + (i + 1) + '</td>' +
+        '<td><b>' + esc(bookNo) + '</b></td>' +
+        '<td>' + esc(title) + '</td>' +
+        '<td>' + esc(b.IssueDate || '') + '</td>' +
+        '<td>' + esc(b.ReturnDate || b.DueDate || '') + '</td>' +
+        '<td>' + esc(b.Status || 'Issued') + '</td>' +
+      '</tr>';
+    }).join('') : '<tr><td colspan="6" class="empty">No currently issued book.</td></tr>';
+
+    resultArea.classList.remove('hide');
+    showMsg('ok', current.length + ' currently issued book found.');
+  }catch(err){
+    resultArea.classList.add('hide');
+    showMsg('err', err.message || 'Failed to check issued books.');
+  }
+}
+
+document.getElementById('checkBtn').addEventListener('click', checkIssuedBooks);
+searchInput.addEventListener('keydown', e => { if(e.key === 'Enter') checkIssuedBooks(); });
+if(preset) checkIssuedBooks();
+</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Result Upload & Auto Promotion</title><link rel="stylesheet" href="../assets/site.css"></head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">🛠️</span><span>Result Upload & Auto Promotion</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a class="active" href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-management.html">Students</a><a href="result-upload.html">Result Upload</a><a href="data-editor.html">Data Edit</a><a href="marks-entry.html">Marks</a></div><section class="academic-banner"><h1>Result Sheet Upload & Auto Promotion</h1></section><div class="grid two"><div class="panel"><div class="panel-title"><div><h2>Upload Result Sheet</h2></div></div><div class="form-grid"><label class="field"><span class="label">Input Session</span><select id="sessionYear" class="input" required></select></label><label class="field"><span class="label">Which Year Result?</span><select id="academicYear"></select></label></div><div class="upload-zone" style="margin-top:12px"><input id="resultFile" class="input" type="file" accept=".xlsx,.xls,.csv"></div><div id="uploadStatus" class="status info hide"></div><div class="right-actions" style="margin-top:12px"><button id="parseFile" class="btn ghost" type="button">Preview File</button><button id="importBtn" class="btn primary" type="button" disabled>Import & Promote</button></div></div><div class="panel"><div class="panel-title"><div><h2>Import Summary</h2></div></div><div class="summary-grid"><div class="summary-box"><span>Rows Found</span><b id="foundCount">0</b></div><div class="summary-box"><span>Promoted</span><b id="promotedCount">0</b></div><div class="summary-box"><span>Not Promoted / Reason</span><b id="notPromotedCount">0</b></div><div class="summary-box"><span>Unsuccessful</span><b id="unsuccessCount">0</b></div></div></div></div><div class="panel" style="margin-top:14px"><div class="panel-title"><div><h2>Preview Rows</h2></div></div><div class="table-wrap"><table><thead><tr><th>SL</th><th>Reg No</th><th>Student Name</th><th>Obtained GP/Mark</th><th>Result</th></tr></thead><tbody id="previewTable"><tr><td colspan="5" class="empty">No file parsed.</td></tr></tbody></table></div></div><div class="panel" style="margin-top:14px"><h2 style="color:var(--gold)">Not Promoted / Reason List</h2><div class="table-wrap"><table><thead><tr><th>SL</th><th>Reg No</th><th>Roll</th><th>Name</th><th>Result</th><th>Old Year</th><th>Current Year</th><th>Reason</th></tr></thead><tbody id="notPromotedTable"><tr><td colspan="8" class="empty">No import yet.</td></tr></tbody></table></div></div><div class="grid two" style="margin-top:14px"><div class="panel"><h2 style="color:var(--primary)">Promoted List</h2><div class="table-wrap"><table><thead><tr><th>SL</th><th>Reg No</th><th>Roll</th><th>Name</th><th>Session</th><th>Old Year</th><th>New Year</th><th>Result</th></tr></thead><tbody id="successTable"><tr><td colspan="8" class="empty">No import yet.</td></tr></tbody></table></div></div><div class="panel"><h2 style="color:var(--danger)">Student Not Found / Unsuccessful List</h2><div class="table-wrap"><table><thead><tr><th>SL</th><th>Reg No</th><th>Name From File</th><th>Result</th><th>Reason</th></tr></thead><tbody id="unsuccessTable"><tr><td colspan="5" class="empty">No import yet.</td></tr></tbody></table></div></div></div></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+fillSelect(document.getElementById('academicYear'), currentAcademicYears(), 'Select result year');
+fillSelect(document.getElementById('sessionYear'), currentSessionYears(), 'Select session');
+let parsedRows = [];
+
+function setCount(id, value){ document.getElementById(id).textContent = value; }
+function clean(v){ return String(v === undefined || v === null ? '' : v).trim(); }
+function normalizeHeader(v){ return clean(v).toLowerCase().replace(/[^a-z0-9]/g,''); }
+
+function findHeaderRow(rows){
+  for(let r=0; r<Math.min(rows.length, 20); r++){
+    const normalized = rows[r].map(normalizeHeader);
+    const hasReg = normalized.some(h => h.includes('reg'));
+    const hasName = normalized.some(h => h.includes('student') || h.includes('name'));
+    const hasResult = normalized.some(h => h.includes('result'));
+    if(hasReg && hasName && hasResult) return r;
+  }
+  return -1;
+}
+
+function parseRows(rows){
+  const headerRow = findHeaderRow(rows);
+  if(headerRow < 0) throw new Error('Header row not found. Required columns: Reg No, Student Name, Result.');
+  const headers = rows[headerRow].map(normalizeHeader);
+  const regIndex = headers.findIndex(h => h.includes('reg'));
+  const nameIndex = headers.findIndex(h => h.includes('studentname') || h === 'name' || h.includes('student'));
+  const obtainedIndex = headers.findIndex(h => h.includes('obtained') || h.includes('gpmark') || h.includes('mark'));
+  const resultIndex = headers.findIndex(h => h.includes('result'));
+
+  if(regIndex < 0 || resultIndex < 0) throw new Error('Reg No or Result column missing.');
+
+  const output = [];
+  for(let i=headerRow+1; i<rows.length; i++){
+    const row = rows[i] || [];
+    const regNo = clean(row[regIndex]).replace(/[^\d]/g,'');
+    const studentName = nameIndex >= 0 ? clean(row[nameIndex]) : '';
+    const obtained = obtainedIndex >= 0 ? clean(row[obtainedIndex]) : '';
+    const result = resultIndex >= 0 ? clean(row[resultIndex]) : '';
+    if(!regNo && !studentName && !result) continue;
+    output.push({ regNo, studentName, obtained, result });
+  }
+  return output;
+}
+
+async function readFileRows(file){
+  const name = file.name.toLowerCase();
+  if(name.endsWith('.csv')){
+    const text = await file.text();
+    return text.split(/\r?\n/).map(line => line.split(',').map(x => x.replace(/^"|"$/g,'')));
+  }
+  const data = await file.arrayBuffer();
+  const wb = XLSX.read(data, { type:'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  return XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+}
+
+function renderPreview(){
+  setCount('foundCount', parsedRows.length);
+  document.getElementById('previewTable').innerHTML = parsedRows.length ? parsedRows.map((r,i)=>`<tr>
+    <td>${i+1}</td><td>${r.regNo||''}</td><td>${r.studentName||''}</td><td>${r.obtained||''}</td><td>${r.result||''}</td>
+  </tr>`).join('') : '<tr><td colspan="5" class="empty">No rows found.</td></tr>';
+}
+
+document.getElementById('parseFile').addEventListener('click', async()=>{
+  const file = document.getElementById('resultFile').files[0];
+  if(!file){ showStatus(document.getElementById('uploadStatus'),'err','Please select a file.'); return; }
+  showStatus(document.getElementById('uploadStatus'),'info','Reading file...');
+  try{
+    const rows = await readFileRows(file);
+    parsedRows = parseRows(rows);
+    renderPreview();
+    document.getElementById('importBtn').disabled = parsedRows.length === 0;
+    showStatus(document.getElementById('uploadStatus'),'ok', parsedRows.length + ' rows found. Now click Import & Promote.');
+  }catch(err){
+    parsedRows = [];
+    renderPreview();
+    document.getElementById('importBtn').disabled = true;
+    showStatus(document.getElementById('uploadStatus'),'err',err.message);
+  }
+});
+
+document.getElementById('importBtn').addEventListener('click', async()=>{
+  const sessionYear = document.getElementById('sessionYear').value.trim();
+  const academicYear = document.getElementById('academicYear').value;
+  if(!sessionYear || !academicYear){ showStatus(document.getElementById('uploadStatus'),'err','Session and result year required.'); return; }
+  if(!parsedRows.length){ showStatus(document.getElementById('uploadStatus'),'err','No parsed rows found.'); return; }
+  if(!confirm('Import result and auto promote matched students?')) return;
+
+  showStatus(document.getElementById('uploadStatus'),'info','Importing and promoting...');
+  try{
+    const res = await geoApiPost({ action:'importFinalResultSheet', sessionYear, academicYear, rows:parsedRows });
+    if(!res.success){ showStatus(document.getElementById('uploadStatus'),'err',res.message || 'Import failed'); return; }
+
+    setCount('promotedCount', res.promotedCount || 0);
+    setCount('notPromotedCount', res.notPromotedCount || 0);
+    setCount('unsuccessCount', (res.unsuccessful || []).length);
+
+    const success = res.successful || [];
+    const notPromoted = res.notPromoted || [];
+    const unsuccess = res.unsuccessful || [];
+
+    document.getElementById('successTable').innerHTML = success.length ? success.map((r,i)=>`<tr>
+      <td>${i+1}</td><td>${r.regNo||''}</td><td>${r.roll||''}</td><td>${r.studentName||''}</td><td>${r.studentSession||''}</td><td>${r.oldYear||''}</td><td>${r.newYear||''}</td><td>${r.result||''}</td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty">No promoted student.</td></tr>';
+
+    document.getElementById('notPromotedTable').innerHTML = notPromoted.length ? notPromoted.map((r,i)=>`<tr>
+      <td>${i+1}</td><td>${r.regNo||''}</td><td>${r.roll||''}</td><td>${r.studentName||r.studentNameFromFile||''}</td><td>${r.result||''}</td><td>${r.oldYear||''}</td><td>${r.newYear||''}</td><td>${r.reason||''}</td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty">No not-promoted row.</td></tr>';
+
+    document.getElementById('unsuccessTable').innerHTML = unsuccess.length ? unsuccess.map((r,i)=>`<tr>
+      <td>${i+1}</td><td>${r.regNo||''}</td><td>${r.studentNameFromFile||''}</td><td>${r.result||''}</td><td>${r.message||''}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">No student-not-found row.</td></tr>';
+
+    showStatus(document.getElementById('uploadStatus'),'ok',res.message || 'Import completed.');
+  }catch(err){
+    showStatus(document.getElementById('uploadStatus'),'err',err.message);
+  }
+});
+</script>
+</body></html>

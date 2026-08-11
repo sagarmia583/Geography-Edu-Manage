@@ -1,0 +1,1433 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Marks Entry - NU Exam System</title><link rel="stylesheet" href="../assets/site.css">
+<style>.marks-sheet-wrap{width:100%;overflow:auto;border:1px solid #cbd5e1;border-radius:16px;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.06)}.marks-sheet-table{min-width:980px;width:100%;border-collapse:collapse;font-size:14px}.marks-sheet-table th{position:static;top:0;z-index:3;background:#006b3c!important;color:#fff!important;border:1px solid #00542f;padding:10px 9px;white-space:nowrap;text-align:left;font-weight:900}.marks-sheet-table td{border:1px solid #d9e2ec;padding:8px 9px;vertical-align:middle;background:#fff;color:#1f2937}.marks-sheet-table tr:nth-child(even) td{background:#fbfdff}.marks-sheet-table tr.active-entry-row td{background:#fff7d6!important;outline:2px solid #f59e0b}.marks-sheet-table tr.absent-row td{background:#fff1f2!important}.marks-sheet-table tr.synced-row td{background:#dcfce7!important}.marks-sheet-table tr.queued-row td{background:#eff6ff!important}.marks-sheet-table .mini-input{width:105px;min-height:38px;padding:8px 10px;border:1.5px solid #94a3b8;border-radius:10px;font-size:16px;text-align:center;background:#fff}.marks-sheet-table .mini-input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.18);outline:none}.marks-sheet-table .roll-cell,.marks-sheet-table .reg-cell{font-family:Arial,sans-serif;white-space:nowrap}.marks-sheet-table .name-cell{min-width:180px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}.marks-sheet-table .sl-cell{text-align:center;font-weight:900;color:#064e3b}@media(max-width:800px){.marks-sheet-table{min-width:760px;font-size:12px}.marks-sheet-table .mini-input{width:82px;font-size:14px}}.marks-sheet-wrap{position:relative}.marks-filter-under-load{display:flex;justify-content:flex-end;align-items:flex-start;margin:8px 0 10px}.marks-side-filter{position:static;float:none;z-index:1;width:330px;max-width:100%;margin:0;background:#ffffff;border:1px solid #cbd5e1;border-radius:16px;padding:10px;box-shadow:0 8px 20px rgba(15,23,42,.08);backdrop-filter:none}.marks-side-filter label{font-size:12px;font-weight:900;color:#064e3b;display:block;margin-bottom:5px}.marks-side-filter input{width:100%;height:38px;border:1px solid #94a3b8;border-radius:12px;padding:0 10px;font-weight:800}.marks-side-filter .mini-row{display:flex;gap:6px;margin-top:7px}.marks-side-filter button{height:34px;border:0;border-radius:10px;padding:0 10px;font-weight:900;cursor:pointer}.marks-side-filter .go{background:#0f6b4f;color:#fff;flex:1}.marks-side-filter .clear{background:#e2e8f0;color:#0f172a}@media(max-width:900px){.marks-filter-under-load{justify-content:stretch}.marks-side-filter{width:100%;margin:0}}#restoreMarksBackupBtn,#restoreOldMarksEntryBtn,#forceOldFormatBtn,#updateSummaryEntryBtn{display:none!important}.excel-file-box{margin:10px 0;padding:12px;border:1px solid #bcd4c6;border-radius:16px;background:#f8fffb}.excel-file-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.excel-file-title{font-weight:900;color:#064e3b}.excel-file-help{font-size:12px;color:#475569;font-weight:700}.excel-file-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.excel-file-actions input{max-width:270px}.excel-file-status{margin-top:8px}.excel-hit-row td{background:#dcfce7!important}.excel-miss{color:#b91c1c;font-weight:900}.excel-ok{color:#166534;font-weight:900}</style>
+<style>#restoreMarksBackupBtn,#forceOldFormatBtn,#restoreOldMarksEntryBtn{display:none!important}</style>
+</head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">✍️</span><span>Marks Entry</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a class="active" href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="exam-create.html">Exam</a><a href="exam-schedule.html">Schedule</a><a href="attendance-sheet.html">Attendance</a><a class="active" href="marks-entry.html">Marks</a><a href="incourse-result.html">Incourse Result</a></div><section class="academic-banner"><h1>Subject-wise Marks Entry</h1><div class="right-actions no-print" style="margin-top:10px"><button id="restoreMarksBackupBtn" class="btn red" type="button">Restore Marks Backup</button><button id="publishResultBtn" class="btn green" type="button">Publish Result</button><button id="unpublishResultBtn" class="btn red" type="button">Unpublish Result</button><button id="forceOldFormatBtn" class="btn red" type="button"></button><button id="restoreOldMarksEntryBtn" class="btn red" type="button"></button><button id="updateSummaryEntryBtn" class="btn green" type="button">Update All Summary</button><a class="btn green" href="attendance-marks-entry.html">Attendance Marks Entry</a></div></section><div class="panel"><div class="filter-row"><label class="field"><span class="label">Study Session</span><select id="sessionYear" class="input"></select></label><label class="field"><span class="label">Academic Year</span><select id="academicYear"></select></label><label class="field"><span class="label">Exam</span><select id="examSelect"></select></label><label class="field"><span class="label">Subject</span><select id="subjectSelect"></select></label><label class="field"><span class="label">Filter Roll / Regi</span><input id="studentSearch" class="input" placeholder="Roll / Registration / Name"></label><label class="field"><span class="label">Sort By</span><select id="sortField" class="input"><option value="roll">Roll</option><option value="reg">Regi No</option><option value="name">Name</option><option value="session">Session</option><option value="type">Type</option></select></label><label class="field"><span class="label">Order</span><select id="sortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label><button id="loadStudents" class="btn primary" type="button">Load Students</button></div><div id="marksStatus" class="status info hide"></div><div class="excel-file-box no-print"><div class="excel-file-head"><div><div class="excel-file-title">📥 Excel File Entry</div><div class="excel-file-help">Excel/CSV file upload করুন। A column = Roll/Registration, B column = Mark. File upload করলেই mark auto বসবে। তারপর Save Marks দিন।</div></div><div class="excel-file-actions"><input id="excelFileInput" type="file" accept=".xlsx,.xls,.csv,text/csv"><button id="clearExcelFileMarks" class="btn ghost" type="button">Clear Highlight</button></div></div><div id="excelFileStatus" class="status info hide excel-file-status"></div></div></div><div class="marks-filter-under-load no-print"><div class="marks-side-filter"><label>Filter Roll / Regi / Name</label><input id="studentSearchSide" placeholder="Type roll / regi / name"><div class="mini-row"><button class="go" id="sideSearchGo" type="button">Search</button><button class="clear" id="sideSearchClear" type="button">Clear</button></div></div></div><div class="status info no-print" style="display:block;margin:10px 0">
+ Incourse Rule: Exam Marks minimum 40% check হবে। Attendance 40% আলাদা Attendance Marks Entry থেকে হবে।
+</div><form id="marksForm" class="marks-sheet-wrap"><table class="marks-sheet-table"><thead id="marksHead"></thead><tbody id="marksTable"><tr><td colspan="9" class="empty"></td></tr></tbody></table></form><div class="panel no-print" style="margin-top:14px"><div class="right-actions"><button id="saveMarks" class="btn blue" type="button">Save Marks</button><button id="syncPendingMarksBottom" class="btn green" type="button">Sync Pending Marks Now</button></div></div></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+const sessionEl = document.getElementById('sessionYear');
+const yearEl = document.getElementById('academicYear');
+const examSelect = document.getElementById('examSelect');
+const subjectSelect = document.getElementById('subjectSelect');
+const head = document.getElementById('marksHead');
+const table = document.getElementById('marksTable');
+const statusEl = document.getElementById('marksStatus');
+const studentSearchEl = document.getElementById('studentSearch');
+const studentSearchSideEl = document.getElementById('studentSearchSide');
+const excelFileInput = document.getElementById('excelFileInput');
+const excelFileStatus = document.getElementById('excelFileStatus');
+let exams = [], filteredExams = [], selectedExam = null, selectedSubject = null, selectedSchedule = null, studentRows = [], visibleRows = [];
+
+
+function examStudySessionValue(e){
+  return String(e?.CurrentStudySession || e?.StudySessionYear || e?.SessionYear || '').trim();
+}
+function examMatchesStudySession(e, sessionYear){
+  const s = String(sessionYear || '').trim();
+  if(!s) return true;
+  return [e?.CurrentStudySession, e?.StudySessionYear, e?.SessionYear].map(x=>String(x||'').trim()).includes(s);
+}
+function fillSessionSelectSafe(){
+  const preset = String(getParam('studySessionYear') || getParam('currentStudySession') || '').trim();
+  const sessions=[...new Set(exams.flatMap(e=>[e.CurrentStudySession,e.StudySessionYear,e.SessionYear]).map(x=>String(x||'').trim()).filter(Boolean).concat(preset?[preset]:[]))].sort().reverse();
+  fillSelect(sessionEl,sessions.map(s=>({value:s,label:s})),'Select session');
+}
+
+function fillYearSelectSafe(){
+  const years=[...new Set(exams.map(e=>String(e.AcademicYear||'').trim()).filter(Boolean))].filter(Boolean);
+  fillSelect(yearEl,years.map(y=>({value:y,label:y})),'Select year');
+}
+function autoSelectMarksExam(){
+  if(!exams.length)return false;
+  if(!sessionEl.value)sessionEl.value=examStudySessionValue(exams[0]);
+  let matches=exams.filter(e=>examMatchesStudySession(e, sessionEl.value.trim()));
+  if(!yearEl.value && matches.length)yearEl.value=String(matches[0].AcademicYear||'').trim();
+  return true;
+}
+
+
+function isICTSubjectUI(subject){
+  const code=String(subject?.SubjectCode||'').trim();
+  return code==='219903';
+}
+
+function isEnglishNonCreditSubjectUI(subject){
+  const type = String(subject?.SubjectType || '').trim().toLowerCase();
+  const credits = String(subject?.Credits || subject?.Credit || '').trim();
+  return type.includes('noncredit') || type.includes('non-credit') || type.includes('non credit') || credits === '0';
+}
+function subjectAllowedForExamUI(exam, subject) {
+  const code = String(subject?.SubjectCode || '').trim();
+  const name = String(subject?.SubjectName || '').trim();
+  const status = String(subject?.Status || 'Active').trim().toLowerCase();
+  const examType = String(exam?.ExamType || '').trim();
+  if(!code || !name) return false;
+  if(['deleted','remove','removed','inactive','archive','archived'].includes(status)) return false;
+
+  if(isEnglishNonCreditSubjectUI(subject) && examType !== 'Test Examination') return false;
+
+  return true;
+}
+
+function displayName(e){
+  return e.DisplayName || e.ExamName || [e.SessionYear,e.AcademicYear,e.ExamType].filter(Boolean).join(' - ') || e.ExamID;
+}
+function getMarksStudySessionYear(){
+  return String((sessionEl && sessionEl.value) || getParam('studySessionYear') || getParam('currentStudySession') || (selectedExam && (selectedExam.CurrentStudySession || selectedExam.StudySessionYear || selectedExam.SessionYear)) || '').trim();
+}
+
+function clearMarksSelection(msg='Select exam and subject.'){
+  subjectSelect.innerHTML='<option value="">Select subject</option>';
+  examSelect.innerHTML='<option value="">Select exam</option>';
+  head.innerHTML='';
+  table.innerHTML = `<tr><td colspan="9" class="empty">${msg}</td></tr>`;
+  selectedExam = null; selectedSubject = null; selectedSchedule = null; studentRows = [];
+}
+function loadFilteredExams(){
+  const sessionYear = sessionEl.value.trim();
+  const academicYear = yearEl.value;
+  if(!sessionYear || !academicYear){
+    clearMarksSelection('');
+    showStatus(statusEl,'err','Required.');
+    return [];
+  }
+  filteredExams = exams.filter(e => examMatchesStudySession(e, sessionYear) && String(e.AcademicYear||'').trim() === academicYear);
+  fillSelect(examSelect, filteredExams.map(e=>({value:e.ExamID,label:displayName(e)})), 'Select exam');
+  subjectSelect.innerHTML='<option value="">Select subject</option>';
+  head.innerHTML='';
+  table.innerHTML = '<tr><td colspan="9" class="empty">Select exam and subject.</td></tr>';
+  if(!filteredExams.length) showStatus(statusEl,'err','No exam found for selected Session + Year.');
+  else showStatus(statusEl,'ok',filteredExams.length + ' exam loaded.');
+  return filteredExams;
+}
+function isIncourseExam(){
+  return selectedExam && (selectedExam.ExamType === '1st Incourse' || selectedExam.ExamType === '2nd Incourse');
+}
+function subjectFullMarks(){
+  return Number(
+    (selectedSchedule && (selectedSchedule.SubjectFullMarks || selectedSchedule.FullMarks || selectedSchedule.SubjectMarks)) ||
+    (selectedSubject && (selectedSubject.FullMarks || selectedSubject.Marks || selectedSubject.MaxMarks)) ||
+    (isICTSubjectUI(selectedSubject) ? 75 : 100)
+  ) || (isICTSubjectUI(selectedSubject) ? 75 : 100);
+}
+function maxTestFromSheet(){
+  if(isEnglishNonCreditSubjectUI(selectedSubject)) return subjectFullMarks() || 100;
+  const fallback = isICTSubjectUI(selectedSubject) ? 60 : Math.round(subjectFullMarks() * 0.80);
+  return Number(
+    (selectedSchedule && selectedSchedule.SubjectTestMarks) ||
+    (selectedExam && (selectedExam.TestExamMarks || selectedExam.TestMarks)) ||
+    fallback
+  ) || fallback;
+}
+function maxIncourseFromSheet(){
+  if(isEnglishNonCreditSubjectUI(selectedSubject)) return 0;
+  const full = subjectFullMarks();
+  return Math.round(full * 0.20);
+}
+
+function maxMain(){
+  if(selectedExam?.ExamType === 'Test Examination') return maxTestFromSheet();
+  if(selectedExam?.ExamType === '1st Incourse' || selectedExam?.ExamType === '2nd Incourse') return maxExam();
+  return Number(
+    (selectedSchedule && (selectedSchedule.SubjectFullMarks || selectedSchedule.SubjectExamMarks || selectedSchedule.SubjectMarks)) ||
+    (selectedSubject && (selectedSubject.FullMarks || selectedSubject.Marks || selectedSubject.MaxMarks)) ||
+    (isICTSubjectUI(selectedSubject) ? 75 : 100)
+  ) || (isICTSubjectUI(selectedSubject) ? 75 : 100);
+}
+
+function maxExam(){
+  return Number((selectedSchedule && selectedSchedule.SubjectExamMarks) || selectedExam?.ExamComponentMarks || (isICTSubjectUI(selectedSubject) ? 8 : 15)) || (isICTSubjectUI(selectedSubject) ? 8 : 15);
+}
+function maxAssignment(){ return Number((selectedSchedule && selectedSchedule.SubjectAssignmentMarks) || selectedExam?.AssignmentMarks || (isICTSubjectUI(selectedSubject) ? 3 : 0)) || (isICTSubjectUI(selectedSubject) ? 3 : 0); }
+function incourseMaxTotal(){ return Number(maxExam() || 0) + (hasAssignment() ? Number(maxAssignment() || 0) : 0); }
+
+function hasAssignment(){
+  if(!isIncourseExam()) return false;
+  return Number(maxAssignment()) > 0;
+}
+
+
+function isAbsentValue(v){
+  return ['a','ab','absent'].includes(String(v || '').trim().toLowerCase());
+}
+function parseMark(v){
+  if(isAbsentValue(v)) return 0;
+  if(String(v || '').trim() === '') return 0;
+  const n = Number(v);
+  return Number.isNaN(n) ? 0 : n;
+}
+function gradeFromPercent(percent){
+  percent=Number(percent||0);
+  if(percent>=80)return'A+';
+  if(percent>=75)return'A';
+  if(percent>=70)return'A-';
+  if(percent>=65)return'B+';
+  if(percent>=60)return'B';
+  if(percent>=55)return'B-';
+  if(percent>=50)return'C+';
+  if(percent>=45)return'C';
+  if(percent>=40)return'D';
+  return'F';
+}
+function grade(mark, maxMarks){
+  mark=Number(mark||0);
+  maxMarks=Number(maxMarks||0) || 100;
+  const percent = (mark / maxMarks) * 100;
+  if(isEnglishNonCreditSubjectUI(selectedSubject)){
+    const passMark = Number(selectedSubject?.PassMarks || Math.ceil(maxMarks * 0.40));
+    return mark >= passMark ? 'Pass' : 'Failed';
+  }
+  return gradeFromPercent(percent);
+}
+function passFailLabelFromGrade(g){
+  g = String(g || '').trim();
+  if(g === 'AB' || g === 'Absent') return 'Absent';
+  if(!g) return '';
+  if(g === 'Failed' || g === 'Fail' || g === 'F') return 'Failed';
+  return 'Pass';
+}
+function statusPill(label){
+  if(!label) return '';
+  const cls = label === 'Absent' || label === 'Failed' ? 'red' : 'green';
+  return `<span class="pill ${cls}">${label}</span>`;
+}
+
+function incourseStatusByExamMark(examVal){
+  if(examVal === '') return {grade:'', status:''};
+  const min = Math.ceil(Number(maxExam() || 0) * 0.40);
+  const mark = parseMark(examVal);
+  const g = grade(mark, maxExam());
+  return {grade:g, status: mark >= min ? 'Pass' : 'Failed'};
+}
+
+function rowGradeAndStatus(mark, maxMarks){
+  const g = grade(mark, maxMarks);
+  return {grade:g, status:passFailLabelFromGrade(g)};
+}
+function typeBadge(s){
+  const type = s.StudentType || s.IrregularStatus || 'Regular';
+  const cls = type === 'Irregular' ? 'irregular' : 'regular';
+  const title = s.IrregularReason ? ` title="${s.IrregularReason}"` : '';
+  return `<span class="student-type-badge ${cls}"${title}>${type}</span>`;
+}
+function cleanMarkInput(inp){
+  const raw = String(inp.value || '').trim();
+  if(isAbsentValue(raw)){
+    inp.value = 'A';
+    markRowAbsent(inp.closest('tr'));
+    return;
+  }
+  if(raw !== '' && Number.isNaN(Number(raw))){
+    inp.value = '';
+    return;
+  }
+  const max = Number(inp.dataset.max || inp.max || 0);
+  const val = Number(inp.value || 0);
+  if(inp.value !== '' && val > max){
+    inp.value = max;
+    alert('Max mark er beshi deua jabe na. Max: ' + max);
+  }
+  if(inp.value !== '' && val < 0) inp.value = 0;
+}
+
+function safeHtml(v){ return String(v ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+function makeMarkIdPreview(s){
+  if(!selectedExam || !selectedSubject || !s) return '';
+  return 'MRK-' + selectedExam.ExamID + '-' + selectedSubject.SubjectCode + '-' + (s.Roll || '');
+}
+function sheetValue(v, fallback=''){
+  return (v === undefined || v === null || v === '') ? fallback : v;
+}
+function sheetPassFailText(tr, computedPassFail){
+  if(!tr) return '';
+  if(tr.dataset.absent === 'Yes') return 'Absent';
+  return computedPassFail || 'Pass';
+}
+
+function renderHeader(){
+  if(isIncourseExam()){
+    head.innerHTML = `<tr>
+      <th style="width:50px">SL</th>
+      <th>Roll</th>
+      <th>Registration</th>
+      <th>Student Name</th>
+      <th>Exam Marks<br></th>
+      ${hasAssignment()?`<th>Assignment<br></th>`:''}
+      <th>Total<br></th>
+      <th>Grade</th>
+      <th>Status</th>
+      <th>Save</th>
+    </tr>`;
+  }else{
+    head.innerHTML = `<tr>
+      <th style="width:50px">SL</th>
+      <th>Roll</th>
+      <th>Registration</th>
+      <th>Student Name</th>
+      <th>Marks<br></th>
+      <th>Grade</th>
+      <th>Status</th>
+      <th>Save</th>
+    </tr>`;
+  }
+}
+
+
+function syncSearchInputs(source){
+  if(!studentSearchEl || !studentSearchSideEl) return;
+  if(source === 'side') studentSearchEl.value = studentSearchSideEl.value;
+  else studentSearchSideEl.value = studentSearchEl.value;
+}
+
+function getFilteredMarkRows(){
+  const q = ((studentSearchEl?.value || studentSearchSideEl?.value || '')).toLowerCase().trim();
+  const rows = studentRows.filter(s => [s.Roll,s.RegistrationNumber,s.Name,s.SessionYear,s.StudentType,s.IrregularStatus].join(' ').toLowerCase().includes(q));
+  return sortStudentList(rows, document.getElementById('sortField').value, document.getElementById('sortDir').value);
+}
+function markRowAbsent(tr){
+  if(!tr) return;
+  tr.dataset.absent = 'Yes';
+  tr.classList.add('absent-row');
+  tr.querySelectorAll('.exam-mark,.assignment-mark,.main-mark').forEach(inp => {
+    inp.classList.add('absent-input');
+  });
+  const total = tr.querySelector('.total-cell');
+  if(total) total.textContent = '0';
+  const gradeCell = tr.querySelector('.grade-cell');
+  const statusCell = tr.querySelector('.status-cell');
+  if(gradeCell) gradeCell.textContent = 'AB';
+  if(statusCell) statusCell.innerHTML = statusPill('Absent');
+}
+
+function clearRowAbsent(tr){
+  if(!tr) return;
+  const anyA = [...tr.querySelectorAll('.exam-mark,.assignment-mark,.main-mark')].some(inp => isAbsentValue(inp.value));
+  if(anyA) return;
+  tr.dataset.absent = 'No';
+  tr.classList.remove('absent-row');
+  tr.querySelectorAll('.exam-mark,.assignment-mark,.main-mark').forEach(inp => inp.classList.remove('absent-input'));
+}
+function markActiveRow(el){
+  document.querySelectorAll('#marksTable tr').forEach(tr => tr.classList.remove('active-entry-row'));
+  el.closest('tr')?.classList.add('active-entry-row');
+}
+function setRowSaveText(tr, text, type='info'){
+  const cell = tr?.querySelector('.row-save-status');
+  if(!cell) return;
+  cell.innerHTML = `<span class="pill ${type === 'ok' ? 'green' : type === 'err' ? 'red' : 'blue'}">${text}</span>`;
+}
+function updateTotals(){
+  document.querySelectorAll('#marksTable tr').forEach(tr=>{
+    const cell = tr.querySelector('.total-cell');
+    if(!cell) return;
+    const eVal = tr.querySelector('.exam-mark')?.value || '';
+    const aVal = hasAssignment() ? (tr.querySelector('.assignment-mark')?.value || '') : '';
+    if(isAbsentValue(eVal) || isAbsentValue(aVal) || tr.dataset.absent === 'Yes'){
+      markRowAbsent(tr);
+      return;
+    }
+    clearRowAbsent(tr);
+    const e = parseMark(eVal);
+    const a = hasAssignment() ? parseMark(aVal) : 0;
+    cell.textContent = e + a;
+  });
+}
+function updatePassFail(){
+  document.querySelectorAll('#marksTable tr').forEach(tr=>{
+    const inp = tr.querySelector('.main-mark');
+    if(!inp) return;
+    const gradeCell = tr.querySelector('.grade-cell');
+    const statusCell = tr.querySelector('.status-cell');
+    const totalCell = tr.querySelector('.total-cell');
+    if(tr.dataset.absent === 'Yes' || isAbsentValue(inp.value)){
+      markRowAbsent(tr);
+      return;
+    }
+    clearRowAbsent(tr);
+    const hasValue = inp.value !== '';
+    const mark = parseMark(inp.value);
+    const rs = hasValue ? rowGradeAndStatus(mark, maxMain()) : {grade:'', status:''};
+    if(totalCell) totalCell.textContent = hasValue ? mark : '';
+    if(gradeCell) gradeCell.textContent = rs.grade;
+    if(statusCell) statusCell.innerHTML = statusPill(rs.status);
+  });
+
+  document.querySelectorAll('#marksTable tr').forEach(tr=>{
+    if(!isIncourseExam()) return;
+    const gradeCell = tr.querySelector('.grade-cell');
+    const statusCell = tr.querySelector('.status-cell');
+    const totalCell = tr.querySelector('.total-cell');
+    const eVal = tr.querySelector('.exam-mark')?.value || '';
+    const aVal = hasAssignment() ? (tr.querySelector('.assignment-mark')?.value || '') : '';
+    if(tr.dataset.absent === 'Yes' || isAbsentValue(eVal) || isAbsentValue(aVal)){
+      markRowAbsent(tr);
+      return;
+    }
+    const hasValue = !!(eVal || aVal);
+    const total = parseMark(eVal) + (hasAssignment() ? parseMark(aVal) : 0);
+    const rs = hasValue ? incourseStatusByExamMark(eVal) : {grade:'', status:''};
+    if(totalCell) totalCell.textContent = hasValue ? total : '';
+    if(gradeCell) gradeCell.textContent = rs.grade;
+    if(statusCell) statusCell.innerHTML = statusPill(rs.status);
+  });
+}
+
+function getRowPayload(tr){
+  if(!tr) return null;
+  if(isIncourseExam()){
+    const inp = tr.querySelector('.exam-mark');
+    if(!inp) return null;
+    const aInp = tr.querySelector('.assignment-mark');
+    const absent = tr.dataset.absent === 'Yes' || isAbsentValue(inp.value) || isAbsentValue(aInp?.value);
+    return {
+      roll: inp.dataset.roll,
+      registrationNumber: inp.dataset.reg,
+      name: inp.dataset.name,
+      examMarks: absent ? 'A' : inp.value,
+      assignmentMarks: hasAssignment() ? (absent ? 'A' : (aInp?.value || '')) : '',
+      attendanceMarks: 0,
+      status: absent ? 'Absent' : incourseStatusByExamMark(inp.value).status,
+      computedStatus: absent ? 'Absent' : incourseStatusByExamMark(inp.value).status,
+      absent: absent ? 'Yes' : 'No'
+    };
+  }
+  const inp = tr.querySelector('.main-mark');
+  if(!inp) return null;
+  const absent = tr.dataset.absent === 'Yes' || isAbsentValue(inp.value);
+  return {
+    roll: inp.dataset.roll,
+    registrationNumber: inp.dataset.reg,
+    name: inp.dataset.name,
+    marks: absent ? 'A' : inp.value,
+    status: absent ? 'Absent' : passFailLabelFromGrade(grade(parseMark(inp.value), maxMain())),
+    computedStatus: absent ? 'Absent' : passFailLabelFromGrade(grade(parseMark(inp.value), maxMain())),
+    absent: absent ? 'Yes' : 'No'
+  };
+}
+function rowHasValue(row){
+  if(!row) return false;
+  if(row.status === 'Absent') return true;
+  if(isIncourseExam()) return row.examMarks !== '' || row.assignmentMarks !== '';
+  return row.marks !== '';
+}
+function validateRowBeforeSave(tr, silent=false){
+  for(const inp of tr.querySelectorAll('input.mark-cell')){
+    cleanMarkInput(inp);
+    if(isAbsentValue(inp.value)) continue;
+    if(inp.value !== '' && Number.isNaN(Number(inp.value))){
+      if(!silent) alert('Only number/A.');
+      inp.focus();
+      return false;
+    }
+    if(inp.value !== '' && Number(inp.value) > Number(inp.dataset.max || 999999)){
+      if(!silent) alert('Max exceeded.');
+      inp.focus();
+      return false;
+    }
+  }
+  updateTotals();
+  updatePassFail();
+
+  if(isIncourseExam() && tr.dataset.absent !== 'Yes'){
+    const eVal = tr.querySelector('.exam-mark')?.value || '';
+    if(eVal !== ''){
+      const min = Math.ceil(Number(maxExam() || 0) * 0.40);
+      if(parseMark(eVal) < min){
+        tr.classList.add('entry-error-row');
+        if(!silent) alert('Incourse Exam Marks 40% er kom save hobe na. Minimum: ' + min + ' / ' + maxExam() + '. Absent hole A likhun.');
+        tr.querySelector('.exam-mark')?.focus();
+        return false;
+      }
+    }
+  }
+  tr.classList.remove('entry-error-row');
+  return true;
+}
+function updateStudentRowsFromPayload(row){
+  const idx = studentRows.findIndex(s => String(s.Roll) === String(row.roll));
+  if(idx < 0) return;
+  const s = studentRows[idx];
+  if(row.status === 'Absent'){
+    s.IsAbsent = 'Yes';
+    s.PassFail = 'Absent';
+    s.ExamMarks = 0;
+    s.AssignmentMarks = 0;
+    s.Marks = 0;
+    return;
+  }
+  s.IsAbsent = 'No';
+  s.PassFail = row.status === 'Absent' ? 'Absent' : (row.computedStatus || s.PassFail || '');
+  if(isIncourseExam()){
+    s.ExamMarks = row.examMarks || '';
+    s.AssignmentMarks = row.assignmentMarks || '';
+    s.Marks = parseMark(row.examMarks) + (hasAssignment() ? parseMark(row.assignmentMarks) : 0);
+    const rs = rowGradeAndStatus(s.Marks, incourseMaxTotal());
+    s.Grade = rs.grade;
+    s.PassFail = rs.status;
+  }else{
+    s.Marks = row.marks || '';
+    const rs = rowGradeAndStatus(s.Marks, maxMain());
+    s.Grade = rs.grade;
+    s.PassFail = rs.status;
+  }
+}
+
+const GEO_MARKS_DRAFT_KEY = 'geo_marks_draft_backup_v2';
+
+function readMarksDrafts(){
+  try{return JSON.parse(localStorage.getItem(GEO_MARKS_DRAFT_KEY) || '{}');}
+  catch(e){return {};}
+}
+function writeMarksDrafts(obj){
+  try{localStorage.setItem(GEO_MARKS_DRAFT_KEY, JSON.stringify(obj || {}));}
+  catch(e){console.warn('Marks draft save failed', e);}
+}
+function draftKey(examId, subjectCode, roll){
+  return [examId, subjectCode, roll].map(x=>String(x||'').trim()).join('|');
+}
+function saveMarkDraft(row){
+  if(!selectedExam || !selectedSubject || !row || !row.roll) return;
+  const drafts = readMarksDrafts();
+  const key = draftKey(selectedExam.ExamID, selectedSubject.SubjectCode, row.roll);
+  drafts[key] = {
+    examId:selectedExam.ExamID,
+    subjectCode:selectedSubject.SubjectCode,
+    row:row,
+    savedAt:Date.now()
+  };
+  writeMarksDrafts(drafts);
+}
+function removeMarkDraft(row){
+  if(!selectedExam || !selectedSubject || !row || !row.roll) return;
+  const drafts = readMarksDrafts();
+  delete drafts[draftKey(selectedExam.ExamID, selectedSubject.SubjectCode, row.roll)];
+  writeMarksDrafts(drafts);
+}
+function applyMarkDraftsToStudents(){
+  if(!selectedExam || !selectedSubject || !Array.isArray(studentRows)) return;
+  const drafts = readMarksDrafts();
+  studentRows = studentRows.map(s=>{
+    const d = drafts[draftKey(selectedExam.ExamID, selectedSubject.SubjectCode, s.Roll)];
+    if(!d || !d.row) return s;
+    const row = d.row;
+    const copy = Object.assign({}, s);
+    copy.LocalDraftPending = 'Yes';
+    if(row.status === 'Absent'){
+      copy.IsAbsent = 'Yes';
+      copy.PassFail = 'Absent';
+      copy.ExamMarks = 0;
+      copy.AssignmentMarks = 0;
+      copy.Marks = 0;
+    }else if(isIncourseExam()){
+      copy.ExamMarks = row.examMarks || '';
+      copy.AssignmentMarks = row.assignmentMarks || '';
+      copy.Marks = parseMark(row.examMarks) + (hasAssignment() ? parseMark(row.assignmentMarks) : 0);
+      copy.PassFail = copy.PassFail || passFailLabelFromGrade(grade(copy.Marks || 0, incourseMaxTotal()));
+    }else{
+      copy.Marks = row.marks || '';
+      copy.PassFail = copy.PassFail || passFailLabelFromGrade(grade(copy.Marks || 0, maxMain()));
+    }
+    return copy;
+  });
+}
+function queueOrSyncMarks(payload, meta){
+  const qItem = enqueueGeoWrite(payload, meta);
+  setTimeout(()=>processGeoWriteQueue(), 80);
+  return qItem;
+}
+
+
+
+function updateStudentRowsFromCurrentDom(){
+  document.querySelectorAll('#marksTable tr').forEach(tr=>{
+    const row = getRowPayload(tr);
+    if(row && row.roll) updateStudentRowsFromPayload(row);
+  });
+}
+function collectAllEnteredRows(){
+  updateStudentRowsFromCurrentDom();
+
+  const rows = [];
+  const seen = {};
+  studentRows.forEach(s=>{
+    const absent = s.IsAbsent === 'Yes' || s.PassFail === 'Absent';
+    let row;
+    if(isIncourseExam()){
+      const examVal = absent ? 'A' : (s.ExamMarks !== undefined && s.ExamMarks !== null ? String(s.ExamMarks) : '');
+      const assignVal = hasAssignment() ? (absent ? 'A' : (s.AssignmentMarks !== undefined && s.AssignmentMarks !== null ? String(s.AssignmentMarks) : '')) : '';
+      row = {
+        roll:String(s.Roll || ''),
+        registrationNumber:String(s.RegistrationNumber || ''),
+        name:String(s.Name || ''),
+        examMarks:examVal,
+        assignmentMarks:assignVal,
+        attendanceMarks:0,
+        status:absent ? 'Absent' : (s.PassFail || ''),
+        computedStatus:absent ? 'Absent' : (s.PassFail || ''),
+        absent:absent ? 'Yes' : 'No'
+      };
+    }else{
+      const markVal = absent ? 'A' : (s.Marks !== undefined && s.Marks !== null ? String(s.Marks) : '');
+      row = {
+        roll:String(s.Roll || ''),
+        registrationNumber:String(s.RegistrationNumber || ''),
+        name:String(s.Name || ''),
+        marks:markVal,
+        status:absent ? 'Absent' : (s.PassFail || ''),
+        computedStatus:absent ? 'Absent' : (s.PassFail || ''),
+        absent:absent ? 'Yes' : 'No'
+      };
+    }
+    if(row.roll && rowHasValue(row) && !seen[row.roll]){
+      rows.push(row);
+      seen[row.roll] = true;
+    }
+  });
+  return rows;
+}
+function markParamValue(v){
+  return v === undefined || v === null ? '' : String(v);
+}
+function buildDirectMarkParams(row){
+  return {
+    examId:selectedExam.ExamID,
+    sessionYear:getMarksStudySessionYear(),
+    academicYear:selectedExam.AcademicYear || yearEl.value || '',
+    examType:selectedExam.ExamType || '',
+    examName:selectedExam.ExamName || selectedExam.DisplayName || '',
+    subjectCode:selectedSubject.SubjectCode || '',
+    subjectName:selectedSubject.SubjectName || selectedSubject.Name || '',
+    roll:row.roll || '',
+    registrationNumber:row.registrationNumber || '',
+    name:row.name || '',
+    marks:markParamValue(row.marks),
+    examMarks:markParamValue(row.examMarks),
+    assignmentMarks:markParamValue(row.assignmentMarks),
+    attendanceMarks:markParamValue(row.attendanceMarks),
+    status:row.status || '',
+    absent:row.absent || 'No',
+    examMax:markParamValue(isIncourseExam()?maxExam():''),
+    totalMax:markParamValue(isIncourseExam()?'':maxMain()),
+    gradeMax:markParamValue(isIncourseExam()?maxExam():maxMain()),
+    force:'1',
+    _t:Date.now()
+  };
+}
+function sendDirectMarkBeacon(params){
+  return new Promise(resolve=>{
+    try{
+      const qs = buildQuery(Object.assign({action:'saveMarkRowDirect'}, params));
+      const img = new Image();
+      let done = false;
+      const finish = ()=>{ if(done) return; done = true; resolve({success:true, beacon:true}); };
+      img.onload = finish;
+      img.onerror = finish;
+      img.src = API_URL + '?' + qs;
+      setTimeout(finish, 3500);
+    }catch(e){ resolve({success:false, message:e.message}); }
+  });
+}
+const MARKS_SAVE_DEBOUNCE_MS = 160;
+let __marksSaveTimer = null;
+let __marksSaveQueue = {};
+let __marksSaveWaiters = [];
+let __marksBatchBusy = false;
+
+function clearMarksLoadCachesAfterSave(){
+  try{ clearGeoCache(); }catch(e){}
+  try{ if(typeof clearLiteGetCache === 'function') clearLiteGetCache(); }catch(e){}
+}
+function flagMissingMarksRefreshAfterSave(){
+  try{
+    const info = {
+      at:Date.now(),
+      examId:selectedExam && selectedExam.ExamID || '',
+      subjectCode:selectedSubject && selectedSubject.SubjectCode || ''
+    };
+    sessionStorage.setItem('geo_missing_marks_refresh_needed','1');
+    localStorage.setItem('geo_missing_marks_refresh_needed','1');
+    localStorage.setItem('geo_missing_marks_refresh_info', JSON.stringify(info));
+  }catch(e){}
+}
+
+function uniqueRowsByRoll(rows){
+  const map = {};
+  (rows || []).forEach(row=>{ if(row && row.roll) map[String(row.roll)] = row; });
+  return Object.keys(map).map(k=>map[k]);
+}
+
+async function saveRowsBatchNow(rows, rowByRoll){
+  rows = uniqueRowsByRoll(rows);
+  if(!rows.length) throw new Error('No marks found');
+
+  rows.forEach(row=>{
+    const tr = rowByRoll && rowByRoll[row.roll];
+    if(tr) setRowSaveText(tr, 'Saving Sheet...', 'info');
+  });
+
+  try{
+    const payload = {
+      action:'saveMarks',
+      examId:selectedExam.ExamID,
+      subjectCode:selectedSubject.SubjectCode,
+      studySessionYear:(getMarksStudySessionYear()),
+      marks:rows
+    };
+    const res = await geoApiPost(payload);
+    if(!res || res.success === false) throw new Error((res && res.message) || 'Batch save failed');
+
+    rows.forEach(row=>{
+      removeMarkDraft(row);
+      updateStudentRowsFromPayload(row);
+      const tr = rowByRoll && rowByRoll[row.roll];
+      if(tr){
+        tr.classList.remove('queued-row','saving-row');
+        tr.classList.add('synced-row');
+        setRowSaveText(tr, 'Saved Sheet', 'ok');
+        setTimeout(()=>tr.classList.remove('synced-row'), 1200);
+      }
+    });
+    clearMarksLoadCachesAfterSave();
+    flagMissingMarksRefreshAfterSave();
+    showStatus(statusEl,'ok',(res.saved || rows.length)+' marks Google Sheet-এ save হয়েছে।');
+    return {success:true, saved:(res.saved || rows.length), batch:true, response:res};
+  }catch(err){
+    rows.forEach(row=>{
+      const tr = rowByRoll && rowByRoll[row.roll];
+      if(tr){
+        tr.classList.remove('saving-row');
+        tr.classList.add('queued-row');
+        setRowSaveText(tr, 'Save Failed', 'err');
+      }
+    });
+    const e = new Error((err && err.message) || String(err));
+    e.saved = 0;
+    e.failed = rows.map(row=>({row, error:e.message}));
+    throw e;
+  }
+}
+
+function flushQueuedMarkSaves(){
+  if(__marksBatchBusy){
+    clearTimeout(__marksSaveTimer);
+    __marksSaveTimer = setTimeout(flushQueuedMarkSaves, 120);
+    return;
+  }
+  const queued = __marksSaveQueue;
+  const waiters = __marksSaveWaiters;
+  __marksSaveQueue = {};
+  __marksSaveWaiters = [];
+  __marksSaveTimer = null;
+
+  const rows = Object.keys(queued).map(k=>queued[k].row).filter(Boolean);
+  const rowByRoll = {};
+  Object.keys(queued).forEach(k=>{ if(queued[k].tr) rowByRoll[k] = queued[k].tr; });
+
+  if(!rows.length){
+    waiters.forEach(w=>w.resolve({success:true, saved:0, skipped:true}));
+    return;
+  }
+
+  __marksBatchBusy = true;
+  saveRowsBatchNow(rows, rowByRoll).then(res=>{
+    waiters.forEach(w=>w.resolve(res));
+  }).catch(err=>{
+    waiters.forEach(w=>{
+      const e = new Error((err && err.message) || String(err));
+      e.saved = 0;
+      e.failed = (w.rows || []).map(row=>({row, error:e.message}));
+      w.reject(e);
+    });
+  }).finally(()=>{
+    __marksBatchBusy = false;
+    if(Object.keys(__marksSaveQueue || {}).length){
+      clearTimeout(__marksSaveTimer);
+      __marksSaveTimer = setTimeout(flushQueuedMarkSaves, 30);
+    }
+  });
+}
+
+
+async function saveRowsDirectToSheet(rows, rowByRoll){
+  rows = uniqueRowsByRoll(rows);
+  if(!rows.length) throw new Error('No marks found');
+
+  // Bulk Save button: save immediately in one batch request.
+  if(rows.length > 1){
+    return saveRowsBatchNow(rows, rowByRoll || {});
+  }
+
+  // Enter key: wait a tiny moment and combine quick consecutive rows into one request.
+  return new Promise((resolve, reject)=>{
+    rows.forEach(row=>{
+      if(!row || !row.roll) return;
+      const key = String(row.roll);
+      __marksSaveQueue[key] = {row, tr: rowByRoll && rowByRoll[row.roll]};
+      const tr = rowByRoll && rowByRoll[row.roll];
+      if(tr) setRowSaveText(tr, 'Saving Sheet...', 'info');
+    });
+    __marksSaveWaiters.push({rows:rows.slice(), resolve, reject});
+    clearTimeout(__marksSaveTimer);
+    __marksSaveTimer = setTimeout(flushQueuedMarkSaves, MARKS_SAVE_DEBOUNCE_MS);
+  });
+}
+
+
+async function saveSingleMarkRow(tr, moveNext=false){
+  if(!selectedExam || !selectedSubject){ showStatus(statusEl,'err','Load students first.'); return false; }
+  if(!validateRowBeforeSave(tr)) return false;
+
+  const row = getRowPayload(tr);
+  if(!rowHasValue(row)){
+    setRowSaveText(tr, 'Empty', 'err');
+    showStatus(statusEl,'err','Mark empty.');
+    return false;
+  }
+
+  updateStudentRowsFromPayload(row);
+  saveMarkDraft(row);
+  tr.dataset.roll = row.roll;
+  tr.classList.add('saving-row');
+  setRowSaveText(tr, 'Saving BG...', 'info');
+
+  try{
+    await saveRowsDirectToSheet([row], {[row.roll]:tr});
+    showStatus(statusEl,'ok','Roll ' + row.roll + ' saved. Continue entry.');
+    return true;
+  }catch(err){
+    tr.classList.remove('saving-row');
+    tr.classList.add('queued-row');
+    const payload = { action:'saveMarks', examId:selectedExam.ExamID, subjectCode:selectedSubject.SubjectCode, studySessionYear:(getMarksStudySessionYear()), marks:[row] };
+    const qItem = queueOrSyncMarks(payload, { type:'marks-row', roll:row.roll, examId:selectedExam.ExamID, subjectCode:selectedSubject.SubjectCode });
+    tr.dataset.queueId = qItem.id;
+    setRowSaveText(tr, 'Queued Retry', 'info');
+    showStatus(statusEl,'err','Sheet save failed, queued retry: ' + err.message);
+    return false;
+  }
+}
+
+function moveDownSameColumn(inp){
+  const cls = inp.classList.contains('assignment-mark') ? 'assignment-mark' : (inp.classList.contains('main-mark') ? 'main-mark' : 'exam-mark');
+  const inputs = [...document.querySelectorAll('#marksTable input.' + cls)];
+  const idx = inputs.indexOf(inp);
+  if(inputs[idx+1]){
+    inputs[idx+1].focus();
+    inputs[idx+1].select();
+  }
+}
+function setupRowFocusAndKeyboard(){
+  document.querySelectorAll('#marksTable input.mark-cell').forEach(inp => {
+    inp.addEventListener('focus', () => markActiveRow(inp));
+    inp.addEventListener('input', () => {
+      cleanMarkInput(inp);
+      clearRowAbsent(inp.closest('tr'));
+      updateTotals();
+      updatePassFail();
+      const tr = inp.closest('tr');
+      const row = getRowPayload(tr);
+      if(row && row.roll) updateStudentRowsFromPayload(row);
+      setRowSaveText(tr, 'Not saved', 'info');
+    });
+    inp.addEventListener('keydown', e => {
+      if(e.key !== 'Enter') return;
+      e.preventDefault();
+      const tr = inp.closest('tr');
+
+      // Validate first. If valid, move down immediately; save continues in background.
+      if(!validateRowBeforeSave(tr)) return;
+
+      moveDownSameColumn(inp);
+      saveSingleMarkRow(tr, false);
+    });
+  });
+}
+function renderMarkRows(){
+  visibleRows = getFilteredMarkRows();
+  renderHeader();
+
+  const colCount = isIncourseExam() ? (hasAssignment() ? 10 : 9) : 8;
+  if(!visibleRows.length){
+    table.innerHTML = `<tr><td colspan="${colCount}" class="empty">No student found.</td></tr>`;
+    return;
+  }
+
+  table.innerHTML = visibleRows.map((s,i)=>{
+    const absent = s.IsAbsent === 'Yes' || s.PassFail === 'Absent';
+    const examValue = isIncourseExam()
+      ? (absent ? 'A' : (s.ExamMarks || ''))
+      : (absent ? 'A' : (s.Marks || s.ExamMarks || ''));
+    const assignmentValue = isIncourseExam() && hasAssignment() ? (absent ? 'A' : (s.AssignmentMarks || '')) : '';
+    const marksValue = absent ? 0 : (s.Marks !== '' && s.Marks !== undefined ? s.Marks : '');
+    const gradeValue = absent ? 'AB' : (s.Grade || '');
+    const existingStatus = String(s.PassFail || '').trim();
+    const passFailValue = absent ? 'Absent' : (
+      existingStatus === 'Pass' || existingStatus === 'Failed' || existingStatus === 'Fail' ? (existingStatus === 'Fail' ? 'Failed' : existingStatus) :
+      (gradeValue ? passFailLabelFromGrade(gradeValue) : '')
+    );
+    const inputClass = isIncourseExam() ? 'exam-mark' : 'main-mark';
+    const maxVal = isIncourseExam() ? maxExam() : maxMain();
+
+    if(isIncourseExam()){
+      const assignmentCell = hasAssignment()
+        ? `<td><input class="mini-input mark-cell assignment-mark" type="text" inputmode="decimal" data-max="${maxAssignment()}" data-roll="${safeHtml(s.Roll||'')}" data-reg="${safeHtml(s.RegistrationNumber||'')}" data-name="${safeHtml(s.Name||'')}" value="${safeHtml(assignmentValue)}"></td>`
+        : '';
+      return `<tr data-absent="${absent?'Yes':'No'}" data-roll="${safeHtml(s.Roll || '')}" class="${absent?'absent-row':''}">
+        <td class="sl-cell">${i+1}</td>
+        <td class="roll-cell">${safeHtml(s.Roll || '')}</td>
+        <td class="reg-cell">${safeHtml(s.RegistrationNumber || '')}</td>
+        <td class="name-cell" title="${safeHtml(s.Name || '')}">${safeHtml(s.Name || '')}</td>
+        <td><input class="mini-input mark-cell ${inputClass}" type="text" inputmode="decimal" data-max="${maxVal}" data-roll="${safeHtml(s.Roll||'')}" data-reg="${safeHtml(s.RegistrationNumber||'')}" data-name="${safeHtml(s.Name||'')}" value="${safeHtml(examValue)}"></td>
+        ${assignmentCell}
+        <td class="total-cell">${safeHtml(marksValue)}</td>
+        <td class="grade-cell">${safeHtml(gradeValue)}</td>
+        <td class="status-cell">${statusPill(passFailValue)}</td>
+        <td class="row-save-status"><span class="pill ${s.LocalDraftPending==='Yes'?'blue':(marksValue!==''?'green':'blue')}">${s.LocalDraftPending==='Yes'?'Pending':(marksValue!==''?'Saved':'Ready')}</span></td>
+      </tr>`;
+    }
+
+    return `<tr data-absent="${absent?'Yes':'No'}" data-roll="${safeHtml(s.Roll || '')}" class="${absent?'absent-row':''}">
+      <td class="sl-cell">${i+1}</td>
+      <td class="roll-cell">${safeHtml(s.Roll || '')}</td>
+      <td class="reg-cell">${safeHtml(s.RegistrationNumber || '')}</td>
+      <td class="name-cell" title="${safeHtml(s.Name || '')}">${safeHtml(s.Name || '')}</td>
+      <td><input class="mini-input mark-cell ${inputClass}" type="text" inputmode="decimal" data-max="${maxVal}" data-roll="${safeHtml(s.Roll||'')}" data-reg="${safeHtml(s.RegistrationNumber||'')}" data-name="${safeHtml(s.Name||'')}" value="${safeHtml(examValue)}"></td>
+      <td class="grade-cell">${safeHtml(gradeValue)}</td>
+      <td class="status-cell">${statusPill(passFailValue)}</td>
+      <td class="row-save-status"><span class="pill ${s.LocalDraftPending==='Yes'?'blue':(marksValue!==''?'green':'blue')}">${s.LocalDraftPending==='Yes'?'Pending':(marksValue!==''?'Saved':'Ready')}</span></td>
+    </tr>`;
+  }).join('');
+
+  setupRowFocusAndKeyboard();
+  updateTotals();
+  updatePassFail();
+  showStatus(statusEl,'ok',visibleRows.length+' students loaded.');
+}
+
+function validateBeforeSave(){
+  for(const tr of document.querySelectorAll('#marksTable tr')){
+    if(tr.querySelector('input.mark-cell') && !validateRowBeforeSave(tr, false)) return false;
+  }
+  return true;
+}
+async function init(){
+  try{
+    showStatus(statusEl,'info','Loading exams...');
+    const res = await geoApiGet('getExams', { forMarksEntry:'1' });
+    exams = Array.isArray(res.exams)?res.exams:[];
+    fillSessionSelectSafe();
+    fillYearSelectSafe();
+    if(!autoSelectMarksExam()){
+      clearMarksSelection('No exam found. Please create exam first.');
+      showStatus(statusEl,'err','No exam found. Create/Edit Exam থেকে আগে exam create করুন।');
+      return;
+    }
+    const preset = getParam('examId');
+    const presetSubject = getParam('subjectCode');
+    if(preset){
+      const ex = exams.find(e=>String(e.ExamID) === String(preset));
+      if(ex){
+        sessionEl.value = getParam('studySessionYear') || getParam('currentStudySession') || ex.CurrentStudySession || ex.StudySessionYear || ex.SessionYear || sessionEl.value;
+        yearEl.value = ex.AcademicYear || yearEl.value;
+        loadFilteredExams();
+        examSelect.value = preset;
+        await loadSubjectsByExam();
+        if(presetSubject){
+          subjectSelect.value = presetSubject;
+          await loadStudents();
+        }
+      }
+    }
+    showStatus(statusEl,'ok',exams.length+' exam loaded.');
+  }catch(err){
+    clearMarksSelection('Exam load failed.');
+    showStatus(statusEl,'err','Exam load failed: '+err.message);
+  }
+}
+async function loadSubjectsByExam(){
+  selectedExam = exams.find(e=>e.ExamID === examSelect.value);
+  subjectSelect.innerHTML='<option value="">Select subject</option>';
+  table.innerHTML = '<tr><td colspan="9" class="empty"></td></tr>';
+  head.innerHTML = '';
+  selectedSchedule = null;
+  studentRows = [];
+  if(!selectedExam) return;
+  const res = await geoApiGet('getSubjects', { academicYear: selectedExam.AcademicYear });
+  let subjects = Array.isArray(res.subjects)?res.subjects:[];
+  subjects = subjects.filter(s => subjectAllowedForExamUI(selectedExam, s));
+  fillSelect(subjectSelect, subjects.map(s=>({value:s.SubjectCode,label:s.SubjectCode+' - '+s.SubjectName})), 'Select subject');
+}
+
+async function forceOldMarksFormat(){
+  const src = prompt('Source backup sheet name দিন (খালি রাখলে auto best source নেবে):', 'Marks_Backup_20260616_081848');
+  showStatus(statusEl,'info','Converting Marks sheet to old format...');
+  try{
+    const res = await geoApiGet('forceMarksSheetOldFormat',{sourceSheet:src||'',_t:Date.now(),noCache:'1'});
+    showStatus(statusEl,res && res.success ? 'ok':'err',res && res.success ? ('Old format ready: '+res.rows+' rows') : (res.message||'Failed'));
+    studentRows=[]; visibleRows=[];
+    table.innerHTML='<tr><td colspan="9" class="empty">Marks old format ready. Load Students again.</td></tr>';
+  }catch(err){showStatus(statusEl,'err',err.message);}
+}
+
+
+function excelFileMsg(type,msg){showStatus(excelFileStatus,type,msg);}
+function excelNormKey(v){return String(v||'').trim().replace(/\s+/g,'').toLowerCase();}
+function excelFindRowByKey(key){
+  const k=excelNormKey(key);
+  if(!k)return null;
+  return [...document.querySelectorAll('#marksTable tr[data-roll]')].find(tr=>{
+    const inp=tr.querySelector('.mark-cell');
+    const roll=excelNormKey(tr.dataset.roll);
+    const reg=excelNormKey(inp?.dataset.reg || tr.children[2]?.textContent || '');
+    return roll===k || reg===k;
+  }) || null;
+}
+function excelApplyPairs(pairs){
+  if(!studentRows.length){excelFileMsg('err','আগে Session/Exam/Subject select করে Load Students করুন।');return;}
+  let hit=0,miss=0,bad=0,misses=[];
+  pairs.forEach(item=>{
+    const tr=excelFindRowByKey(item.key);
+    if(!tr){miss++;misses.push(item.key);return;}
+    const inp=tr.querySelector(isIncourseExam()?'.exam-mark':'.main-mark');
+    if(!inp){miss++;misses.push(item.key);return;}
+    let mark=String(item.mark||'').trim();
+    const max=Number(inp.dataset.max||0);
+    if(!isAbsentValue(mark)){
+      mark=mark.replace(/[^\d.]/g,'');
+      if(mark===''||isNaN(Number(mark))){bad++;misses.push(item.key);return;}
+      if(max&&Number(mark)>max)mark=String(max);
+    }
+    inp.value=isAbsentValue(mark)?'A':mark;
+    cleanMarkInput(inp);
+    clearRowAbsent(tr);
+    if(isAbsentValue(inp.value)){tr.dataset.absent='Yes';tr.classList.add('absent-row');}
+    updateTotals();updatePassFail();
+    const payload=getRowPayload(tr);
+    if(payload&&payload.roll)updateStudentRowsFromPayload(payload);
+    setRowSaveText(tr,'Not saved','info');
+    tr.classList.add('excel-hit-row');
+    hit++;
+  });
+  setTimeout(()=>document.querySelectorAll('.excel-hit-row').forEach(tr=>tr.classList.remove('excel-hit-row')),1800);
+  let msg='<span class="excel-ok">'+hit+' mark বসেছে</span>';
+  if(miss||bad)msg+=' | <span class="excel-miss">'+(miss+bad)+' পাওয়া যায়নি/ভুল</span>';
+  if(misses.length)msg+=' — '+safeHtml(misses.slice(0,10).join(', '));
+  excelFileMsg(hit?'ok':'err',msg);
+  showStatus(statusEl,hit?'ok':'err',hit+' marks applied from file. Save Marks দিলে sheet update হবে।');
+}
+function parseCsvText(text){
+  const rows=[];let row=[],cur='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(c==='"'&&q&&n==='"'){cur+='"';i++;continue;}
+    if(c==='"'){q=!q;continue;}
+    if((c===','||c==='\t'||c===';')&&!q){row.push(cur);cur='';continue;}
+    if((c==='\n'||c==='\r')&&!q){
+      if(c==='\r'&&n==='\n')i++;
+      row.push(cur); if(row.some(x=>String(x).trim()!==''))rows.push(row);
+      row=[];cur='';continue;
+    }
+    cur+=c;
+  }
+  row.push(cur); if(row.some(x=>String(x).trim()!==''))rows.push(row);
+  return rows;
+}
+function pairsFromRows(rows){
+  return (rows||[]).map(r=>({key:String(r[0]||'').trim(),mark:String(r[1]||'').trim()})).filter(x=>x.key&&x.mark);
+}
+function loadSheetJs(){
+  return new Promise((resolve,reject)=>{
+    if(window.XLSX)return resolve();
+    const s=document.createElement('script');
+    s.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+    s.onload=()=>resolve();
+    s.onerror=()=>reject(new Error('Excel library load failed. CSV file try করুন।'));
+    document.head.appendChild(s);
+  });
+}
+async function handleExcelFileUpload(){
+  const file=excelFileInput?.files?.[0];
+  if(!file)return;
+  try{
+    excelFileMsg('info','Reading file...');
+    const name=file.name.toLowerCase();
+    let pairs=[];
+    if(name.endsWith('.csv')||file.type.includes('csv')){
+      const text=await file.text();
+      pairs=pairsFromRows(parseCsvText(text));
+    }else{
+      await loadSheetJs();
+      const buf=await file.arrayBuffer();
+      const wb=XLSX.read(buf,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,blankrows:false});
+      pairs=pairsFromRows(rows);
+    }
+    if(!pairs.length){excelFileMsg('err','File-এর A column Roll/Registration এবং B column Mark পাওয়া যায়নি।');return;}
+    excelApplyPairs(pairs);
+  }catch(err){excelFileMsg('err',err.message);}
+  finally{ if(excelFileInput) excelFileInput.value=''; }
+}
+
+async function loadStudents(){
+  const examId = examSelect.value, subjectCode = subjectSelect.value;
+  if(!examId || !subjectCode){ showStatus(statusEl,'err','Required.'); return; }
+  showStatus(statusEl,'info','Loading...');
+  try{
+    const res = await geoApiGet('getMarksEntryData', { examId, subjectCode, studySessionYear:getMarksStudySessionYear() });
+    selectedExam = res.exam;
+    selectedSubject = res.subject;
+    selectedSchedule = res.schedule || null;
+    studentRows = Array.isArray(res.students)?res.students:[];
+    applyMarkDraftsToStudents();
+    renderMarkRows();
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+async function saveMarks(){
+  if(!selectedExam || !selectedSubject){ showStatus(statusEl,'err','Load students first.'); return; }
+  if(!validateBeforeSave()) return;
+
+  const marks = collectAllEnteredRows();
+  const rowByRoll = {};
+  document.querySelectorAll('#marksTable tr').forEach(tr=>{
+    const row = getRowPayload(tr);
+    if(row && row.roll) rowByRoll[row.roll] = tr;
+  });
+
+  if(!marks.length){ showStatus(statusEl,'err','No marks found.'); return; }
+
+  marks.forEach(row=>{
+    saveMarkDraft(row);
+    const tr = rowByRoll[row.roll];
+    if(tr){
+      tr.classList.add('saving-row');
+      setRowSaveText(tr, 'Saving BG...', 'info');
+    }
+  });
+
+  try{
+    const res = await saveRowsDirectToSheet(marks, rowByRoll);
+    showStatus(statusEl,'ok',marks.length + ' marks Sheet saved. Missing হবে না।');
+    return res;
+  }catch(err){
+    const failedRows = Array.isArray(err.failed) && err.failed.length ? err.failed.map(x=>x.row).filter(Boolean) : marks;
+    const payload = { action:'saveMarks', examId:selectedExam.ExamID, subjectCode:selectedSubject.SubjectCode, studySessionYear:(getMarksStudySessionYear()), marks:failedRows };
+    const qItem = queueOrSyncMarks(payload, { type:'marks-bulk', examId:selectedExam.ExamID, subjectCode:selectedSubject.SubjectCode, count:failedRows.length, rolls:failedRows.map(r=>r.roll) });
+    failedRows.forEach(updateStudentRowsFromPayload);
+    failedRows.forEach(row=>{
+      const tr = rowByRoll[row.roll];
+      if(!tr) return;
+      tr.dataset.queueId = qItem.id;
+      tr.dataset.roll = row.roll;
+      tr.classList.remove('saving-row');
+      tr.classList.add('queued-row');
+      setRowSaveText(tr, 'Queued Retry', 'info');
+    });
+    showStatus(statusEl,'err','কিছু mark direct save হয়নি; failed row queue-তে রাখা হয়েছে। Sync Pending Marks Now চাপুন। ' + (err.message || err));
+  }
+}
+
+window.addEventListener('geo-write-saved', e=>{
+  const item = e.detail?.item;
+  if(!item || !item.meta) return;
+  if(item.meta.examId !== selectedExam?.ExamID || item.meta.subjectCode !== selectedSubject?.SubjectCode) return;
+
+  const rolls = item.meta.rolls || (item.meta.roll ? [item.meta.roll] : []);
+  rolls.forEach(roll => removeMarkDraft({roll}));
+
+  document.querySelectorAll('#marksTable tr').forEach(tr=>{
+    const rowRoll = tr.dataset.roll || tr.querySelector('input.mark-cell')?.dataset.roll;
+    if(tr.dataset.queueId === item.id || rolls.includes(rowRoll) || item.meta.type === 'marks-bulk'){
+      tr.classList.remove('queued-row','saving-row');
+      tr.classList.add('synced-row');
+      setRowSaveText(tr, 'Saved Fast', 'ok');
+      setTimeout(()=>tr.classList.remove('synced-row'), 1200);
+    }
+  });
+  showStatus(statusEl,'ok','Queued marks Google Sheet-এ save হয়েছে।');
+});
+
+window.addEventListener('geo-write-saved', e=>{
+  try{
+    const item = e.detail && e.detail.item;
+    const action = item && item.payload && item.payload.action;
+    if(action === 'saveMarks' || action === 'saveMarkRow' || action === 'saveMarkRowDirect') flagMissingMarksRefreshAfterSave();
+  }catch(err){}
+});
+
+window.addEventListener('geo-write-failed', e=>{
+  const item = e.detail?.item;
+  if(!item || !item.meta) return;
+  if(item.meta.examId !== selectedExam?.ExamID || item.meta.subjectCode !== selectedSubject?.SubjectCode) return;
+  document.querySelectorAll('#marksTable tr').forEach(tr=>{
+    if(tr.dataset.queueId === item.id || item.meta.type === 'marks-bulk'){
+      tr.classList.add('queued-row');
+      setRowSaveText(tr, 'Retrying', 'info');
+    }
+  });
+  showStatus(statusEl,'info','Sheet save failed; auto retry চলবে। Data cache-এ safe আছে।');
+});
+
+document.getElementById('syncPendingMarksBottom')?.addEventListener('click', async()=>{
+  showStatus(statusEl,'info','Pending marks sync চলছে...');
+  await processGeoWriteQueue();
+  showStatus(statusEl,'ok','Sync tried. Pending থাকলে auto retry চলবে।');
+});
+sessionEl.addEventListener('change', ()=>{
+  const match=exams.find(e=>examMatchesStudySession(e, sessionEl.value.trim()));
+  if(match && !exams.some(e=>examMatchesStudySession(e, sessionEl.value.trim()) && String(e.AcademicYear||'').trim()===yearEl.value.trim())) yearEl.value=String(match.AcademicYear||'').trim();
+  loadFilteredExams();
+});
+yearEl.addEventListener('change', loadFilteredExams);
+examSelect.addEventListener('change', loadSubjectsByExam);
+
+
+async function publishCurrentResult(publish){
+  const examId = examSelect.value;
+  if(!examId){
+    showStatus(statusEl,'err','Exam select করুন');
+    return;
+  }
+  const exam = selectedExam || exams.find(e => String(e.ExamID) === String(examId)) || {};
+  const msg = publish ? 'Publish this result?' : 'Unpublish this result?';
+  if(!confirm(msg)) return;
+
+  showStatus(statusEl,'info',publish ? 'Publishing result...' : 'Unpublishing result...');
+  try{
+    const res = await geoApiPost({
+      action:'publishResultFromMarksPage',
+      examId:examId,
+      sessionYear:getMarksStudySessionYear() || exam.SessionYear || sessionEl.value,
+      academicYear:exam.AcademicYear || yearEl.value,
+      examType:exam.ExamType || '',
+      examName:exam.ExamName || exam.DisplayName || displayName(exam),
+      publish:publish ? 'Yes' : 'No'
+    });
+    showStatus(statusEl,res && res.success ? 'ok':'err',res && res.success ? res.message : (res.message || 'Failed'));
+  }catch(err){
+    showStatus(statusEl,'err',err.message);
+  }
+}
+
+
+async function restoreOldMarksEntry(){
+  const backupName = prompt('Old marks backup sheet name দিন:', 'Marks_Backup_20260616_081848');
+  if(!backupName) return;
+  if(!confirm(backupName+' থেকে Marks sheet আগের subject-wise format এ restore হবে। Continue?')) return;
+  showStatus(statusEl,'info','Restoring old Marks...');
+  try{
+    const res = await geoApiGet('restoreMarksOldSubjectWiseFromBackup',{backupName:backupName,_t:Date.now(),noCache:'1'});
+    showStatus(statusEl,res && res.success ? 'ok':'err',res && res.success ? ('Restored '+res.rows+' rows. Load Students again.') : (res.message||'Failed'));
+    studentRows=[]; visibleRows=[];
+    table.innerHTML='<tr><td colspan="9" class="empty">Old Marks restored. Load Students again.</td></tr>';
+  }catch(err){showStatus(statusEl,'err',err.message);}
+}
+async function updateSummaryEntry(){
+  showStatus(statusEl,'info','Updating ResultSummary...');
+  try{
+    const res = await geoApiGet('refreshAllResultSummaryFromMarks',{
+      examId:selectedExam && selectedExam.ExamID,
+      sessionYear:getMarksStudySessionYear() || (selectedExam && selectedExam.SessionYear),
+      academicYear:selectedExam && selectedExam.AcademicYear,
+      examType:selectedExam && selectedExam.ExamType,
+      examName:selectedExam && (selectedExam.ExamName || selectedExam.DisplayName),
+      _t:Date.now(),
+      noCache:'1'
+    });
+    showStatus(statusEl,res && res.success ? 'ok':'err',res && res.success ? ('ResultSummary updated for '+res.exams+' exams') : (res.message||'Failed'));
+  }catch(err){showStatus(statusEl,'err',err.message);}
+}
+
+async function restoreMarksBackup(){
+  if(!confirm('Latest Marks_Backup sheet থেকে Marks sheet restore হবে। বর্তমান Marks sheet-এর আরেকটা safety backup তৈরি হবে। Continue?')) return;
+  showStatus(statusEl,'info','Restoring latest Marks backup...');
+  try{
+    const list = await geoApiGet('listMarksBackupSheets', {_t:Date.now(), noCache:'1'});
+    if(!list || !list.backups || !list.backups.length){
+      showStatus(statusEl,'err','No Marks_Backup sheet found.');
+      return;
+    }
+    const latest = list.latest || list.backups[0];
+    if(!confirm('Restore from: ' + latest + ' ?')) return;
+    const res = await geoApiGet('restoreMarksFromBackup', {backupName:latest, _t:Date.now(), noCache:'1'});
+    showStatus(statusEl,res && res.success ? 'ok':'err',res && res.success ? ('Restored: '+res.rows+' rows from '+res.restoredFrom) : (res.message || 'Restore failed'));
+    studentRows = [];
+    visibleRows = [];
+    table.innerHTML = '<tr><td colspan="9" class="empty">Backup restored. Load Students again.</td></tr>';
+  }catch(err){
+    showStatus(statusEl,'err',err.message);
+  }
+}
+function applySideSearch(){
+  syncSearchInputs('side');
+  renderMarkRows();
+  const firstInput = document.querySelector('#marksTable input');
+  if(firstInput) firstInput.focus();
+}
+
+studentSearchEl?.addEventListener('input', ()=>{syncSearchInputs('top'); renderMarkRows();});
+
+studentSearchSideEl?.addEventListener('input', ()=>{syncSearchInputs('side'); renderMarkRows();});
+document.getElementById('sideSearchGo')?.addEventListener('click', applySideSearch);
+document.getElementById('sideSearchClear')?.addEventListener('click', ()=>{
+  if(studentSearchEl) studentSearchEl.value='';
+  if(studentSearchSideEl) studentSearchSideEl.value='';
+  renderMarkRows();
+});
+document.getElementById('restoreMarksBackupBtn')?.addEventListener('click', restoreMarksBackup);
+document.getElementById('publishResultBtn')?.addEventListener('click', ()=>publishCurrentResult(true));
+document.getElementById('unpublishResultBtn')?.addEventListener('click', ()=>publishCurrentResult(false));
+
+attachSortControls('sortField','sortDir', renderMarkRows);
+
+
+excelFileInput?.addEventListener('change', handleExcelFileUpload);
+document.getElementById('clearExcelFileMarks')?.addEventListener('click',()=>{document.querySelectorAll('.excel-hit-row').forEach(tr=>tr.classList.remove('excel-hit-row'));excelFileMsg('info','Highlight cleared.');});
+
+
+/* FINAL MARKS ENTER SAVE HARD FIX */
+window.__MARKS_FINAL_SAVE_ACTIVE__ = true;
+function safeSetRowSaveTextFinal(tr, text, type='info'){
+  try{ setRowSaveText(tr, text, type); }catch(e){
+    const cell = tr?.querySelector?.('.row-save-status');
+    if(cell) cell.innerHTML = `<span class="pill ${type === 'ok' ? 'green' : type === 'err' ? 'red' : 'blue'}">${text}</span>`;
+  }
+}
+function safeUpdateStudentPayloadFinal(row){
+  try{ if(row && row.roll) updateStudentRowsFromPayload(row); }catch(e){}
+}
+function safeSaveDraftFinal(row){
+  try{ saveMarkDraft(row); }catch(e){}
+}
+function safeRemoveDraftFinal(row){
+  try{ removeMarkDraft(row); }catch(e){}
+}
+function collectDomEnteredRowsFinal(){
+  const rows = [];
+  const rowByRoll = {};
+  document.querySelectorAll('#marksTable tr').forEach(tr=>{
+    if(!tr.querySelector('input.mark-cell')) return;
+    let row = null;
+    try{ row = getRowPayload(tr); }catch(e){ row = null; }
+    if(row && row.roll && rowHasValue(row)){
+      rows.push(row);
+      rowByRoll[row.roll] = tr;
+    }
+  });
+  return {rows, rowByRoll};
+}
+async function saveOneMarkRowFinal(tr, inputToMove){
+  if(!selectedExam || !selectedSubject){ showStatus(statusEl,'err','Load students first.'); return false; }
+  if(!tr){ return false; }
+  if(!validateRowBeforeSave(tr)) return false;
+
+  const row = getRowPayload(tr);
+  if(!rowHasValue(row)){
+    safeSetRowSaveTextFinal(tr, 'Empty', 'err');
+    showStatus(statusEl,'err','Mark empty.');
+    return false;
+  }
+
+  tr.dataset.roll = row.roll;
+  tr.classList.remove('queued-row');
+  tr.classList.add('saving-row');
+  safeSetRowSaveTextFinal(tr, 'Saving Sheet...', 'info');
+  safeUpdateStudentPayloadFinal(row);
+  safeSaveDraftFinal(row);
+
+  if(inputToMove) setTimeout(()=>moveDownSameColumn(inputToMove), 10);
+
+  try{
+    await saveRowsDirectToSheet([row], {[row.roll]:tr});
+    tr.classList.remove('saving-row','queued-row');
+    tr.classList.add('synced-row');
+    safeSetRowSaveTextFinal(tr, 'Saved Sheet', 'ok');
+    safeRemoveDraftFinal(row);
+    showStatus(statusEl,'ok','Roll ' + row.roll + ' Google Sheet-এ save হয়েছে।');
+    setTimeout(()=>tr.classList.remove('synced-row'), 1200);
+    return true;
+  }catch(err){
+    const failedRows = Array.isArray(err.failed) && err.failed.length ? err.failed.map(x=>x.row).filter(Boolean) : [row];
+    const payload = { action:'saveMarks', examId:selectedExam.ExamID, subjectCode:selectedSubject.SubjectCode, studySessionYear:(getMarksStudySessionYear()), marks:failedRows };
+    const qItem = queueOrSyncMarks(payload, { type:'marks-row', roll:row.roll, examId:selectedExam.ExamID, subjectCode:selectedSubject.SubjectCode });
+    tr.dataset.queueId = qItem.id;
+    tr.classList.remove('saving-row');
+    tr.classList.add('queued-row');
+    safeSetRowSaveTextFinal(tr, 'Queued Retry', 'info');
+    showStatus(statusEl,'err','Direct save হয়নি; row queue-তে রাখা হয়েছে। Sync Pending Marks Now চাপুন। ' + (err.message || err));
+    return false;
+  }
+}
+async function saveAllMarksFinal(){
+  if(!selectedExam || !selectedSubject){ showStatus(statusEl,'err','Load students first.'); return false; }
+  if(!validateBeforeSave()) return false;
+
+  const pack = collectDomEnteredRowsFinal();
+  const rows = pack.rows;
+  const rowByRoll = pack.rowByRoll;
+  if(!rows.length){ showStatus(statusEl,'err','No marks found.'); return false; }
+
+  rows.forEach(row=>{
+    const tr = rowByRoll[row.roll];
+    if(tr){
+      tr.classList.remove('queued-row');
+      tr.classList.add('saving-row');
+      safeSetRowSaveTextFinal(tr, 'Saving Sheet...', 'info');
+    }
+    safeUpdateStudentPayloadFinal(row);
+    safeSaveDraftFinal(row);
+  });
+
+  try{
+    const res = await saveRowsDirectToSheet(rows, rowByRoll);
+    showStatus(statusEl,'ok',(res.saved || rows.length)+' marks Google Sheet-এ save হয়েছে।');
+    return true;
+  }catch(err){
+    const failedRows = Array.isArray(err.failed) && err.failed.length ? err.failed.map(x=>x.row).filter(Boolean) : rows;
+    const payload = { action:'saveMarks', examId:selectedExam.ExamID, subjectCode:selectedSubject.SubjectCode, studySessionYear:(getMarksStudySessionYear()), marks:failedRows };
+    const qItem = queueOrSyncMarks(payload, { type:'marks-bulk', examId:selectedExam.ExamID, subjectCode:selectedSubject.SubjectCode, count:failedRows.length, rolls:failedRows.map(r=>r.roll) });
+    failedRows.forEach(row=>{
+      const tr = rowByRoll[row.roll];
+      if(!tr) return;
+      tr.dataset.queueId = qItem.id;
+      tr.dataset.roll = row.roll;
+      tr.classList.remove('saving-row');
+      tr.classList.add('queued-row');
+      safeSetRowSaveTextFinal(tr, 'Queued Retry', 'info');
+    });
+    showStatus(statusEl,'err','কিছু mark direct save হয়নি; failed row queue-তে রাখা হয়েছে। Sync Pending Marks Now চাপুন। ' + (err.message || err));
+    return false;
+  }
+}
+document.addEventListener('input', function(e){
+  const inp = e.target && e.target.closest ? e.target.closest('#marksTable input.mark-cell') : null;
+  if(!inp) return;
+  const tr = inp.closest('tr');
+  if(tr) safeSetRowSaveTextFinal(tr, 'Not saved', 'info');
+}, true);
+document.addEventListener('keydown', function(e){
+  const inp = e.target && e.target.closest ? e.target.closest('#marksTable input.mark-cell') : null;
+  if(!inp || e.key !== 'Enter') return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  const tr = inp.closest('tr');
+  saveOneMarkRowFinal(tr, inp);
+}, true);
+document.addEventListener('click', function(e){
+  const btn = e.target && e.target.closest ? e.target.closest('#saveMarks') : null;
+  if(!btn) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  saveAllMarksFinal();
+}, true);
+
+document.getElementById('loadStudents').addEventListener('click', loadStudents);
+if(!window.__MARKS_FINAL_SAVE_ACTIVE__) document.getElementById('saveMarks').addEventListener('click', saveMarks);
+document.getElementById('forceOldFormatBtn')?.addEventListener('click', forceOldMarksFormat);
+document.getElementById('restoreOldMarksEntryBtn')?.addEventListener('click', restoreOldMarksEntry);
+document.getElementById('updateSummaryEntryBtn')?.addEventListener('click', updateSummaryEntry);
+init();
+</script>
+</body></html>

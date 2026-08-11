@@ -1,0 +1,109 @@
+<!DOCTYPE html><html lang="en"><head>
+ <script>
+  (function(){
+    try{
+      var p = window.location.pathname || '';
+      var last = p.split('/').pop() || '';
+      if (window.location.protocol.indexOf('http') === 0 && p && !p.endsWith('/') && last.indexOf('.') < 0) {
+        window.location.replace(p + '/' + window.location.search + window.location.hash);
+      }
+    }catch(e){}
+  })();
+  </script>
+ <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Geography Department Portal</title><link rel="stylesheet" href="assets/site.css"></head><body class="login-ui-v2"><main class="login-v2-page"><div class="login-v2-bg"><span class="geo-shape shape-1"></span><span class="geo-shape shape-2"></span><span class="geo-shape shape-3"></span></div><section class="login-v2-shell"><div class="login-v2-left"><div class="college-badge"><span class="badge-icon">🌍</span><span>Academic Management System</span></div><h1>Geography and Environment Department</h1><h2>Kumudini Govt. College, Tangail</h2><div class="login-v2-feature-grid"><div class="login-feature-card"><span>🎓</span><b>Student Panel</b></div><div class="login-feature-card"><span>📝</span><b>Exam System</b></div><div class="login-feature-card"><span>📚</span><b>Seminar Library</b></div><div class="login-feature-card"><span>⚡</span><b>Fast Sync</b></div></div></div><div class="login-v2-card"><div class="login-card-head"><div class="login-logo-circle">G</div><div><h3>Welcome Back</h3></div></div><div class="login-tabs modern-tabs"><button class="login-tab active" data-tab="studentOpen" type="button"><span>🎓</span> Student
+ </button><button class="login-tab" data-tab="admin" type="button"><span>🛠️</span> Admin
+ </button></div><div id="studentOpenLoginForm" class="login-form active"><div class="student-open-box"><div class="student-open-icon">🎓</div><h2>Student Panel</h2><div class="student-action-row"><a class="btn primary big-action" href="student/index.html">Open Student Panel</a><a class="btn ghost big-action" href="pages/student-registration.html">New Registration</a></div></div><div class="mini-info-row"><div><b>Result</b><span>Roll/Regi দিয়ে check</span></div><div><b>Library</b><span>Issue history</span></div></div></div><form id="adminLoginForm" class="login-form"><div class="admin-form-title"><h2>Admin Login</h2></div><label class="field modern-field"><span class="label">Admin Username</span><div class="input-icon-wrap"><span>👤</span><input class="input" name="username" placeholder="Enter admin username" autocomplete="username" required></div></label><label class="field modern-field"><span class="label">Password</span><div class="password-wrap input-icon-wrap"><span>🔒</span><input class="input" type="password" name="password" placeholder="Enter password" autocomplete="current-password" required><button class="show-pass" type="button" data-show-pass>Show</button></div></label><div id="adminLoginStatus" class="status info hide"></div><button class="btn blue login-submit-btn" type="submit"><span>Login Admin</span><b>→</b></button></form></div></section></main>
+ <script src="assets/geography-api.js"></script>
+ <script src="assets/site.js"></script>
+ <script>
+  document.querySelectorAll('.login-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.login-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab + 'LoginForm').classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('[data-show-pass]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = btn.closest('.password-wrap').querySelector('input');
+      input.type = input.type === 'password' ? 'text' : 'password';
+      btn.textContent = input.type === 'password' ? 'Show' : 'Hide';
+    });
+  });
+
+
+  function portalBasePath() {
+    const protocol = window.location.protocol;
+    if (protocol === 'file:') {
+      return window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+    }
+    let path = window.location.pathname || '/';
+    const last = path.split('/').pop() || '';
+    if (!path.endsWith('/')) {
+      if (last.indexOf('.') >= 0) path = path.substring(0, path.lastIndexOf('/') + 1);
+      else path = path + '/';
+    }
+    return window.location.origin + path;
+  }
+
+  function panelUrl(path) {
+    return portalBasePath() + String(path || '').replace(/^\/+/, '');
+  }
+
+  function openPanelSafe(path, statusEl) {
+    const target = panelUrl(path);
+    if (statusEl) {
+      statusEl.innerHTML =
+        'Login successful. <a id="manualOpenAdmin" class="btn primary" style="margin-left:8px" href="' + target + '">Open Admin Panel</a>';
+      statusEl.className = 'status ok';
+      statusEl.classList.remove('hide');
+    }
+
+    try {
+      const a = document.createElement('a');
+      a.href = target;
+      a.id = 'autoOpenAdminLink';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      setTimeout(() => a.click(), 60);
+    } catch(e) {}
+
+    setTimeout(() => { try { window.location.href = target; } catch(e) {} }, 120);
+    setTimeout(() => { try { window.location.assign(target); } catch(e) {} }, 350);
+    setTimeout(() => { try { window.open(target, '_self'); } catch(e) {} }, 650);
+  }
+
+  document.getElementById('adminLoginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const statusEl = document.getElementById('adminLoginStatus');
+    const btn = form.querySelector('button[type="submit"]');
+    const old = btn.innerHTML;
+    btn.innerHTML = '<span>Please wait...</span><b>⏳</b>';
+    btn.disabled = true;
+    try {
+      const fd = new FormData(form);
+      const res = await geoApiPost({
+        action: 'loginUser',
+        role: 'admin',
+        username: fd.get('username'),
+        password: fd.get('password')
+      });
+      if (!res.success) {
+        showStatus(statusEl, 'err', res.message || 'Login failed');
+        return;
+      }
+      const user = Object.assign({ loggedIn:true, role:'admin', username:fd.get('username') }, res.user || {});
+      saveAuthSession(user);
+      openPanelSafe('admin/index.html', statusEl);
+    } catch (err) {
+      showStatus(statusEl, 'err', err.message);
+    } finally {
+      btn.innerHTML = old;
+      btn.disabled = false;
+    }
+  });
+  </script>
+</body></html>

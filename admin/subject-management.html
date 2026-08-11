@@ -1,0 +1,53 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Subject Management - Academic Management</title><link rel="stylesheet" href="../assets/site.css"></head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">🛠️</span><span>Subject Management</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-management.html">Students</a><a href="subject-management.html">Subjects</a><a href="exam-create.html">Exam</a><a href="attendance-sheet.html">Attendance</a><a href="marks-entry.html">Marks</a><a href="final-result.html">Result</a><a href="promotion-management.html">Promotion</a></div><section class="academic-banner"><h1>Subject Management</h1></section><div class="grid two"><form id="subjectForm" class="panel"><div class="panel-title"><div><h2>Add / Update Subject</h2></div></div><div class="form-grid"><label class="field"><span class="label">Academic Year</span><select name="academicYear" id="subjectYear" required></select></label><label class="field"><span class="label">Subject Type</span><select name="subjectType" required><option value="">Select type</option><option>Major</option><option>Non-Major</option><option>Compulsory</option><option>Practical</option></select></label><label class="field"><span class="label">Subject Code</span><input class="input" name="subjectCode" placeholder="e.g. 213201" required></label><label class="field"><span class="label">Subject Name</span><input class="input" name="subjectName" placeholder="e.g. Introduction to Geography" required></label><label class="field"><span class="label">Full Marks</span><input class="input" type="number" name="fullMarks" value="100" required></label><label class="field"><span class="label">Pass Marks</span><input class="input" type="number" name="passMarks" value="40" required></label><label class="field"><span class="label">Credits</span><input class="input" type="number" step="0.5" name="credits" value="4" required></label></div><div id="subjectStatus" class="status info hide"></div><div class="right-actions"><button class="btn primary" type="submit">Save Subject</button></div></form><div class="panel"><div class="panel-title"><div><h2>Subject List</h2></div></div><div class="filter-row" style="grid-template-columns:1fr auto"><label class="field"><span class="label">Filter Year</span><select id="filterYear"></select></label><button id="refreshSubjects" class="btn ghost" type="button">Refresh</button></div><div id="subjectChips"></div></div></div><div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>SL</th><th>Year</th><th>Type</th><th>Code</th><th>Subject Name</th><th>Full</th><th>Pass</th><th>Credits</th><th>Status</th></tr></thead><tbody id="subjectTable"><tr><td colspan="9" class="empty">No data loaded.</td></tr></tbody></table></div></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+const subjectForm = document.getElementById('subjectForm');
+const statusEl = document.getElementById('subjectStatus');
+const table = document.getElementById('subjectTable');
+const filterYear = document.getElementById('filterYear');
+fillSelect(document.getElementById('subjectYear'), currentAcademicYears(), 'Select year');
+fillSelect(filterYear, currentAcademicYears(), 'All year');
+function renderSubjects(list){
+  const chips = document.getElementById('subjectChips');
+  if(!list.length){
+    table.innerHTML = '<tr><td colspan="9" class="empty">No subject found.</td></tr>';
+    chips.innerHTML = '<div class="empty">No subject found.</div>';
+    return;
+  }
+  table.innerHTML = list.map((s,i)=>`<tr>
+    <td>${i+1}</td><td>${s.AcademicYear||''}</td><td><span class="pill blue">${s.SubjectType||''}</span></td>
+    <td><b>${s.SubjectCode||''}</b></td><td>${s.SubjectName||''}</td><td>${s.FullMarks||''}</td><td>${s.PassMarks||''}</td>
+    <td>${s.Credits||''}</td><td><span class="pill green">${s.Status||'Active'}</span></td>
+  </tr>`).join('');
+  chips.innerHTML = list.map(s=>`<span class="subject-chip"><b>${s.SubjectCode||''}</b> ${s.SubjectName||''}</span>`).join('');
+}
+async function loadSubjects(){
+  const year = filterYear.value;
+  try{
+    const res = await geoApiGet('getSubjects', { _t: Date.now(), academicYear: year });
+    renderSubjects(Array.isArray(res.subjects)?res.subjects:[]);
+  }catch(err){ table.innerHTML='<tr><td colspan="9" class="empty">'+err.message+'</td></tr>'; }
+}
+subjectForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const btn = subjectForm.querySelector('button[type="submit"]');
+  const old = btn.textContent; btn.textContent='Please wait...'; btn.disabled=true;
+  try{
+    const fd = new FormData(subjectForm);
+    const res = await geoApiPost({
+      action:'saveSubject', academicYear:fd.get('academicYear'), subjectType:fd.get('subjectType'),
+      subjectCode:fd.get('subjectCode'), subjectName:fd.get('subjectName'),
+      fullMarks:fd.get('fullMarks'), passMarks:fd.get('passMarks'), credits:fd.get('credits'), status:'Active'
+    });
+    showStatus(statusEl, res.success?'ok':'err', res.message || 'Saved');
+    if(res.success){ subjectForm.reset(); loadSubjects(); }
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+  finally{ btn.textContent=old; btn.disabled=false; }
+});
+filterYear.addEventListener('change', loadSubjects);
+document.getElementById('refreshSubjects').addEventListener('click', loadSubjects);
+loadSubjects();
+</script>
+</body></html>

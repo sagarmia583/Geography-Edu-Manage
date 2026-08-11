@@ -1,0 +1,218 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Incourse Average Sheet - Admin</title><link rel="stylesheet" href="../assets/site.css">
+ <style>.avg-sub-head{min-width:110px;text-align:center}.avg-att-head{min-width:70px;text-align:center;background:#fff7ed!important}.avg-cell{text-align:center;font-weight:800}.att-cell{text-align:center;background:#fffaf0}.not-assigned{color:#94a3b8;background:#f8fafc;text-align:center}.individual-result-card{margin-top:14px}@media print{.no-print,.topbar,.panel-sidebar,.panel-mobile-tabs{display:none!important}.panel-layout{display:block!important}.panel-main{padding:0!important}.table-wrap{overflow:visible!important}table{font-size:10px!important}th,td{padding:5px!important}}.marksheet-card{background:#fff;border:2px solid #111;border-radius:10px;padding:14px;margin-top:14px;color:#111;font-family:"Times New Roman",serif;box-shadow:var(--shadow-soft)}.marksheet-title{text-align:center;border-bottom:1px solid #111;padding-bottom:8px;margin-bottom:10px}.marksheet-title h2,.marksheet-title h3,.marksheet-title h4{margin:2px 0;color:#111}.marksheet-student-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;border:1px solid #111;margin-bottom:10px}.marksheet-student-grid div{padding:7px;border-right:1px solid #111}.marksheet-student-grid div:last-child{border-right:0}.marksheet-table{width:100%;border-collapse:collapse}.marksheet-table th,.marksheet-table td{border:1px solid #111;padding:7px;text-align:center}.marksheet-table th{background:#eef6f0;color:#111}.marksheet-table .sub-name{text-align:left}@media print{.marksheet-card{box-shadow:none;border-radius:0}.marksheet-table th,.marksheet-table td{font-size:12px!important;padding:5px!important}}</style>
+
+<style>
+@media print{
+  table.print-align-table th,
+  table.print-align-table thead th,
+  table.print-align-table tr:first-child > th,
+  table.print-align-table tr:first-child > td{text-align:center!important;vertical-align:middle!important}
+  table.print-align-table td{text-align:center!important;vertical-align:middle!important}
+  table.print-align-table td.printable-name-cell{text-align:left!important}
+}
+</style>
+</head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">📈</span><span>Incourse Average Sheet</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">📈</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a class="active" href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><section class="academic-banner"><h1>Subject-wise Average Sheet</h1></section><div class="panel no-print individual-result-card"><div class="panel-title"><div><h2>Individual Incourse Result</h2></div></div><div class="filter-row" style="grid-template-columns:1fr auto"><input id="individualSearch" class="input" placeholder="Individual check by Roll / Registration"><button id="individualBtn" class="btn blue" type="button">Check Individual</button></div><div id="individualBox" class="status info hide"></div></div><div id="individualMarksheet" class="marksheet-card individual-result-card"><div class="marksheet-title"><h2>Geography and Environment Department</h2><h3>Kumudini Govt. College, Tangail</h3><h4>Individual Incourse Result</h4></div><div id="individualStudentInfo" class="marksheet-student-grid"><div><b>Name:</b> —</div><div><b>Roll:</b> —</div><div><b>Registration:</b> —</div><div><b>Year:</b> —</div></div><table id="individualTable" class="marksheet-table"><thead><tr><th>SL</th><th>Subject Code</th><th>Subject Name</th><th>1st Incourse</th><th>2nd Incourse</th><th>Average</th><th>Attendance</th></tr></thead><tbody id="individualTableBody"><tr><td colspan="7" class="empty">Search individual result.</td></tr></tbody></table></div><div class="panel no-print"><div class="panel-title"><div><h2>Average Sheet Filter</h2></div><button id="printBtn" onclick="printIncourseAverageSheet()" class="btn ghost" type="button">Print</button></div><div class="filter-row" style="grid-template-columns:1fr 1fr 1fr .8fr .8fr auto"><label class="field"><span class="label">Academic Year</span><select id="academicYear"></select></label><label class="field"><span class="label">Study Session</span><select id="studySessionYear" class="input"></select></label><label class="field"><span class="label">Search Roll / Regi / Name</span><input id="sheetSearch" class="input" placeholder="Optional search"></label><label class="field"><span class="label">Sort By</span><select id="avgSortField" class="input"><option value="roll">Roll</option><option value="reg">Registration</option></select></label><label class="field"><span class="label">Order</span><select id="avgSortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label><button id="loadSheetBtn" class="btn primary" type="button">Load Average Sheet</button></div><div id="incStatus" class="status info hide"></div></div><div class="table-wrap" style="margin-top:14px"><table id="averageSheetTable"><thead id="avgHead"><tr><th>SL</th><th>Roll</th><th>Regi No</th><th>Name</th><th>Type</th><th>Study Session</th></tr></thead><tbody id="avgBody"><tr><td colspan="6" class="empty">Select year/session and load average sheet.</td></tr></tbody></table></div></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+fillSelect(document.getElementById('academicYear'), currentAcademicYears(), 'Select year');
+
+const yearEl = document.getElementById('academicYear');
+const sessionEl = document.getElementById('studySessionYear');
+fillSelect(sessionEl, currentSessionYears(), 'Select session');
+const sheetSearchEl = document.getElementById('sheetSearch');
+const avgSortField = document.getElementById('avgSortField');
+const avgSortDir = document.getElementById('avgSortDir');
+let lastAverageData = null;
+const individualSearchEl = document.getElementById('individualSearch');
+const statusEl = document.getElementById('incStatus');
+const avgHead = document.getElementById('avgHead');
+const avgBody = document.getElementById('avgBody');
+const individualBox = document.getElementById('individualBox');
+const individualBody = document.getElementById('individualTableBody');
+const individualStudentInfo = document.getElementById('individualStudentInfo');
+
+function esc(v){return String(v ?? '').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+function typeBadge(type){
+  const t = type || 'Regular';
+  const cls = t === 'Irregular' ? 'irregular' : 'regular';
+  return `<span class="student-type-badge ${cls}">${t}</span>`;
+}
+function valueOrDash(v){
+  return v === '' || v === undefined || v === null ? '—' : esc(v);
+}
+function nat(v){
+  const t=String(v??'').trim();
+  const n=Number(t.replace(/[^0-9.]/g,''));
+  return Number.isFinite(n)&&t.replace(/[^0-9]/g,'')!==''?n:t.toLowerCase();
+}
+function filterSortAverageStudents(students){
+  const q=String(sheetSearchEl.value||'').trim().toLowerCase();
+  let out=(students||[]).slice();
+  if(q){
+    out=out.filter(st=>[st.Roll,st.RegistrationNumber,st.Name,st.StudySessionYear,st.SessionYear,st.StudentType].join(' ').toLowerCase().includes(q));
+  }
+  const field=(avgSortField&&avgSortField.value)||'roll';
+  const dir=(avgSortDir&&avgSortDir.value)==='desc'?-1:1;
+  out.sort((a,b)=>{
+    const av=nat(field==='reg'?a.RegistrationNumber:a.Roll);
+    const bv=nat(field==='reg'?b.RegistrationNumber:b.Roll);
+    let r=(typeof av==='number'&&typeof bv==='number')?av-bv:String(av).localeCompare(String(bv),undefined,{numeric:true,sensitivity:'base'});
+    return r*dir;
+  });
+  return out;
+}
+function renderAverageSheet(res){
+  const subjects = Array.isArray(res.subjects) ? res.subjects : [];
+  const students = filterSortAverageStudents(Array.isArray(res.students) ? res.students : []);
+
+  let head = '<tr><th rowspan="2">SL</th><th rowspan="2">Roll</th><th rowspan="2">Regi No</th><th rowspan="2">Name</th><th rowspan="2">Type</th><th rowspan="2">Study Session</th>';
+  subjects.forEach(s=>{
+    head += `<th class="avg-sub-head" colspan="2">${esc(s.SubjectCode)}<br>${esc(s.SubjectName)}</th>`;
+  });
+  head += '</tr><tr>';
+  subjects.forEach(()=>{ head += '<th>Avg</th><th class="avg-att-head">Att</th>'; });
+  head += '</tr>';
+  avgHead.innerHTML = head;
+
+  if(!students.length){
+    avgBody.innerHTML = `<tr><td colspan="${6 + subjects.length*2}" class="empty">No student found.</td></tr>`;
+    return;
+  }
+
+  avgBody.innerHTML = students.map((st,i)=>{
+    let row = `<tr>
+      <td>${i+1}</td>
+      <td>${esc(st.Roll)}</td>
+      <td>${esc(st.RegistrationNumber)}</td>
+      <td>${esc(st.Name)}</td>
+      <td>${typeBadge(st.StudentType)}</td>
+      <td>${esc(st.StudySessionYear || st.SessionYear)}</td>`;
+    subjects.forEach(s=>{
+      const code = s.SubjectCode;
+      const cell = st.SubjectCells && st.SubjectCells[code] ? st.SubjectCells[code] : {};
+      if(cell.assigned === false){
+        row += '<td class="not-assigned">X</td><td class="not-assigned">X</td>';
+      }else{
+        row += `<td class="avg-cell">${valueOrDash(cell.average)}</td><td class="att-cell">${valueOrDash(cell.attendance)}</td>`;
+      }
+    });
+    row += '</tr>';
+    return row;
+  }).join('');
+}
+
+function rerenderAverageFromCache(){
+  if(lastAverageData) renderAverageSheet(lastAverageData);
+}
+
+async function loadAverageSheet(){
+  const academicYear = yearEl.value;
+  const studySessionYear = sessionEl.value.trim();
+  if(!academicYear){ showStatus(statusEl,'err','Academic Year required.'); return; }
+
+  showStatus(statusEl,'info','Loading incourse average sheet...');
+  try{
+    const res = await geoApiGet('getIncourseAverageSheet', {
+      academicYear,
+      studySessionYear
+    });
+    if(!res.success){ showStatus(statusEl,'err',res.message || 'Load failed'); return; }
+    lastAverageData = res;
+    renderAverageSheet(res);
+    showStatus(statusEl,'ok',(res.students||[]).length + ' students and ' + (res.subjects||[]).length + ' subjects loaded. Search/filter now works locally.');
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+
+function findStudentInAverage(search){
+  const q=String(search||'').trim().toLowerCase();
+  const digits=String(search||'').replace(/\D/g,'');
+  const students=(lastAverageData&&Array.isArray(lastAverageData.students))?lastAverageData.students:[];
+  return students.find(st=>String(st.Roll||'').toLowerCase()===q || String(st.RegistrationNumber||'').replace(/\D/g,'')===digits || String(st.Roll||'').toLowerCase().includes(q) || (digits&&String(st.RegistrationNumber||'').replace(/\D/g,'').includes(digits)) || String(st.Name||'').toLowerCase().includes(q));
+}
+function renderIndividualFromAverage(st){
+  const subjects=(lastAverageData&&Array.isArray(lastAverageData.subjects))?lastAverageData.subjects:[];
+  individualBox.className = 'status ok';
+  individualBox.innerHTML = 'Loaded from current average sheet data.';
+  individualStudentInfo.innerHTML = `
+    <div><b>Name:</b> ${esc(st.Name)}</div>
+    <div><b>Roll:</b> ${esc(st.Roll)}</div>
+    <div><b>Registration:</b> ${esc(st.RegistrationNumber)}</div>
+    <div><b>Year:</b> ${esc(yearEl.value || '')}</div>`;
+  const rows=[];
+  subjects.forEach(s=>{
+    const code=s.SubjectCode;
+    const cell=st.SubjectCells&&st.SubjectCells[code]?st.SubjectCells[code]:{};
+    if(cell.assigned===false) return;
+    rows.push({
+      SubjectCode:code,
+      SubjectName:s.SubjectName,
+      FirstIncourse:cell.first,
+      SecondIncourse:cell.second,
+      Average:cell.average,
+      AttendanceMarks:cell.attendance
+    });
+  });
+  individualBody.innerHTML = rows.length ? rows.map((r,i)=>`<tr>
+    <td>${i+1}</td>
+    <td>${esc(r.SubjectCode)}</td>
+    <td class="sub-name">${esc(r.SubjectName)}</td>
+    <td>${valueOrDash(r.FirstIncourse)}</td>
+    <td>${valueOrDash(r.SecondIncourse)}</td>
+    <td><b>${valueOrDash(r.Average)}</b></td>
+    <td class="att-cell">${valueOrDash(r.AttendanceMarks)}</td>
+  </tr>`).join('') : '<tr><td colspan="7" class="empty">No incourse result found for this student.</td></tr>';
+}
+async function checkIndividual(){
+  const search = individualSearchEl.value.trim();
+  if(!search){ showStatus(individualBox,'err','Roll/Registration required.'); return; }
+  if(!lastAverageData){ showStatus(individualBox,'err','Please load average sheet first.'); return; }
+  const st=findStudentInAverage(search);
+  if(!st){ showStatus(individualBox,'err','Student not found in loaded average sheet.'); return; }
+  renderIndividualFromAverage(st);
+}
+
+
+function printIncourseAverageSheet(){
+  const table = document.getElementById('averageSheetTable');
+  if(!table){ window.print(); return; }
+  const frame = document.createElement('iframe');
+  frame.style.position = 'fixed';
+  frame.style.right = '0';
+  frame.style.bottom = '0';
+  frame.style.width = '0';
+  frame.style.height = '0';
+  frame.style.border = '0';
+  document.body.appendChild(frame);
+  const doc = frame.contentWindow.document;
+  doc.open();
+  doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Print</title><style>
+    @page{size:A4 landscape;margin:8mm}
+    *{box-sizing:border-box}
+    body{margin:0;color:#111;background:#fff;font-family:Arial,"Noto Sans Bengali",sans-serif;font-size:10px}
+    table{width:100%;border-collapse:collapse;table-layout:auto}
+    th,td{border:1px solid #111;padding:4px 5px;text-align:center;vertical-align:middle;line-height:1.2}
+    th{font-weight:700;background:#eef6f0;color:#111;text-align:center;vertical-align:middle}
+    /* INCOURSE PRINT HEADER CENTER ALIGN FIX */
+    td:nth-child(4){text-align:left}
+    .student-type-badge{border:0!important;background:transparent!important;color:#111!important;padding:0!important;font-weight:700!important}
+    .not-assigned{color:#111;background:#fff;text-align:center}
+    .avg-cell{font-weight:700}.att-cell{background:#fffaf0}
+  table thead th,table tr:first-child th,th{text-align:center!important;vertical-align:middle!important}
+</style></head><body>${table.outerHTML}</body></html>`);
+  doc.close();
+  frame.onload = function(){
+    try{ frame.contentWindow.focus(); frame.contentWindow.print(); }
+    finally{ setTimeout(()=>{ if(frame && frame.parentNode) frame.parentNode.removeChild(frame); }, 800); }
+  };
+}
+
+document.getElementById('loadSheetBtn').addEventListener('click', loadAverageSheet);
+document.getElementById('individualBtn').addEventListener('click', checkIndividual);
+sheetSearchEl.addEventListener('input', rerenderAverageFromCache);
+sheetSearchEl.addEventListener('keydown', e=>{ if(e.key === 'Enter') rerenderAverageFromCache(); });
+[avgSortField,avgSortDir].forEach(el=>{if(el)el.addEventListener('change',rerenderAverageFromCache);});
+individualSearchEl.addEventListener('keydown', e=>{ if(e.key === 'Enter') checkIndividual(); });
+</script>
+</body></html>

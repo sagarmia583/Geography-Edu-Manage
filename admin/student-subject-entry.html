@@ -1,0 +1,157 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Student Subject Entry - Compact</title><link rel="stylesheet" href="../assets/site.css"></head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">📌</span><span>Student Subjects</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a class="active" href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-management.html">Students</a><a href="student-profile-edit.html">Profile</a><a class="active" href="student-subject-entry.html">Subjects</a><a href="data-editor.html">Data Edit</a></div><section class="academic-banner"><h1>Student Subject Entry</h1></section><div class="panel no-print" style="margin-bottom:14px"><div class="panel-title"><div><h2>Non Major Management</h2><p class="muted">Student subject page থেকে Non-Major group manage করতে এখানে যান।</p></div><div class="right-actions"><a class="btn primary" href="non-major-management.html">Open Non Major Management</a></div></div></div><div class="grid two"><div class="panel" id="studentListPanel"><div class="panel-title"><div><h2>Student List</h2></div></div><div class="form-grid"><label class="field"><span class="label">Academic Year</span><select id="studentListYear"></select></label><label class="field"><span class="label">Filter Roll / Regi</span><input id="studentListSearch" class="input" placeholder="Roll / Registration / Name"></label><label class="field"><span class="label">Sort By</span><select id="studentSortField" class="input"><option value="roll">Roll</option><option value="reg">Regi No</option><option value="name">Name</option><option value="session">Session</option><option value="type">Type</option></select></label><label class="field"><span class="label">Order</span><select id="studentSortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label></div><div class="right-actions"><button id="loadStudentList" class="btn ghost" type="button">Load Students</button></div><div id="studentListBox" class="student-list-box" style="margin-top:12px"><div class="empty">Load student list.</div></div></div><div class="panel"><div class="panel-title"><div><h2>1 Click Bulk Assign</h2></div></div><div class="form-grid"><label class="field full"><span class="label">Academic Year</span><select id="bulkYear"></select></label></div><div id="bulkStatus" class="status info hide"></div><div class="right-actions"><button id="bulkAssign" class="btn primary" type="button">1 Click Assign / Replace Subjects</button></div></div><div class="panel"><div class="panel-title"><div><h2>Single Student Edit</h2></div></div><div class="form-grid"><label class="field"><span class="label">Roll / Registration</span><input id="rollInput" class="input" placeholder="Roll or Registration Number"></label><label class="field"><span class="label">Academic Year</span><select id="singleYear"></select></label></div><div class="right-actions"><button id="loadStudentSubjects" class="btn blue" type="button">Load Subjects</button></div></div></div><div id="singlePanel" class="panel hide" style="margin-top:14px"><h2 style="color:var(--primary)">Select Subjects</h2><p id="studentInfo" class="muted"></p><div id="subjectBox" class="checkbox-grid"></div><div id="singleStatus" class="status info hide"></div><div class="right-actions"><button id="saveStudentSubjects" class="btn primary" type="button">Save One Row Subject List</button></div></div><div class="panel" style="margin-top:14px"><div class="panel-title"><div><h2>Current Compact StudentSubjects</h2></div></div><div class="filter-row" style="grid-template-columns:1fr 1fr 1fr 1fr auto"><select id="listYear"></select><input id="compactSearch" class="input" placeholder="Filter by Roll / Regi / Name"><select id="compactSortField" class="input"><option value="roll">Sort: Roll</option><option value="reg">Sort: Regi</option><option value="name">Sort: Name</option><option value="session">Sort: Session</option></select><select id="compactSortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select><button id="loadCompactList" class="btn ghost" type="button">Load Year List</button></div><div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>SL</th><th>Roll</th><th>Regi No</th><th>Student Name</th><th>Session</th><th>Year</th><th>Subject Names</th></tr></thead><tbody id="compactTable"><tr><td colspan="7" class="empty">Load list to view.</td></tr></tbody></table></div></div></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+fillSelect(document.getElementById('bulkYear'), currentAcademicYears(), 'Select year');
+fillSelect(document.getElementById('studentListYear'), currentAcademicYears(), 'Select year');
+fillSelect(document.getElementById('singleYear'), currentAcademicYears(), 'Select year');
+fillSelect(document.getElementById('listYear'), currentAcademicYears(), 'All year');
+
+let loadedStudent = null;
+let loadedSubjects = [];
+let studentListRows = [];
+let compactRows = [];
+
+
+function subjectBelongsToSelectedGroup(subject, academicYear, student) {
+  if (subject.SubjectType !== 'Non-Major') return true;
+  if (academicYear !== 'Honours 1st Year' && academicYear !== 'Honours 2nd Year') return false;
+
+  const group = String(student.NonMajorGroup || '').trim();
+  const text = String(subject.SubjectName || '').toLowerCase();
+
+  if (group === 'Group-A Science') {
+    return text.includes('botany') || text.includes('zoology');
+  }
+  if (group === 'Group-B Humanities') {
+    return text.includes('social') || text.includes('political') || text.includes('economics') || text.includes('economy') || text.includes('society') || text.includes('culture');
+  }
+  return false;
+}
+
+function typeBadge(s){
+  const type = s.StudentType || s.IrregularStatus || 'Regular';
+  const cls = type === 'Irregular' ? 'irregular' : 'regular';
+  const title = s.IrregularReason ? ` title="${s.IrregularReason}"` : '';
+  return `<span class="student-type-badge ${cls}"${title}>${type}</span>`;
+}
+function parseCodes(text){
+  return new Set(String(text || '').split(',').map(x => x.trim()).filter(Boolean));
+}
+
+
+function renderStudentList(){
+  const q = document.getElementById('studentListSearch').value.toLowerCase().trim();
+  const rows = sortStudentList(studentListRows.filter(s => [s.Roll,s.RegistrationNumber,s.Name,s.SessionYear,s.StudentType,s.IrregularStatus].join(' ').toLowerCase().includes(q)), document.getElementById('studentSortField').value, document.getElementById('studentSortDir').value);
+  const academicYear = document.getElementById('studentListYear').value;
+  const box = document.getElementById('studentListBox');
+  if(!rows.length){ box.innerHTML = '<div class="empty">No student found.</div>'; return; }
+  box.innerHTML = rows.map(s=>`<button class="student-row-btn" type="button" onclick="chooseStudentForEdit('${String(s.Roll||'').replace(/'/g,"\\'")}','${academicYear}')">
+      <b>${s.Roll||''}</b> — ${s.Name||''} ${typeBadge(s)}<br>
+    </button>`).join('');
+}
+async function loadStudentList(){
+  const academicYear = document.getElementById('studentListYear').value;
+  const box = document.getElementById('studentListBox');
+  if(!academicYear){ box.innerHTML = '<div class="empty">Year required.</div>'; return; }
+  box.innerHTML = '<div class="empty">Loading year-wise students...</div>';
+  try{
+    const res = await geoApiGet('getStudents', { academicYear, sortField:document.getElementById('studentSortField').value, sortDir:document.getElementById('studentSortDir').value });
+    studentListRows = Array.isArray(res.students) ? res.students : [];
+    renderStudentList();
+  }catch(err){ box.innerHTML = '<div class="empty">'+err.message+'</div>'; }
+}
+async function chooseStudentForEdit(roll, academicYear){
+  document.getElementById('rollInput').value = roll;
+  document.getElementById('singleYear').value = academicYear;
+  document.getElementById('loadStudentSubjects').click();
+}
+window.chooseStudentForEdit = chooseStudentForEdit;
+document.getElementById('loadStudentList')?.addEventListener('click', loadStudentList);
+document.getElementById('studentListSearch')?.addEventListener('input', renderStudentList);
+attachSortControls('studentSortField','studentSortDir', renderStudentList);
+
+document.getElementById('bulkAssign').addEventListener('click', async()=>{
+  const academicYear = document.getElementById('bulkYear').value;
+  if(!academicYear){ showStatus(document.getElementById('bulkStatus'),'err','Year required.'); return; }
+  if(!confirm('Ei year er sob student er subject list replace kore one-row kore save hobe. Continue?')) return;
+  showStatus(document.getElementById('bulkStatus'),'info','Assigning subjects in one row...');
+  try{
+    const res = await geoApiPost({ action:'bulkAssignSubjects', academicYear });
+    showStatus(document.getElementById('bulkStatus'),res.success?'ok':'err',res.message||'Done');
+    await loadCompactList();
+  }catch(err){ showStatus(document.getElementById('bulkStatus'),'err',err.message); }
+});
+
+document.getElementById('loadStudentSubjects').addEventListener('click', async()=>{
+  const roll = document.getElementById('rollInput').value.trim();
+  const academicYear = document.getElementById('singleYear').value;
+  if(!roll || !academicYear){ alert('Roll/Registration and year required'); return; }
+
+  try{
+    const stRes = await geoApiGet('getStudent', { roll });
+    if(!stRes.found){ alert('Student not found'); return; }
+    loadedStudent = stRes.student;
+
+    const subRes = await geoApiGet('getSubjects', { academicYear });
+    const assigned = await geoApiGet('getStudentSubjects', { roll, academicYear });
+    const assignedRow = (assigned.subjects || [])[0] || {};
+    const assignedCodes = parseCodes(assignedRow.SubjectCodes);
+
+    loadedSubjects = (subRes.subjects || []).filter(s => subjectBelongsToSelectedGroup(s, academicYear, loadedStudent));
+
+    document.getElementById('studentInfo').textContent = `${loadedStudent.Name} | Roll: ${loadedStudent.Roll} | Regi: ${loadedStudent.RegistrationNumber} | Group: ${loadedStudent.NonMajorGroup || 'N/A'} | Year: ${academicYear}`;
+    document.getElementById('subjectBox').innerHTML = loadedSubjects.map(s=>`<label class="check-item">
+      <input type="checkbox" value="${s.SubjectCode}" ${assignedCodes.has(s.SubjectCode)?'checked':''}>
+      <span><b>${s.SubjectCode}</b> - ${s.SubjectName}<br></span>
+    </label>`).join('');
+    document.getElementById('singlePanel').classList.remove('hide');
+  }catch(err){ alert(err.message); }
+});
+
+document.getElementById('saveStudentSubjects').addEventListener('click', async()=>{
+  if(!loadedStudent) return;
+  const academicYear = document.getElementById('singleYear').value;
+  const checked = [...document.querySelectorAll('#subjectBox input:checked')].map(ch=>{
+    const s = loadedSubjects.find(x=>x.SubjectCode===ch.value);
+    return { subjectCode:s.SubjectCode, subjectName:s.SubjectName, subjectType:s.SubjectType };
+  });
+  if(!checked.length){ showStatus(document.getElementById('singleStatus'),'err','No subject selected.'); return; }
+  showStatus(document.getElementById('singleStatus'),'info','Saving one row subject list...');
+  try{
+    const studySessionYear = loadedStudent.StudySessionYear || loadedStudent.CurrentStudySession || loadedStudent.SessionYear || '';
+    const res = await geoApiPost({ action:'saveStudentSubjects', roll:loadedStudent.Roll, sessionYear:loadedStudent.SessionYear, studySessionYear, currentStudySession:studySessionYear, academicYear, subjects:checked });
+    showStatus(document.getElementById('singleStatus'),res.success?'ok':'err',res.message||'Saved');
+    await loadCompactList();
+  }catch(err){ showStatus(document.getElementById('singleStatus'),'err',err.message); }
+});
+
+function renderCompactList(){
+  const tbody = document.getElementById('compactTable');
+  const q = document.getElementById('compactSearch').value.toLowerCase().trim();
+  const rows = sortStudentList(compactRows.filter(r => [r.Roll,r.RegistrationNumber,r.StudentName,r.SessionYear,r.AcademicYear].join(' ').toLowerCase().includes(q)), document.getElementById('compactSortField').value, document.getElementById('compactSortDir').value);
+  if(!rows.length){ tbody.innerHTML = '<tr><td colspan="7" class="empty">No compact subject row found.</td></tr>'; return; }
+  tbody.innerHTML = rows.map((r,i)=>`<tr>
+      <td>${i+1}</td><td>${r.Roll||''}</td><td>${r.RegistrationNumber||''}</td><td>${r.StudentName||''}</td>
+      <td>${r.SessionYear||''}</td><td>${r.AcademicYear||''}</td><td style="white-space:normal;min-width:360px">${r.SubjectNames||''}</td>
+    </tr>`).join('');
+}
+async function loadCompactList(){
+  const academicYear = document.getElementById('listYear').value;
+  const tbody = document.getElementById('compactTable');
+  tbody.innerHTML = '<tr><td colspan="7" class="empty">Loading...</td></tr>';
+  try{
+    const res = await geoApiGet('getStudentSubjects', { academicYear });
+    compactRows = Array.isArray(res.subjects) ? res.subjects : [];
+    renderCompactList();
+  }catch(err){
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">'+err.message+'</td></tr>';
+  }
+}
+document.getElementById('loadCompactList').addEventListener('click', loadCompactList);
+document.getElementById('compactSearch').addEventListener('input', renderCompactList);
+attachSortControls('compactSortField','compactSortDir', renderCompactList);
+loadCompactList();
+</script>
+</body></html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Create/Edit Exam</title><link rel="stylesheet" href="../assets/site.css"></head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">🛠️</span><span>Create/Edit Exam</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a class="active" href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-management.html">Students</a><a href="student-profile-edit.html">Profile</a><a href="student-subject-entry.html">Student Subjects</a><a href="exam-create.html">Exam</a><a href="exam-schedule.html">Schedule</a><a href="marks-entry.html">Marks</a></div><section class="academic-banner"><h1>Create & Edit Exam</h1></section><div class="grid two"><form id="examForm" class="panel"><input type="hidden" name="examId" id="examId"><div class="panel-title"><div><h2 id="formTitle">New Exam</h2></div></div><div class="form-grid"><label class="field"><span class="label">Session</span><input class="input" name="sessionYear" placeholder="e.g. 2024-25" required></label><label class="field"><span class="label">Academic Year</span><select name="academicYear" id="examYear" required></select></label><label class="field"><span class="label">Exam Type</span><select name="examType" id="examType" required></select></label><label class="field"><span class="label">Exam Name</span><input class="input" name="examName" placeholder="e.g. 2024-25 - Honours 1st Year - 1st Incourse" required></label><label class="field"><span class="label">Start Date</span><input class="input" type="date" name="startDate"></label><label class="field"><span class="label">Status</span><select name="status"><option>Active</option><option>Closed</option><option>Draft</option></select></label></div><div id="incourseComponents" class="component-box hide"><div class="component-title">Incourse Exam Component</div><div class="component-grid"><label class="field"><span class="label">Exam Marks</span><input class="input" type="number" name="examComponentMarks" value="15"></label><label class="field"><span class="label">Note</span><input class="input" readonly value="Assignment & Attendance marks separate entry"></label><input type="hidden" name="assignmentMarks" value="0"><input type="hidden" name="attendanceMarks" value="0"><input id="incourseTotal" type="hidden" value="15"></div></div><div id="testComponents" class="component-box hide"><div class="component-title">Test Examination</div><div class="component-grid"><label class="field"><span class="label">Test Exam Marks</span><input class="input" type="number" name="testExamMarks" value="80"></label></div></div><div id="finalComponents" class="component-box hide"><div class="component-title">Final Exam</div><div class="component-grid"><label class="field"><span class="label">Final Pass Marks</span><input class="input" type="number" name="finalPassMarks" value="40"></label></div></div><div id="subjectExamConfig" class="component-box"><div class="component-title">Subject Selection & Exam Marks</div><p class="muted" style="margin-top:0">যে subject-এ exam নিবেন শুধু সেগুলো tick দিন। English Non-Credit incourse exam-এ auto hidden থাকবে। Assignment/Attendance এখানে নেই।</p><div class="right-actions" style="justify-content:flex-start;margin-bottom:10px"><button id="loadExamSubjectsBtn" class="btn ghost" type="button">Load Subjects</button><button id="selectAllSubjectsBtn" class="btn ghost" type="button">Select All</button></div><div id="examSubjectStatus" class="status info hide"></div><div class="table-wrap" style="max-height:360px;overflow:auto"><table><thead><tr><th style="width:55px">Use</th><th>Code</th><th>Subject Name</th><th>Type</th><th style="width:140px">Exam Marks</th></tr></thead><tbody id="examSubjectRows"><tr><td colspan="5" class="empty">Select Academic Year + Exam Type, then Load Subjects.</td></tr></tbody></table></div></div><div id="examStatus" class="status info hide"></div><div class="right-actions"><button id="resetForm" class="btn ghost" type="button">New</button><button id="saveExamBtn" class="btn primary" type="submit">Save Exam</button></div></form><div class="panel"><div class="panel-title"><div><h2>Exam List</h2></div></div><div class="filter-row" style="grid-template-columns:1fr 1fr auto"><input id="examSessionFilter" class="input" placeholder="Session filter"><select id="examYearFilter"></select><button id="refreshExam" class="btn ghost" type="button">Refresh</button></div><div id="examCards" class="grid" style="grid-template-columns:1fr"></div></div></div></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+fillSelect(document.getElementById('examYear'), currentAcademicYears(), 'Select year');
+fillSelect(document.getElementById('examType'), examTypes(), 'Select exam type');
+fillSelect(document.getElementById('examYearFilter'), currentAcademicYears(), 'All year');
+const form = document.getElementById('examForm');
+const statusEl = document.getElementById('examStatus');
+const cards = document.getElementById('examCards');
+const typeEl = document.getElementById('examType');
+let examsCache = [];
+
+function updateComponentView(){
+  const type = typeEl.value;
+  document.getElementById('incourseComponents').classList.toggle('hide', !(type === '1st Incourse' || type === '2nd Incourse'));
+  document.getElementById('testComponents').classList.toggle('hide', type !== 'Test Examination');
+  document.getElementById('finalComponents').classList.toggle('hide', type !== 'Final Exam');
+}
+function updateTotal(){
+  const ex = Number(form.examComponentMarks.value || 0);
+  if(document.getElementById('incourseTotal')) document.getElementById('incourseTotal').value = ex;
+}
+['examComponentMarks'].forEach(n => form[n] && form[n].addEventListener('input', updateTotal));
+typeEl.addEventListener('change', updateComponentView);
+updateComponentView(); updateTotal();
+
+function displayName(e){
+  return e.DisplayName || e.ExamName || [e.SessionYear,e.AcademicYear,e.ExamType].filter(Boolean).join(' - ') || e.ExamID;
+}
+function editExam(id){
+  const e = examsCache.find(x => x.ExamID === id);
+  if(!e) return;
+  form.examId.value = e.ExamID || '';
+  form.sessionYear.value = e.SessionYear || '';
+  form.academicYear.value = e.AcademicYear || '';
+  form.examType.value = e.ExamType || '';
+  form.examName.value = displayName(e);
+  form.startDate.value = e.StartDate || '';
+  form.status.value = e.Status || 'Active';
+  form.examComponentMarks.value = e.ExamComponentMarks || 15;
+  form.assignmentMarks.value = e.AssignmentMarks || 0;
+  form.attendanceMarks.value = e.AttendanceMarks || 5;
+  form.testExamMarks.value = e.TestExamMarks || 80;
+  form.finalPassMarks.value = e.FinalPassMarks || 40;
+  document.getElementById('formTitle').textContent = 'Edit Exam';
+  const saveBtn=document.getElementById('saveExamBtn'); if(saveBtn) saveBtn.textContent='Update Exam';
+  showStatus(statusEl,'info','Edit mode: exam loaded. Subject marks নিচে edit করে Update Exam দিন।');
+  updateComponentView(); updateTotal();
+  loadSubjectSchedulesForExam(e.ExamID).then(()=>loadExamSubjects(true));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+window.editExam = editExam;
+
+function resetExamForm(){
+  form.reset();
+  form.examId.value = '';
+  document.getElementById('formTitle').textContent = 'New Exam';
+  const saveBtn=document.getElementById('saveExamBtn'); if(saveBtn) saveBtn.textContent='Save Exam';
+  form.examComponentMarks.value = 15;
+  form.assignmentMarks.value = 0;
+  form.attendanceMarks.value = 5;
+  form.testExamMarks.value = 80;
+  form.finalPassMarks.value = 40;
+  updateComponentView(); updateTotal();
+  scheduleCache = [];
+  if(examSubjectRows) examSubjectRows.innerHTML = '<tr><td colspan="5" class="empty">Select Academic Year + Exam Type, then Load Subjects.</td></tr>';
+}
+document.getElementById('resetForm').addEventListener('click', resetExamForm);
+
+async function loadExams(){
+  cards.innerHTML = '<div class="empty">Loading exams...</div>';
+  try{
+    const res = await geoApiGet('getExams', { sessionYear: document.getElementById('examSessionFilter').value, academicYear: document.getElementById('examYearFilter').value, noCache:'1', force:'1', _t:Date.now() });
+    const exams = Array.isArray(res.exams)?res.exams:[];
+    examsCache = exams;
+    if(!exams.length){ cards.innerHTML='<div class="empty">No exam found.</div>'; return; }
+    cards.innerHTML = exams.reverse().map(e=>`<div class="easy-card">
+      <h3>${displayName(e)}</h3>
+      
+      <div class="badge-row">
+        <span class="badge">${e.Status||'Active'}</span>
+        ${e.ExamComponentMarks ? `<span class="badge blue">Exam: ${e.ExamComponentMarks}</span>` : ''}
+        ${e.AssignmentMarks ? `<span class="badge blue">Assignment: ${e.AssignmentMarks}</span>` : ''}
+        ${e.AttendanceMarks ? `<span class="badge blue">Attendance: ${e.AttendanceMarks}</span>` : ''}
+        ${e.TestExamMarks ? `<span class="badge gold">Test: ${e.TestExamMarks}</span>` : ''}
+        ${e.PromotionExam === 'Yes' ? `<span class="badge red">Promotion Exam</span>` : ''}
+      </div>
+      <div class="action-row" style="margin-top:12px">
+        <button class="btn primary small-btn" type="button" onclick="editExam('${e.ExamID}')">Edit Exam</button>
+        <a class="btn ghost small-btn" href="exam-schedule.html?examId=${encodeURIComponent(e.ExamID||'')}">Schedule</a>
+        <a class="btn ghost small-btn" href="attendance-sheet.html?examId=${encodeURIComponent(e.ExamID||'')}">Attendance</a>
+        <a class="btn primary small-btn" href="marks-entry.html?examId=${encodeURIComponent(e.ExamID||'')}">Marks</a>
+      </div>
+    </div>`).join('');
+  }catch(err){ cards.innerHTML='<div class="status err">'+err.message+'</div>'; }
+}
+
+const examSubjectRows = document.getElementById('examSubjectRows');
+const examSubjectStatus = document.getElementById('examSubjectStatus');
+const loadExamSubjectsBtn = document.getElementById('loadExamSubjectsBtn');
+const selectAllSubjectsBtn = document.getElementById('selectAllSubjectsBtn');
+let subjectConfigCache = [];
+let scheduleCache = [];
+
+
+function isICTSubjectUI(s){
+  const code=String(s?.SubjectCode||s?.subjectCode||'').trim();
+  return code==='219903';
+}
+
+function defaultSubjectExamMark(subject){
+  const type = typeEl.value;
+  if(type === 'Test Examination') return Number(form.testExamMarks.value || (isICTSubjectUI(subject)?60:80));
+  if(type === '1st Incourse' || type === '2nd Incourse') return Number(form.examComponentMarks.value || (isICTSubjectUI(subject)?8:15));
+  return Number(subject.FullMarks || subject.fullMarks || subject.Marks || (isICTSubjectUI(subject)?75:100));
+}
+
+function subjectTypeText(s){
+  return s.SubjectType || s.subjectType || s.Type || '';
+}
+
+function subjectNameText(s){
+  return s.SubjectName || s.subjectName || s.Name || '';
+}
+
+function isEnglishNonCreditUI(s){
+  const type = String(subjectTypeText(s)).toLowerCase();
+  const credits = String(s.Credits || s.Credit || s.credits || '');
+  return type.includes('noncredit') || type.includes('non-credit') || type.includes('non credit') || credits === '0';
+}
+
+async function loadSubjectSchedulesForExam(examId){
+  if(!examId){ scheduleCache = []; return; }
+  try{
+    const res = await geoApiGet('getExamSchedule',{examId, noCache:'1', _t:Date.now()});
+    scheduleCache = Array.isArray(res.schedules) ? res.schedules : [];
+  }catch(e){ scheduleCache = []; }
+}
+
+async function loadExamSubjects(auto=false){
+  const academicYear = form.academicYear.value;
+  const examType = form.examType.value;
+  if(!academicYear || !examType){
+    if(!auto) showStatus(examSubjectStatus,'err','Academic Year + Exam Type required.');
+    return;
+  }
+  showStatus(examSubjectStatus,'info','Loading subjects...');
+  try{
+    const res = await geoApiGet('getSubjectsForExamCreate',{academicYear, examType, noCache:'1', _t:Date.now()});
+    subjectConfigCache = Array.isArray(res.subjects) ? res.subjects : [];
+    const schedByCode = {};
+    scheduleCache.forEach(s => schedByCode[String(s.SubjectCode || '')] = s);
+    if(!subjectConfigCache.length){
+      examSubjectRows.innerHTML = '<tr><td colspan="5" class="empty">No subject found.</td></tr>';
+      showStatus(examSubjectStatus,'err','No subject found.');
+      return;
+    }
+    examSubjectRows.innerHTML = subjectConfigCache.map(s=>{
+      const code = s.SubjectCode || s.subjectCode || '';
+      const existing = schedByCode[String(code)] || null;
+      const checked = existing ? 'checked' : '';
+      const mark = existing ? (existing.SubjectExamMarks || existing.SubjectFullMarks || existing.SubjectTestMarks || defaultSubjectExamMark(s)) : defaultSubjectExamMark(s);
+      return `<tr data-code="${String(code).replace(/"/g,'&quot;')}">
+        <td class="text-center"><input type="checkbox" class="exam-sub-check" ${checked}></td>
+        <td>${code}</td>
+        <td>${subjectNameText(s)} ${isEnglishNonCreditUI(s)?'<span class="badge gold">Non Credit</span>':''}</td>
+        <td>${subjectTypeText(s)}</td>
+        <td><input class="input subject-exam-mark" type="number" min="0" value="${mark}"></td>
+      </tr>`;
+    }).join('');
+    showStatus(examSubjectStatus,'ok',subjectConfigCache.length+' subjects loaded.');
+  }catch(err){
+    showStatus(examSubjectStatus,'err',err.message);
+  }
+}
+
+async function saveSelectedSubjectConfigs(examId){
+  const rows = [...document.querySelectorAll('#examSubjectRows tr[data-code]')];
+  const selected = rows.filter(tr => tr.querySelector('.exam-sub-check')?.checked);
+  if(!selected.length) return {saved:0};
+  const examType = form.examType.value;
+  const startDate = form.startDate.value || '';
+  let saved = 0;
+  for(const tr of selected){
+    const code = tr.dataset.code;
+    const mark = tr.querySelector('.subject-exam-mark')?.value || defaultSubjectExamMark({});
+    const oldSchedule = scheduleCache.find(s=>String(s.SubjectCode||'')===String(code)) || {};
+    const payload = {
+      action:'saveExamSchedule',
+      scheduleId: oldSchedule.ScheduleID || oldSchedule.scheduleId || '',
+      examId:examId,
+      subjectCode:code,
+      examDate:startDate,
+      subjectExamMarks:mark,
+      subjectFullMarks:mark,
+      subjectAssignmentMarks:0,
+      subjectAttendanceMarks:0,
+      subjectTestMarks: examType === 'Test Examination' ? mark : 0,
+      subjectFinalPassMarks: Math.ceil(Number(mark || 0) * 0.40)
+    };
+    const res = await geoApiPost(payload);
+    if(res && res.success) saved++;
+  }
+  return {saved};
+}
+
+loadExamSubjectsBtn?.addEventListener('click',()=>loadExamSubjects(false));
+selectAllSubjectsBtn?.addEventListener('click',()=>{
+  document.querySelectorAll('.exam-sub-check').forEach(c=>c.checked=true);
+});
+document.getElementById('examYear')?.addEventListener('change',()=>loadExamSubjects(true));
+typeEl.addEventListener('change',()=>loadExamSubjects(true));
+form.testExamMarks?.addEventListener('input',()=>{ if(typeEl.value==='Test Examination'){ document.querySelectorAll('.subject-exam-mark').forEach(inp=>inp.value=form.testExamMarks.value || 80); } });
+form.examComponentMarks?.addEventListener('input',()=>{
+  if(typeEl.value === '1st Incourse' || typeEl.value === '2nd Incourse'){
+    document.querySelectorAll('.subject-exam-mark').forEach(inp=>inp.value=form.examComponentMarks.value || 15);
+  }
+});
+
+form.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const btn = form.querySelector('button[type="submit"]');
+  const old = btn.textContent; btn.textContent='Please wait...'; btn.disabled=true;
+  try{
+    const fd = new FormData(form);
+    const res = await geoApiPost({
+      action:'saveExam',
+      examId:fd.get('examId'),
+      sessionYear:fd.get('sessionYear'),
+      academicYear:fd.get('academicYear'),
+      examType:fd.get('examType'),
+      examName:fd.get('examName'),
+      startDate:fd.get('startDate'),
+      status:fd.get('status'),
+      examComponentMarks:fd.get('examComponentMarks'),
+      assignmentMarks:fd.get('assignmentMarks'),
+      attendanceMarks:fd.get('attendanceMarks'),
+      testExamMarks:fd.get('testExamMarks'),
+      finalPassMarks:fd.get('finalPassMarks')
+    });
+    if(res.success){
+      const subRes = await saveSelectedSubjectConfigs(res.examId || fd.get('examId'));
+      showStatus(statusEl,'ok',(res.message || 'Saved') + ' | Subject config saved: ' + (subRes.saved || 0));
+      resetExamForm(); loadExams();
+    } else {
+      showStatus(statusEl,'err',res.message || 'Save failed');
+    }
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+  finally{ btn.textContent=old; btn.disabled=false; }
+});
+document.getElementById('refreshExam').addEventListener('click', loadExams);
+document.getElementById('examYearFilter').addEventListener('change', loadExams);
+loadExams();
+</script>
+</body></html>

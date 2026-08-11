@@ -1,0 +1,220 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Session Wise Actual Students</title><link rel="stylesheet" href="../assets/site.css"></head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">🎓</span><span>Session Wise Actual Students</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🎓</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a class="active" href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><section class="academic-banner"><h1>Session Wise Student List</h1></section><div class="panel"><div class="panel-title"><div><h2>Load Session Student List</h2></div><button id="saveAllBtn" class="btn primary" type="button">Save All Visible</button></div><div class="filter-row" style="grid-template-columns:1fr 1fr 1fr 1fr auto"><label class="field"><span class="label">Academic Year / Current Year</span><select id="academicYear"></select></label><label class="field"><span class="label">Session Year / Study Session</span><select id="sessionYear" class="input"></select></label><label class="field"><span class="label">Search in List</span><input id="studentSearch" class="input" placeholder="Roll / Registration / Name"></label><label class="field"><span class="label">Show</span><select id="statusFilter" class="input"><option value="">All</option><option value="Continuing">Continuing only</option><option value="Inactive">Inactive only</option></select></label><button id="loadStudentsBtn" class="btn blue" type="button">Load List</button></div><div class="right-actions" style="margin-top:10px"><button id="markVisibleContinuingBtn" class="btn green" type="button">Mark Visible Continuing</button><button id="markVisibleInactiveBtn" class="btn red" type="button">Mark Visible Inactive</button><button id="printBtn" class="btn ghost" type="button" onclick="window.print()">Print</button></div><div id="actualStatus" class="status info hide"></div></div><div class="grid two" style="margin-top:14px"><div class="panel"><div class="panel-title"><div><h2>Add Irregular / Old Student to This Session</h2></div></div><div class="filter-row" style="grid-template-columns:1fr auto"><input id="globalStudentSearch" class="input" placeholder="Search by Roll / Registration / Name"><button id="globalSearchBtn" class="btn blue" type="button">Search Student</button></div><div id="addStudentStatus" class="status info hide"></div><div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Roll</th><th>Regi</th><th>Name</th><th>Original Session</th><th>Year</th><th>Action</th></tr></thead><tbody id="globalSearchTable"><tr><td colspan="6" class="empty">Search student to add in this session.</td></tr></tbody></table></div></div><div class="panel"><div class="panel-title"><div><h2>Quick Add by Roll / Registration</h2></div></div><div class="form-grid" style="grid-template-columns:1fr 1fr"><label class="field"><span class="label">Roll / Registration</span><input id="quickAddSearch" class="input" placeholder="Roll or Regi No"></label><label class="field"><span class="label">Target Session</span><input id="quickAddSession" class="input" placeholder="e.g. 2023-24"></label></div><div class="right-actions" style="margin-top:12px"><button id="quickAddBtn" class="btn green" type="button">Add to Session</button></div><div id="quickAddStatus" class="status info hide"></div></div></div><div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>SL</th><th>Roll</th><th>Regi No</th><th>Name</th><th>Original Session</th><th>Study Session</th><th>Current Year</th><th>Type</th><th>Study Status</th><th>Save Status</th><th>Action</th></tr></thead><tbody id="actualTable"><tr><td colspan="11" class="empty">Select year/session and load list.</td></tr></tbody></table></div></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+fillSelect(document.getElementById('academicYear'), currentAcademicYears(), 'Select year');
+
+const yearEl = document.getElementById('academicYear');
+const sessionEl = document.getElementById('sessionYear');
+fillSelect(sessionEl, currentSessionYears(), 'Select session');
+const searchEl = document.getElementById('studentSearch');
+const statusFilter = document.getElementById('statusFilter');
+const table = document.getElementById('actualTable');
+const statusEl = document.getElementById('actualStatus');
+let students = [];
+let visible = [];
+
+function esc(v){return String(v ?? '').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+function badge(type){
+  const t = type || 'Regular';
+  const cls = t === 'Irregular' ? 'irregular' : 'regular';
+  return `<span class="student-type-badge ${cls}">${t}</span>`;
+}
+function setRowStatus(tr, text, type='info'){
+  const cell = tr?.querySelector('.row-save-status');
+  if(!cell) return;
+  cell.innerHTML = `<span class="pill ${type==='ok'?'green':type==='err'?'red':'blue'}">${text}</span>`;
+}
+function getTargetSession(){
+  return sessionEl.value.trim();
+}
+function renderRows(){
+  const q = searchEl.value.toLowerCase().trim();
+  const sf = statusFilter.value;
+
+  visible = students.filter(s => {
+    const text = [s.Roll,s.RegistrationNumber,s.Name,s.SessionYear,s.StudySessionYear,s.CurrentYear,s.StudyStatus,s.StudentType].join(' ').toLowerCase();
+    if(q && !text.includes(q)) return false;
+    if(sf === 'Continuing' && String(s.StudyStatus||'Continuing') !== 'Continuing') return false;
+    if(sf === 'Inactive' && String(s.StudyStatus||'Continuing') === 'Continuing') return false;
+    return true;
+  });
+  visible = sortStudentList(visible, 'roll', 'asc');
+
+  if(!visible.length){
+    table.innerHTML = '<tr><td colspan="11" class="empty">No students found.</td></tr>';
+    return;
+  }
+
+  table.innerHTML = visible.map((s,i)=>`<tr>
+    <td>${i+1}</td>
+    <td>${esc(s.Roll)}</td>
+    <td>${esc(s.RegistrationNumber)}</td>
+    <td>${esc(s.Name)}</td>
+    <td>${esc(s.SessionYear)}</td>
+    <td><input class="mini-input study-session" data-roll="${esc(s.Roll)}" data-reg="${esc(s.RegistrationNumber)}" value="${esc(s.StudySessionYear || s.SessionYear)}"></td>
+    <td>${esc(s.CurrentYear)}</td>
+    <td>${badge(s.StudentType)}</td>
+    <td>
+      <select class="mini-input study-status" data-roll="${esc(s.Roll)}">
+        <option value="Continuing" ${(s.StudyStatus||'Continuing')==='Continuing'?'selected':''}>Continuing</option>
+        <option value="Inactive" ${s.StudyStatus==='Inactive'?'selected':''}>Inactive</option>
+        <option value="Dropout" ${s.StudyStatus==='Dropout'?'selected':''}>Dropout</option>
+        <option value="Stopped" ${s.StudyStatus==='Stopped'?'selected':''}>Stopped</option>
+      </select>
+    </td>
+    <td class="row-save-status"><span class="pill blue">Ready</span></td>
+    <td><button class="btn small-btn primary" type="button" onclick="saveOne('${String(s.Roll||'').replace(/'/g,"\\'")}')">Save</button></td>
+  </tr>`).join('');
+
+  document.querySelectorAll('#actualTable .study-session').forEach(inp=>{
+    inp.addEventListener('keydown', e=>{
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        saveOne(inp.dataset.roll);
+      }
+    });
+    inp.addEventListener('input', ()=>setRowStatus(inp.closest('tr'),'Not saved','info'));
+  });
+  document.querySelectorAll('#actualTable .study-status').forEach(sel=>{
+    sel.addEventListener('change', ()=>setRowStatus(sel.closest('tr'),'Not saved','info'));
+  });
+}
+async function loadStudents(){
+  const academicYear = yearEl.value;
+  const sessionYear = getTargetSession();
+  if(!academicYear){ showStatus(statusEl,'err','Academic year required.'); return; }
+  if(!sessionYear){ showStatus(statusEl,'err','Session Year required.'); return; }
+
+  showStatus(statusEl,'info','Loading session-wise students...');
+  try{
+    const res = await geoApiGet('getStudySessionStudents', {
+      academicYear,
+      sessionYear,
+      search:'',
+      _t:Date.now(),
+      noCache:'1'
+    });
+    students = Array.isArray(res.students) ? res.students : [];
+    renderRows();
+    showStatus(statusEl,'ok',students.length + ' students loaded for session ' + sessionYear + '.');
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+function collectRows(onlyRoll){
+  const rows = [];
+  document.querySelectorAll('#actualTable tr').forEach(tr=>{
+    const study = tr.querySelector('.study-session');
+    const st = tr.querySelector('.study-status');
+    if(!study || !st) return;
+    if(onlyRoll && study.dataset.roll !== onlyRoll) return;
+    rows.push({ roll:study.dataset.roll, registrationNumber:study.dataset.reg, studySessionYear:study.value, studyStatus:st.value });
+  });
+  return rows;
+}
+async function saveRows(rows){
+  if(!rows.length){ showStatus(statusEl,'err','No rows to save.'); return; }
+  showStatus(statusEl,'info','Saving study session/status...');
+  document.querySelectorAll('#actualTable tr').forEach(tr=>{
+    const study = tr.querySelector('.study-session');
+    if(study && rows.some(r=>r.roll===study.dataset.roll)){
+      tr.classList.add('saving-row');
+      setRowStatus(tr,'Saving','info');
+    }
+  });
+  try{
+    const res = await geoApiPost({ action:'updateStudentStudyStatus', students:rows });
+    document.querySelectorAll('#actualTable tr').forEach(tr=>{
+      const study = tr.querySelector('.study-session');
+      if(study && rows.some(r=>r.roll===study.dataset.roll)){
+        tr.classList.remove('saving-row');
+        tr.classList.add('saved-row');
+        setRowStatus(tr,'Saved','ok');
+        setTimeout(()=>tr.classList.remove('saved-row'), 1000);
+      }
+    });
+    showStatus(statusEl,res.success?'ok':'err',res.message || 'Saved');
+    clearGeoCache?.();
+    await loadStudents();
+  }catch(err){
+    document.querySelectorAll('#actualTable tr').forEach(tr=>tr.classList.remove('saving-row'));
+    showStatus(statusEl,'err',err.message);
+  }
+}
+function saveOne(roll){ saveRows(collectRows(roll)); }
+
+async function addStudentToCurrentSession(searchValue, statusBox, regValue=''){
+  const target = getTargetSession() || document.getElementById('quickAddSession').value.trim();
+  const key = String(searchValue || '').trim();
+  const reg = String(regValue || '').trim();
+
+  if(!key && !reg){ showStatus(statusBox,'err','Roll/Registration required.'); return; }
+  if(!target){ showStatus(statusBox,'err','Target session required.'); return; }
+
+  const payload = {
+    studentKey: key || reg,
+    roll: key,
+    registrationNumber: reg,
+    studySessionYear: target,
+    studyStatus: 'Continuing'
+  };
+
+  showStatus(statusBox,'info','Adding student to session...');
+  try{
+    const res = await geoApiPost({ action:'updateStudentStudyStatus', students:[payload] });
+    showStatus(statusBox,res.success && (res.saved||0)>0 ? 'ok':'err',res.message || 'Updated');
+    if(res.success && (res.saved||0)>0 && yearEl.value && target){
+      sessionEl.value = target;
+      await loadStudents();
+    }
+  }catch(err){ showStatus(statusBox,'err',err.message); }
+}
+
+async function searchGlobalStudent(){
+  const q = document.getElementById('globalStudentSearch').value.trim();
+  const box = document.getElementById('addStudentStatus');
+  const body = document.getElementById('globalSearchTable');
+  if(!q){ showStatus(box,'err','Roll/Registration/Name required.'); return; }
+
+  showStatus(box,'info','Searching student...');
+  try{
+    const res = await geoApiGet('getStudents', { search:q, noStudySessionFilter:'true', _t:Date.now(), noCache:'1' });
+    const rows = Array.isArray(res.students) ? res.students : [];
+    if(!rows.length){
+      body.innerHTML = '<tr><td colspan="6" class="empty">No student found.</td></tr>';
+      showStatus(box,'err','No student found.');
+      return;
+    }
+    body.innerHTML = rows.map(s=>`<tr>
+      <td>${esc(s.Roll)}</td>
+      <td>${esc(s.RegistrationNumber)}</td>
+      <td>${esc(s.Name)}</td>
+      <td>${esc(s.SessionYear)}</td>
+      <td>${esc(s.CurrentYear)}</td>
+      <td><button class="btn small-btn green" type="button" onclick="addStudentToCurrentSession('${String(s.Roll||'').replace(/'/g,"\\'")}', document.getElementById('addStudentStatus'), '${String(s.RegistrationNumber||'').replace(/'/g,"\\'")}')">Add</button></td>
+    </tr>`).join('');
+    showStatus(box,'ok',rows.length + ' student found. Click Add.');
+  }catch(err){ showStatus(box,'err',err.message); }
+}
+
+document.getElementById('loadStudentsBtn').addEventListener('click', loadStudents);
+document.getElementById('saveAllBtn').addEventListener('click', ()=>saveRows(collectRows()));
+document.getElementById('markVisibleContinuingBtn').addEventListener('click', ()=>{
+  document.querySelectorAll('#actualTable .study-status').forEach(sel => sel.value = 'Continuing');
+  saveRows(collectRows());
+});
+document.getElementById('markVisibleInactiveBtn').addEventListener('click', ()=>{
+  document.querySelectorAll('#actualTable .study-status').forEach(sel => sel.value = 'Inactive');
+  saveRows(collectRows());
+});
+searchEl.addEventListener('input', renderRows);
+statusFilter.addEventListener('change', renderRows);
+document.getElementById('globalSearchBtn').addEventListener('click', searchGlobalStudent);
+document.getElementById('globalStudentSearch').addEventListener('keydown', e=>{ if(e.key === 'Enter') searchGlobalStudent(); });
+document.getElementById('quickAddBtn').addEventListener('click', ()=>{
+  const q = document.getElementById('quickAddSearch').value.trim();
+  addStudentToCurrentSession(q, document.getElementById('quickAddStatus'));
+});
+document.getElementById('quickAddSearch').addEventListener('keydown', e=>{ if(e.key === 'Enter') document.getElementById('quickAddBtn').click(); });
+</script>
+</body></html>

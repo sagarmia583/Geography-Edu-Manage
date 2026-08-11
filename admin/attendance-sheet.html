@@ -1,0 +1,478 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Excel Style Attendance Sheet</title><link rel="stylesheet" href="../assets/site.css">
+<style>
+@media print{
+  table.print-align-table th,
+  table.print-align-table thead th,
+  table.print-align-table tr:first-child > th,
+  table.print-align-table tr:first-child > td{text-align:center!important;vertical-align:middle!important}
+  table.print-align-table td{text-align:center!important;vertical-align:middle!important}
+  table.print-align-table td.printable-name-cell{text-align:left!important}
+}
+</style>
+</head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">📄</span><span>Attendance Sheet</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a class="active" href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-subject-entry.html">Student Subjects</a><a href="exam-create.html">Exam</a><a href="exam-schedule.html">Schedule</a><a class="active" href="attendance-sheet.html">Attendance</a></div><section class="academic-banner no-print"><h1>Attendance Sheet</h1></section><div class="panel no-print"><div class="filter-row" style="grid-template-columns:1fr 1fr auto 1fr 1fr 1fr auto auto"><label class="field"><span class="label">Session Year</span><select id="sessionYear" class="input"></select></label><label class="field"><span class="label">Academic Year</span><select id="academicYear"></select></label><label class="field"><span class="label">Exam</span><select id="examSelect"></select></label><label class="field"><span class="label">Sort By</span><select id="sortField" class="input"><option value="roll">Roll</option><option value="reg">Regi No</option><option value="name">Name</option></select></label><label class="field"><span class="label">Order</span><select id="sortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label><button id="loadSheet" class="btn primary" type="button">Load Attendance Sheet</button><button onclick="printFastAttendance()" class="btn ghost" type="button">Print Stable A4</button><button id="cleanupSubjectsBtn" class="btn red" type="button">Clean Removed Subjects</button></div><div id="attendanceStatus" class="status info hide"></div></div><section class="panel print-panel" style="margin-top:14px"><div id="printArea" class="excel-attendance-page"><div class="excel-title"><h2>Geography and Environment Department</h2><h3>Kumudini Govt. College, Tangail</h3><h4 id="examTitle">Attendance Sheet</h4></div><div class="attendance-print-container"><table class="excel-table"><thead id="attendanceHead"><tr><th class="sl-col">SL</th><th class="reg-col">Reg No</th><th class="roll-col">Roll No</th><th class="name-col">Student Name</th></tr></thead><tbody id="attendanceTable"><tr><td colspan="4">Select exam and load attendance.</td></tr></tbody></table></div><div class="teacher-signature-row"><div class="teacher-signature-box">Hall Duty Teacher Signature</div><div class="teacher-signature-box">Course Teacher Signature</div></div></div></section></main></div>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
+<script>
+const sessionEl = document.getElementById('sessionYear');
+const yearEl = document.getElementById('academicYear');
+const examSelect = document.getElementById('examSelect');
+const head = document.getElementById('attendanceHead');
+const table = document.getElementById('attendanceTable');
+const statusEl = document.getElementById('attendanceStatus');
+let exams = [], filteredExams = [];
+
+function displayName(e){
+  return e.DisplayName || e.ExamName || [e.SessionYear,e.AcademicYear,e.ExamType].filter(Boolean).join(' - ') || e.ExamID;
+}
+
+function clearAttendanceExam(msg='Select exam and load attendance.'){
+  examSelect.innerHTML='<option value="">Select exam</option>';
+  head.innerHTML='<tr><th class="sl-col">SL</th><th class="reg-col">Reg No</th><th class="roll-col">Roll No</th><th class="name-col">Student Name</th></tr>';
+  table.innerHTML = `<tr><td colspan="4">${msg}</td></tr>`;
+}
+function loadFilteredExams(){
+  const sessionYear = sessionEl.value.trim();
+  const academicYear = yearEl.value;
+  if(!sessionYear || !academicYear){
+    clearAttendanceExam('');
+    showStatus(statusEl,'err','Required.');
+    return [];
+  }
+  filteredExams = exams.filter(e => String(e.SessionYear||'').trim() === sessionYear && String(e.AcademicYear||'').trim() === academicYear);
+  fillSelect(examSelect, filteredExams.map(e=>({value:e.ExamID,label:displayName(e)})), 'Select exam');
+  if(!filteredExams.length) showStatus(statusEl,'err','No exam found for selected Session + Year.');
+  else showStatus(statusEl,'ok',filteredExams.length + ' exam loaded.');
+  return filteredExams;
+}
+function formatDate(d){
+  if(!d) return '';
+  const date = new Date(d);
+  if(!isNaN(date.getTime())){
+    const dd = String(date.getDate()).padStart(2,'0');
+    const mm = String(date.getMonth()+1).padStart(2,'0');
+    const yyyy = date.getFullYear();
+    return dd + '/' + mm + '/' + yyyy;
+  }
+  return d;
+}
+
+function shortSubjectName(name){
+  return String(name || '')
+    .replace(/&/g, 'and')
+    .replace(/\s+and\s+/gi, '<br>and<br>')
+    .replace(/\s+of\s+/gi, '<br>of<br>')
+    .replace(/\s+Regional\s+/gi, '<br>Regional<br>')
+    .replace(/\s+Geography/gi, '<br>Geography')
+    .replace(/Practical[-– ]*/gi, 'Practical-<br>');
+}
+
+function renderAttendanceCell(c){
+  const val = String(c || '').trim();
+  if(val === '—' || val === '-' || val.toLowerCase() === 'x' || val.toLowerCase() === 'cross'){
+    return '<td class="attendance-sign-cell cross-cell"><span class="x-mark">X</span></td>';
+  }
+  return '<td class="attendance-sign-cell"></td>';
+}
+
+async function init(){
+  try{
+    fillSelect(yearEl, currentAcademicYears(), 'Select year');
+    const res = await geoApiGet('getExams', { _t: Date.now() });
+    exams = Array.isArray(res.exams)?res.exams:[];
+    fillSessionSelectFromExams(sessionEl, exams, 'Select session');
+    clearAttendanceExam('');
+    const preset = getParam('examId');
+    if(preset){
+      const ex = exams.find(e=>e.ExamID === preset);
+      if(ex){
+        sessionEl.value = ex.SessionYear || '';
+        yearEl.value = ex.AcademicYear || '';
+        loadFilteredExams();
+        examSelect.value = preset;
+        await loadAttendance();
+      }
+    }
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+
+async function loadAttendance(){
+  const examId = examSelect.value;
+  if(!examId){ showStatus(statusEl,'err','Exam required.'); return; }
+  showStatus(statusEl,'info','Loading attendance sheet...');
+  try{
+    const res = await geoApiGet('getFullAttendanceData', { examId, studySessionYear: sessionEl.value, academicYear: yearEl.value, _t: Date.now() });
+    const subjects = Array.isArray(res.subjects)?res.subjects:[];
+    const students = sortStudentList(Array.isArray(res.students)?res.students:[], document.getElementById('sortField').value, document.getElementById('sortDir').value);
+    const exam = res.exam || {};
+
+    document.getElementById('examTitle').textContent = displayName(exam);
+
+    const dateRow = `<tr>
+      <th class="sl-col" rowspan="3">SL</th>
+      <th class="reg-col" rowspan="3">Reg No</th>
+      <th class="roll-col" rowspan="3">Roll No</th>
+      <th class="name-col" rowspan="3">Student Name</th>
+      ${subjects.map(s=>`<th class="subject-col date-head">${formatDate(s.ExamDate)}</th>`).join('')}
+    </tr>`;
+    const codeRow = `<tr>${subjects.map(s=>`<th class="subject-col code-head">${s.SubjectCode || ''}</th>`).join('')}</tr>`;
+    const nameRow = `<tr>${subjects.map(s=>`<th class="subject-col name-head">${shortSubjectName(s.SubjectName)}</th>`).join('')}</tr>`;
+    head.innerHTML = dateRow + codeRow + nameRow;
+
+    if(!students.length){
+      table.innerHTML = `<tr><td colspan="${4 + subjects.length}">No student found.</td></tr>`;
+      return;
+    }
+
+    const studentRowsHtml = students.map((s,i)=>`<tr>
+      <td class="sl-col">${i+1}</td>
+      <td class="reg-col">${s.RegistrationNumber || ''}</td>
+      <td class="roll-col roll-nowrap">${s.Roll || ''}</td>
+      <td class="name-col">${s.Name || ''}</td>
+      ${(s.SubjectCells || subjects.map(()=>'' )).map(c=>renderAttendanceCell(c)).join('')}
+    </tr>`).join('');
+    const signatureRow = `<tr class="course-sign-row">
+      <td class="course-sign-title" colspan="4">Hall Duty Teacher Signature</td>
+      ${subjects.map(()=>`<td class="course-sign-cell"><div class="course-sign-line"></div></td>`).join('')}
+    </tr>`;
+    table.innerHTML = studentRowsHtml + signatureRow;
+
+    showStatus(statusEl,'ok',students.length + ' students and ' + subjects.length + ' subjects loaded.');
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+}
+sessionEl.addEventListener('change', loadFilteredExams);
+yearEl.addEventListener('change', loadFilteredExams);
+document.getElementById('loadSheet').addEventListener('click', loadAttendance);
+document.getElementById('cleanupSubjectsBtn')?.addEventListener('click', async()=>{
+  showStatus(statusEl,'info','Cleaning removed subjects...');
+  try{
+    await geoApiGet('hardRemoveOldSubjects', { _t: Date.now() });
+    await geoApiGet('cleanStudentSubjectsByLiveSubjects', { _t: Date.now() });
+    clearGeoCache?.();
+    showStatus(statusEl,'ok','Removed subjects cleaned. Reloading attendance sheet...');
+    await loadAttendance();
+  }catch(err){
+    showStatus(statusEl,'err',err.message);
+  }
+});
+attachSortControls('sortField','sortDir', ()=>{ if(examSelect.value) loadAttendance(); });
+init();
+
+
+function prepareFastAttendancePrint(){
+  document.body.classList.add('attendance-print-fast-mode');
+}
+window.addEventListener('beforeprint', prepareFastAttendancePrint);
+window.addEventListener('afterprint', ()=>document.body.classList.remove('attendance-print-fast-mode'));
+
+
+
+function cleanPrintClone(node){
+  const clone = node.cloneNode(true);
+  clone.querySelectorAll('script,style,link,button,input,select,textarea,.no-print').forEach(el=>el.remove());
+  clone.querySelectorAll('*').forEach(el=>{
+    el.removeAttribute('class');
+    el.removeAttribute('style');
+    el.removeAttribute('id');
+  });
+  return clone;
+}
+
+function escapeFastPrint(v){
+  return String(v ?? '').replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+
+function printFastAttendance(){
+  const tableEl = document.querySelector('#printArea .excel-table');
+  if(!tableEl){
+    alert('Please load attendance sheet first.');
+    return;
+  }
+
+  const titleHtml = document.querySelector('#printArea .excel-title')?.innerHTML || '<h2>Attendance Sheet</h2>';
+  const headRows = [...tableEl.querySelectorAll('thead tr')];
+  const bodyRowsRaw = [...tableEl.querySelectorAll('tbody tr')];
+
+  if(headRows.length < 3 || !bodyRowsRaw.length){
+    alert('Please load attendance sheet first.');
+    return;
+  }
+
+  function text(cell){ return (cell?.textContent || '').replace(/\s+/g,' ').trim(); }
+  function esc(v){ return String(v ?? '').replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+  function proper(v){
+    return String(v ?? '')
+      .replace(/<br\s*\/?>/gi,' ')
+      .replace(/\s+/g,' ')
+      .trim()
+      .toLowerCase()
+      .replace(/\b([a-z])/g, m=>m.toUpperCase())
+      .replace(/\bIct\b/g,'ICT')
+      .replace(/\bAnd\b/g,'and')
+      .replace(/\bOf\b/g,'of')
+      .replace(/\bThe\b/g,'the')
+      .replace(/\bIi\b/g,'II')
+      .replace(/\bIii\b/g,'III')
+      .replace(/\bIv\b/g,'IV')
+      .replace(/\bVi\b/g,'VI')
+      .replace(/\bVii\b/g,'VII')
+      .replace(/\bViii\b/g,'VIII')
+      .replace(/\bIx\b/g,'IX')
+      .replace(/\bUsa\b/g,'USA');
+  }
+
+  const dateCells = [...headRows[0].children].slice(4);
+  const codeCells = [...headRows[1].children];
+  const nameCells = [...headRows[2].children];
+  const subjectCount = Math.max(dateCells.length, codeCells.length, nameCells.length);
+
+  const subjects = [];
+  for(let i=0;i<subjectCount;i++){
+    subjects.push({
+      idx:i,
+      date:text(dateCells[i]),
+      code:text(codeCells[i]),
+      name:proper(text(nameCells[i]))
+    });
+  }
+
+  const studentRows = bodyRowsRaw
+    .filter(row => !row.classList.contains('course-sign-row'))
+    .map((row, i)=>{
+      const cells = [...row.children];
+      const subjectCells = [];
+      for(let s=0;s<subjectCount;s++){
+        const c = cells[4+s];
+        const v = text(c);
+        const isX = v.toUpperCase() === 'X' || !!c?.querySelector?.('.x-mark');
+        subjectCells.push(isX ? 'X' : '');
+      }
+      return {
+        sl:i+1,
+        reg:text(cells[1]),
+        roll:text(cells[2]),
+        name:proper(text(cells[3])),
+        cells:subjectCells
+      };
+    });
+
+  if(!studentRows.length || !subjectCount){
+    alert('No attendance data found.');
+    return;
+  }
+
+  /*
+    Stable print:
+    - One continuous table, browser page break naturally.
+    - College/exam title only first page.
+    - Table header repeats on every print page.
+    - Hall Duty Teacher signature rows are ONLY at the last rows of the whole table.
+  */
+  const pageWidthMm = 285;
+  const slMm = 7;
+  const regMm = 22;
+  const rollMm = 21;
+  const nameMm = 38;
+  const fixedMm = slMm + regMm + rollMm + nameMm;
+  const subjectMm = Math.max(10.8, (pageWidthMm - fixedMm) / Math.max(subjectCount, 1));
+
+  // Subject name font is intentionally kept same.
+  // All other table texts are increased as requested.
+  const subjectFont = subjectCount >= 13 ? 6.5 : subjectCount >= 10 ? 7.2 : 8.0;
+  const dateFont = Math.min(subjectFont + 2.5, 10.7);
+  const bodyFont = subjectCount >= 13 ? 9.6 : subjectCount >= 10 ? 10.2 : 11.0;
+  const nameFont = Math.min(bodyFont + 0.8, 11.8);
+  const rowHeight = subjectCount >= 13 ? 7.8 : subjectCount >= 10 ? 8.4 : 9.0;
+  const xFont = Math.min(bodyFont + 5.6, 17.0);
+
+  function colgroup(){
+    let html = '<colgroup>';
+    html += `<col style="width:${slMm}mm">`;
+    html += `<col style="width:${regMm}mm">`;
+    html += `<col style="width:${rollMm}mm">`;
+    html += `<col style="width:${nameMm}mm">`;
+    subjects.forEach(()=> html += `<col style="width:${subjectMm.toFixed(2)}mm">`);
+    html += '</colgroup>';
+    return html;
+  }
+
+  function tableHead(){
+    let html = '<thead>';
+    html += '<tr>';
+    html += '<th rowspan="3" class="sl-head">SL</th>';
+    html += '<th rowspan="3" class="reg-head">Registration<br>No</th>';
+    html += '<th rowspan="3" class="roll-head">Class<br>Roll</th>';
+    html += '<th rowspan="3" class="student-head">Name</th>';
+    subjects.forEach(s => html += `<th class="date-head">${esc(s.date)}</th>`);
+    html += '</tr><tr>';
+    subjects.forEach(s => html += `<th class="code-head">${esc(s.code)}</th>`);
+    html += '</tr><tr>';
+    subjects.forEach(s => html += `<th class="subject-head">${esc(s.name)}</th>`);
+    html += '</tr></thead>';
+    return html;
+  }
+
+  function bodyRows(){
+    let html = '<tbody>';
+    studentRows.forEach(st=>{
+      html += '<tr>';
+      html += `<td class="sl-col">${st.sl}</td>`;
+      html += `<td class="reg-col">${esc(st.reg)}</td>`;
+      html += `<td class="roll-col">${esc(st.roll)}</td>`;
+      html += `<td class="name-col">${esc(st.name)}</td>`;
+      subjects.forEach(s=>{
+        const v = st.cells[s.idx] || '';
+        html += v === 'X' ? '<td class="x-cell">X</td>' : '<td class="blank-cell"></td>';
+      });
+      html += '</tr>';
+    });
+
+    function signatureRow(label){
+      let row = '<tr class="last-sign-row">';
+      row += '<td colspan="4" class="sign-name-cell">' + label + '</td>';
+      subjects.forEach(() => { row += '<td class="sign-space-cell"></td>'; });
+      row += '</tr>';
+      return row;
+    }
+    html += signatureRow('Hall Duty Teacher Sign');
+    html += signatureRow('Hall Duty Teacher Sign');
+
+    html += '</tbody>';
+    return html;
+  }
+
+  const printHtml = `<div class="title">${titleHtml}</div>
+    <table>${colgroup()}${tableHead()}${bodyRows()}</table>`;
+
+  const w = window.open('', '_blank', 'width=1200,height=850');
+  if(!w){ window.print(); return; }
+
+  const doc = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Attendance Sheet Print</title>
+<style>
+@page{size:A4 landscape;margin:5mm}
+html,body{margin:0;padding:0;background:#fff;color:#000;font-family:"Times New Roman",serif}
+*{box-sizing:border-box;box-shadow:none!important;text-shadow:none!important;background-image:none!important}
+.title{
+  text-align:center;
+  margin:0 0 2mm;
+  padding:0;
+  line-height:1.08;
+  page-break-after:avoid;
+}
+.title h2{font-size:18px;margin:0;font-weight:900}
+.title h3{font-size:16px;margin:0;font-weight:900}
+.title h4{font-size:15px;margin:0;font-weight:900}
+table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  background:#fff;
+  color:#000;
+}
+thead{display:table-header-group}
+th,td{
+  border:1px solid #000;
+  text-align:center;
+  vertical-align:middle;
+  padding:1.3px 1px;
+  background:#fff;
+  color:#000;
+  line-height:1.08;
+  overflow:hidden;
+}
+thead th{font-weight:900;text-align:center!important;vertical-align:middle!important}
+/* ATTENDANCE PRINT HEADER CENTER ALIGN FIX */
+.sl-head,.reg-head,.roll-head,.student-head{
+  font-size:13px;
+  font-weight:900;
+  white-space:normal;
+  height:12mm;
+}
+.date-head,.code-head{
+  font-size:${dateFont.toFixed(1)}px;
+  font-weight:900;
+  height:7.2mm;
+  white-space:nowrap;
+}
+.subject-head{
+  font-size:${subjectFont.toFixed(1)}px;
+  font-weight:900;
+  height:22mm;
+  line-height:1.06;
+  white-space:normal;
+  word-break:normal;
+  overflow-wrap:anywhere;
+}
+tbody td{
+  height:${rowHeight.toFixed(1)}mm;
+  min-height:${rowHeight.toFixed(1)}mm;
+  font-size:${bodyFont.toFixed(1)}px;
+  font-weight:900;
+  line-height:1.06;
+}
+.sl-col{font-size:${bodyFont.toFixed(1)}px;font-weight:900}
+.reg-col,.roll-col{
+  font-size:${Math.max(8.8, bodyFont-0.6).toFixed(1)}px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.name-col{
+  text-align:left;
+  font-size:${nameFont.toFixed(1)}px;
+  font-weight:900;
+  padding-left:2px;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.x-cell{
+  font-size:${xFont.toFixed(1)}px!important;
+  font-weight:900!important;
+  line-height:1!important;
+}
+.blank-cell{background:#fff}
+.last-sign-row{
+  page-break-inside:avoid!important;
+  break-inside:avoid!important;
+}
+.last-sign-row td{
+  height:16mm!important;
+  min-height:16mm!important;
+  font-size:10.5px!important;
+  font-weight:900!important;
+  border:1px solid #000!important;
+}
+.sign-name-cell{
+  text-align:center!important;
+  vertical-align:middle!important;
+  white-space:nowrap!important;
+  font-size:10.5px!important;
+  padding:0 2mm!important;
+}
+.sign-space-cell{
+  background:#fff!important;
+}
+.sign-empty{
+  background:#fff!important;
+}
+tr{page-break-inside:avoid;break-inside:avoid}
+@media print{
+  html,body{margin:0!important;padding:0!important}
+}
+</style>
+</head>
+<body>
+${printHtml}
+<script>setTimeout(function(){ window.focus(); window.print(); }, 300);<\/script>
+</body>
+</html>`;
+
+  w.document.open();
+  w.document.write(doc);
+  w.document.close();
+}
+</script>
+</body></html>

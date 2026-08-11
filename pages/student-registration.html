@@ -1,0 +1,131 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Student Registration - Geography Department</title><link rel="stylesheet" href="../assets/site.css"></head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../student/index.html"><span class="brand-logo">🎓</span><span>Student Registration</span></a><button class="mobile-menu" data-mobile-menu>Menu</button><nav class="navlinks"><a href="../index.html">Login</a><a href="../pages/student-registration.html">Registration</a><a href="../pages/student-result.html">Result</a><a class="nav-cta" href="../admin/index.html">Admin Panel</a></nav></div></header><section class="page-hero"><div class="container"><h1>Student Registration</h1></div></section><main class="page-pad"><div class="container thin"><form id="registrationForm" class="panel panel-lg"><div class="panel-title"><div><h2>Academic Identity</h2></div><span class="pill green">Google Sheet Connected</span></div><div class="form-grid"><label class="field"><span class="label">Student Name</span><input class="input" name="name" placeholder="Student full name" required></label><label class="field"><span class="label">Class Roll</span><input class="input" name="roll" placeholder="Class roll" required></label><label class="field"><span class="label">Registration Number</span><input class="input" name="registrationNumber" placeholder="NU registration number" required></label><label class="field"><span class="label">Father Name</span><input class="input" name="fatherName" placeholder="Father name" required></label><label class="field"><span class="label">Mother Name</span><input class="input" name="motherName" placeholder="Mother name" required></label><label class="field full"><span class="label">Address</span><textarea name="address" placeholder="Present/permanent address" required></textarea></label><label class="field"><span class="label">Email</span><input class="input" type="email" name="email" placeholder="student@email.com"></label><label class="field"><span class="label">Student Mobile Number</span><input class="input" name="studentPhone" placeholder="01XXXXXXXXX" inputmode="numeric" required></label><label class="field"><span class="label">Guardian Mobile Number</span><input class="input" name="guardianPhone" placeholder="01XXXXXXXXX" inputmode="numeric" required></label><label class="field"><span class="label">Session</span><input class="input" name="sessionYear" placeholder="e.g. 2024-25" required></label><label class="field"><span class="label">Current Year</span><select name="currentYear" id="currentYear" required></select></label><label class="field full"><span class="label">Non-Major Group</span><select class="input" name="nonMajorGroup" id="nonMajorGroup"><option value="">Select non-major group</option><option value="Group-A Science">Group-A / Science</option><option value="Group-B Humanities">Group-B / Humanities</option></select></label><div class="field full nonmajor-auto-subjects" style="display:none"><span class="label">1st Year Non-Major Subject(s)</span><div id="nonMajor1Box" class="easy-card">Loading subjects...</div><input type="hidden" name="nonMajor1" id="nonMajor1"></div><div class="field full nonmajor-auto-subjects" style="display:none"><span class="label">2nd Year Non-Major Subject(s)</span><div id="nonMajor2Box" class="easy-card">Loading subjects...</div><input type="hidden" name="nonMajor2" id="nonMajor2"></div><label class="field full"><span class="label">Profile Picture</span><div class="file-zone"><label><span class="upload-icon">⇧</span><b style="color:var(--blue)">Upload a file</b><br><span>PNG/JPG up to 2MB</span><input type="file" name="profilePicture" accept="image/*"></label></div></label></div><div id="regStatus" class="status info hide"></div><div id="generatedLoginBox" class="generated-box hide"><h3>Student Login Created</h3><div class="form-grid"><label class="field"><span class="label">Username / Class Roll</span><input id="generatedUsername" class="input" readonly></label><label class="field"><span class="label">Password</span><div class="generated-pass-row"><div id="generatedPassword" class="generated-pass">••••••••</div><button id="toggleGeneratedPass" class="show-pass" type="button">Show</button></div></label></div></div><div class="right-actions"><button class="btn primary" type="submit">Save Registration</button></div></form></div></main>
+<script src="../assets/geography-api.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+fillSelect(document.getElementById('currentYear'), currentAcademicYears(), 'Select current year');
+function renderNonMajor(boxId, inputId, subjects) {
+  const box = document.getElementById(boxId);
+  const hidden = document.getElementById(inputId);
+  if (!subjects.length) {
+    box.innerHTML = '';
+    hidden.value = '';
+    return;
+  }
+  box.innerHTML = subjects.map((s, i) => {
+    const value = s.SubjectCode + ' - ' + s.SubjectName;
+    return `<label class="subject-chip" style="cursor:pointer">
+      <input type="checkbox" value="${value.replace(/"/g,'&quot;')}" style="width:auto">
+      <span><b>${s.SubjectCode}</b> ${s.SubjectName}</span>
+    </label>`;
+  }).join('');
+  box.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      hidden.value = [...box.querySelectorAll('input:checked')].map(x => x.value).join(', ');
+    });
+  });
+}
+
+async function loadNonMajor(){
+  try{
+    const first = await geoApiGet('getSubjects', { _t: Date.now(), academicYear:'Honours 1st Year', subjectType:'Non-Major' });
+    const second = await geoApiGet('getSubjects', { _t: Date.now(), academicYear:'Honours 2nd Year', subjectType:'Non-Major' });
+    renderNonMajor('nonMajor1Box', 'nonMajor1', first.subjects || []);
+    renderNonMajor('nonMajor2Box', 'nonMajor2', second.subjects || []);
+    applyNonMajorGroupFilter();
+  }catch(err){
+    document.getElementById('nonMajor1Box').innerHTML = '';
+    document.getElementById('nonMajor2Box').innerHTML = '';
+  }
+}
+loadNonMajor();
+const form = document.getElementById('registrationForm');
+const statusEl = document.getElementById('regStatus');
+form.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const btn = form.querySelector('button[type="submit"]');
+  const old = btn.textContent; btn.textContent='Please wait...'; btn.disabled=true;
+  try{
+    const fd = new FormData(form);
+    const file = fd.get('profilePicture');
+    const base64 = file && file.size ? await readFileAsBase64(file) : '';
+    const res = await geoApiPost({
+      action:'registerStudent',
+      name:fd.get('name'), fullName:fd.get('name'),
+      roll:fd.get('roll'), rollId:fd.get('roll'), registrationNumber:fd.get('registrationNumber'),
+      fatherName:fd.get('fatherName'), motherName:fd.get('motherName'),
+      address:fd.get('address'), email:fd.get('email'),
+      studentPhone:fd.get('studentPhone'), guardianPhone:fd.get('guardianPhone'),
+      phone:fd.get('studentPhone'),
+      sessionYear:fd.get('sessionYear'), currentYear:fd.get('currentYear'), academicLevel:fd.get('currentYear'),
+      nonMajorGroup:fd.get('nonMajorGroup'), nonMajor1:fd.get('nonMajor1'), nonMajor2:fd.get('nonMajor2'),
+      profilePicture:base64, status:'Active'
+    });
+    showStatus(statusEl,res.success?'ok':'err',res.message || 'Saved');
+    if(res.success) {
+      const box = document.getElementById('generatedLoginBox');
+      const userEl = document.getElementById('generatedUsername');
+      const passEl = document.getElementById('generatedPassword');
+      const toggle = document.getElementById('toggleGeneratedPass');
+      const password = res.password || res.studentPassword || '';
+      userEl.value = res.username || fd.get('roll');
+      passEl.dataset.password = password;
+      passEl.dataset.visible = '0';
+      passEl.textContent = '••••••••';
+      toggle.textContent = 'Show';
+      box.classList.remove('hide');
+      form.reset();
+    }
+  }catch(err){ showStatus(statusEl,'err',err.message); }
+  finally{ btn.textContent=old; btn.disabled=false; }
+});
+document.getElementById('toggleGeneratedPass')?.addEventListener('click', () => {
+  const passEl = document.getElementById('generatedPassword');
+  const btn = document.getElementById('toggleGeneratedPass');
+  const visible = passEl.dataset.visible === '1';
+  passEl.dataset.visible = visible ? '0' : '1';
+  passEl.textContent = visible ? '••••••••' : (passEl.dataset.password || '');
+  btn.textContent = visible ? 'Show' : 'Hide';
+});
+
+function subjectGroupFromText(text) {
+  const s = String(text || '').toLowerCase();
+  if (s.includes('botany') || s.includes('zoology')) return 'Group-A Science';
+  if (s.includes('social') || s.includes('political') || s.includes('economics') || s.includes('economy') || s.includes('society') || s.includes('culture')) return 'Group-B Humanities';
+  return '';
+}
+
+function applyNonMajorGroupFilter() {
+  const group = document.getElementById('nonMajorGroup')?.value || '';
+  ['nonMajor1Box','nonMajor2Box'].forEach((boxId, idx) => {
+    const year = idx === 0 ? 'Honours 1st Year' : 'Honours 2nd Year';
+    const box = document.getElementById(boxId);
+    const hidden = document.getElementById(idx === 0 ? 'nonMajor1' : 'nonMajor2');
+    if (!box || !hidden) return;
+    box.querySelectorAll('label.subject-chip').forEach(label => {
+      const input = label.querySelector('input');
+      const labelText = String(input?.value || '') + ' ' + String(input?.parentElement?.textContent || '');
+      const match = !group || subjectGroupFromText(labelText) === group;
+      label.style.display = match ? '' : 'none';
+      if (!match && input) input.checked = false;
+    });
+    hidden.value = [...box.querySelectorAll('input:checked')].filter(x => x.closest('label').style.display !== 'none').map(x => x.value).join(', ');
+  });
+}
+document.getElementById('nonMajorGroup')?.addEventListener('change', applyNonMajorGroupFilter);
+
+
+function updateNonMajorGroupVisibility(){
+  const year = document.getElementById('currentYear')?.value || '';
+  const groupField = document.getElementById('nonMajorGroup')?.closest('.field');
+  const groupSelect = document.getElementById('nonMajorGroup');
+  if(!groupField || !groupSelect) return;
+  const need = year === 'Honours 1st Year' || year === 'Honours 2nd Year';
+  groupField.style.display = need ? '' : 'none';
+  groupSelect.required = need;
+  if(!need) groupSelect.value = '';
+}
+document.getElementById('currentYear')?.addEventListener('change', updateNonMajorGroupVisibility);
+setTimeout(updateNonMajorGroupVisibility, 300);
+
+</script>
+</body></html>

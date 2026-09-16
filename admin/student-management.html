@@ -27,10 +27,12 @@
   <div><h2>Registered Students</h2></div>
   <div class="toolbar">
     <input id="studentSearch" class="input" placeholder="Filter by Roll / Regi / Name">
+    <select id="sessionFilter" class="input"></select>
     <select id="yearFilter"></select>
     <select id="sortField" class="input"><option value="roll">Sort: Roll</option><option value="reg">Sort: Regi No</option><option value="name">Sort: Name</option><option value="session">Sort: Session</option><option value="type">Sort: Type</option></select>
     <select id="sortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select>
     <button id="refreshBtn" class="btn ghost" type="button">Load Year List</button>
+    <button class="btn green" type="button" onclick="exportTableToCSV('studentTable', 'student_list.csv')">Download CSV</button>
     <button id="manualStudentToggleBtn" class="btn blue" type="button">Manual Student Excel Entry</button>
     <a class="btn primary" href="../pages/student-registration.html">+ Add Student</a>
   </div>
@@ -66,6 +68,7 @@
 <script src="../assets/site.js"></script>
 <script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
 <script>
+fillSelect(document.getElementById('sessionFilter'), currentSessionYears(), 'Select session');
 fillSelect(document.getElementById('yearFilter'), currentAcademicYears(), 'Select year');
 fillSelect(document.getElementById('manualAcademicYear'), currentAcademicYears(), 'Select year');
 let allStudents = [];
@@ -77,29 +80,32 @@ const manualPanel = document.getElementById('manualStudentPanel');
 const manualStatus = document.getElementById('manualStudentStatus');
 const manualPreview = document.getElementById('manualStudentPreview');
 function typeBadge(s){
-  const type = s.StudentType || s.IrregularStatus || 'Regular';
-  const cls = type === 'Irregular' ? 'irregular' : 'regular';
-  const title = s.IrregularReason ? ` title="${String(s.IrregularReason).replace(/"/g,'&quot;')}"` : '';
-  return `<span class="student-type-badge ${cls}"${title}>${type}</span>`;
+  const type = esc(s.StudentType || s.IrregularStatus || 'Regular');
+  const cls = (s.StudentType || s.IrregularStatus || '') === 'Irregular' ? 'irregular' : 'regular';
+  const title = s.IrregularReason ? ` title="${esc(s.IrregularReason)}"` : '';
+  return `<span class="badge ${cls}"${title}>${type}</span>`;
 }
-function renderStudents(list){
-  if(!list.length){ tbody.innerHTML='<tr><td colspan="16" class="empty">No student found.</td></tr>'; return; }
-  tbody.innerHTML = list.map((s,i)=>`<tr>
-    <td>${i+1}</td><td><b>${s.Name||s.FullName||''}</b></td><td>${s.Roll||s.RollID||''}</td>
-    <td>${s.RegistrationNumber||''}</td><td>${s.SessionYear||''}</td><td>${s.StudySessionYear||s.CurrentStudySession||''}</td><td>${s.CurrentYear||s.AcademicLevel||s.AcademicYear||''}</td><td>${typeBadge(s)}</td><td>${s.NonMajorGroup||''}</td>
-    <td>${s.FatherName||''}</td><td>${s.MotherName||''}</td>
-    <td>${s.StudentPhone||s.StudentMobile||s.Phone||''}</td><td>${s.GuardianPhone||s.GuardianMobile||''}</td>
-    <td>${s.NonMajor1||''}<br>${s.NonMajor2||''}</td>
-    <td><span class="pill green">${s.Status||'Active'}</span></td>
+function renderStudents(rows){
+  if(!rows.length){ tbody.innerHTML='<tr><td colspan="16" class="empty">No student found.</td></tr>'; return; }
+  tbody.innerHTML = rows.map((s,i) => `<tr>
+    <td>${i+1}</td>
+    <td><div class="student-name">${esc(s.Name||s.FullName||'')}</div></td>
+    <td><b>${esc(s.Roll||'')}</b></td>
+    <td>${esc(s.RegistrationNumber||'')}</td><td>${esc(s.SessionYear||'')}</td><td>${esc(s.StudySessionYear||s.CurrentStudySession||'')}</td><td>${esc(s.CurrentYear||s.AcademicLevel||s.AcademicYear||'')}</td><td>${typeBadge(s)}</td><td>${esc(s.NonMajorGroup||'')}</td>
+    <td>${esc(s.FatherName||s.Father||'')}</td><td>${esc(s.MotherName||s.Mother||'')}</td><td>${esc(s.StudentPhone||s.Phone||'')}</td><td>${esc(s.GuardianPhone||'')}</td>
+    <td>${[s.NonMajor1,s.NonMajor2].filter(Boolean).map(esc).join('<br>')}</td>
+    <td>${esc(s.StudyStatus||'Continuing')}</td>
     <td><a class="btn primary small-btn" href="student-profile-edit.html?student=${encodeURIComponent(s.Roll||s.RegistrationNumber||'')}">Edit</a></td>
   </tr>`).join('');
 }
+
 async function loadStudents(){
   showStatus(statusEl,'info','Loading students...');
   try{
     const year = document.getElementById('yearFilter').value;
+    const session = document.getElementById('sessionFilter').value;
     if(!year){ allStudents=[]; renderStudents([]); showStatus(statusEl,'info','Please select year.'); return; }
-    const res = await geoApiGet('getStudents', { academicYear: year, sortField:document.getElementById('sortField').value, sortDir:document.getElementById('sortDir').value });
+    const res = await geoApiGet('getStudents', { academicYear: year, sessionYear: session, sortField:document.getElementById('sortField').value, sortDir:document.getElementById('sortDir').value });
     allStudents = Array.isArray(res.students)?res.students:[];
     applyFilter();
     showStatus(statusEl,'ok',allStudents.length+' students loaded.');
@@ -164,6 +170,7 @@ searchEl.addEventListener('input', applyFilter);
 attachSortControls('sortField','sortDir', applyFilter);
 document.getElementById('refreshBtn').addEventListener('click', loadStudents);
 document.getElementById('yearFilter').addEventListener('change', loadStudents);
+document.getElementById('sessionFilter').addEventListener('change', loadStudents);
 document.getElementById('manualStudentToggleBtn').addEventListener('click',()=>manualPanel.classList.toggle('hide'));
 document.getElementById('manualStudentCloseBtn').addEventListener('click',()=>manualPanel.classList.add('hide'));
 document.getElementById('manualPreviewBtn').addEventListener('click', previewManualStudents);

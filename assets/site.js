@@ -149,15 +149,15 @@ nativePrint();
 return;
 }
 w.document.open();
-w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Print View</title>${styles}
+w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Print View</title><base href="${window.location.href}">${styles}
 <style>
 body{background:#fff!important;margin:0!important;padding:0!important}
 .no-print,.topbar,.panel-sidebar,.panel-mobile-tabs{display:none!important}
 .panel-main{margin:0!important;width:100%!important;padding:0!important}
 #printViewToolbar{position:sticky;top:0;background:#fff;border-bottom:1px solid #ddd;padding:8px;margin:0 0 6mm 0;z-index:9999}
 #printViewToolbar button{padding:8px 14px;border:0;border-radius:8px;background:#0f664b;color:#fff;font-weight:700}
-  table thead th,table tr:first-child th,th{text-align:center!important;vertical-align:middle!important}
-table.print-align-table th,table.print-align-table thead th,table.print-align-table tr:first-child>*{text-align:center!important;vertical-align:middle!important}table.print-align-table td,table.print-align-table td.printable-center-cell{text-align:center!important;vertical-align:middle!important}table.print-align-table td.printable-name-cell{text-align:left!important}
+  table thead th,table th{text-align:center!important;vertical-align:middle!important}
+table.print-align-table th,table.print-align-table thead th,table.print-align-table .print-header-cell{text-align:center!important;vertical-align:middle!important}table.print-align-table td,table.print-align-table td.printable-center-cell{text-align:center!important;vertical-align:middle!important}table.print-align-table td.printable-name-cell{text-align:left!important}
 
 @media print{#printViewToolbar{display:none!important}body{padding:0!important}@page{size:A4 portrait;margin:8mm}}
 </style></head><body><div id="printViewToolbar"><button onclick="window.print()">Print</button></div>${html}</body></html>`);
@@ -216,8 +216,8 @@ function stableDirectPrint(target, title='Print', extraCss=''){
   body.original-layout-print .admit-card:last-child{page-break-after:auto!important}
   body.original-layout-print table{page-break-inside:auto}
   body.original-layout-print tr{page-break-inside:avoid;page-break-after:auto}
-  body.original-layout-print table thead th,body.original-layout-print table tr:first-child th,body.original-layout-print th{text-align:center!important;vertical-align:middle!important}
-body.original-layout-print table.print-align-table th,table.print-align-table thead th,table.print-align-table tr:first-child>*{text-align:center!important;vertical-align:middle!important}table.print-align-table td,table.print-align-table td.printable-center-cell{text-align:center!important;vertical-align:middle!important}table.print-align-table td.printable-name-cell{text-align:left!important}
+  body.original-layout-print table thead th,body.original-layout-print th{text-align:center!important;vertical-align:middle!important}
+body.original-layout-print table.print-align-table th,body.original-layout-print table.print-align-table thead th,body.original-layout-print table.print-align-table .print-header-cell{text-align:center!important;vertical-align:middle!important}body.original-layout-print table.print-align-table td,body.original-layout-print table.print-align-table td.printable-center-cell{text-align:center!important;vertical-align:middle!important}body.original-layout-print table.print-align-table td.printable-name-cell{text-align:left!important}
   ${extraCss||''}
 }`;
 
@@ -360,6 +360,36 @@ function printElementNow(target,title,css){ stableDirectPrint(target,title,css);
       };
     }
   }
-  setTimeout(wrapPrint,0);
-  setTimeout(wrapPrint,250);
+  setTimeout(wrapPrint, 0);
 })();
+
+window.exportTableToCSV = function(tableId, filename) {
+  var table = document.getElementById(tableId) || document.querySelector(tableId);
+  if(!table) return;
+  var rows = Array.from(table.rows);
+  var csvContent = [];
+  rows.forEach(function(row) {
+    if(row.style.display === 'none') return;
+    var rowData = [];
+    var cells = Array.from(row.cells);
+    cells.forEach(function(cell) {
+      if(cell.style.display === 'none') return;
+      var text = cell.innerText || cell.textContent;
+      text = text.replace(/"/g, '""');
+      if(text.search(/("|,|\n)/g) >= 0) {
+        text = '"' + text + '"';
+      }
+      rowData.push(text.trim());
+    });
+    if(rowData.length) csvContent.push(rowData.join(','));
+  });
+  var csvData = '\uFEFF' + csvContent.join('\n');
+  var blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename || 'export.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};

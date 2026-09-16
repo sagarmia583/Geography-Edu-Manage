@@ -1,8 +1,8 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbwnEgiT4lWymsMLrtUMefSQYMr5ODVNRJeVtFFMEykwaD1ulOR2px855DHvnDe2G_Rdwg/exec';
-const GEO_API_READ_TIMEOUT_MS = 120000;
-const GEO_API_WRITE_TIMEOUT_MS = 120000;
-const GEO_API_LOGIN_TIMEOUT_MS = 120000;
-const GEO_API_HEAVY_READ_TIMEOUT_MS = 180000;
+const GEO_API_READ_TIMEOUT_MS = 30000;    // 30s — normal reads
+const GEO_API_WRITE_TIMEOUT_MS = 60000;   // 60s — save/update operations
+const GEO_API_LOGIN_TIMEOUT_MS = 30000;   // 30s — login
+const GEO_API_HEAVY_READ_TIMEOUT_MS = 60000; // 60s — heavy data loads (result, marks, etc.)
 
 function buildQuery(params) {
 return Object.keys(params || {})
@@ -69,16 +69,16 @@ if (/^(getResultPanelData|getEasyResultList|getExamResultSummaryLists|getIncours
 return GEO_API_READ_TIMEOUT_MS;
 }
 
-async function geoApiGet(action, params = {}) {
+async function geoApiGetBase(action, params = {}) {
 // Security: any write/update action is sent as POST with the login token.
-if (geoIsWriteAction_(action)) return geoApiPost(Object.assign({ action }, params || {}));
+if (geoIsWriteAction_(action)) return geoApiPostBase(Object.assign({ action }, params || {}));
 const qs = buildQuery(Object.assign({ action }, params));
 const timeoutMs = geoReadTimeoutForAction_(action);
 const res = await geoFetchWithTimeout_(API_URL + '?' + qs, { method: 'GET', cache:'no-store' }, timeoutMs);
 return geoReadJsonResponse_(res);
 }
 
-async function geoApiPost(payload) {
+async function geoApiPostBase(payload) {
 payload = geoAttachAuth_(payload || {});
 const action = payload && payload.action;
 const timeoutMs = String(action || '') === 'loginUser' ? GEO_API_LOGIN_TIMEOUT_MS : (geoIsWriteAction_(action) ? GEO_API_WRITE_TIMEOUT_MS : geoReadTimeoutForAction_(action));
@@ -89,6 +89,11 @@ body: JSON.stringify(payload || {}),
 cache:'no-store'
 }, timeoutMs);
 return geoReadJsonResponse_(res);
+}
+
+// XSS protection: HTML special characters escape করার জন্য global helper
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
 }
 
 function showStatus(el, type, message) {
@@ -113,7 +118,10 @@ return new URLSearchParams(location.search).get(name) || '';
 
 function currentSessionYears() {
 const years = [];
-for (let y = 2018; y <= 2035; y++) {
+const now = new Date().getFullYear();
+const startYear = Math.min(2018, now - 8);
+const endYear = now + 5;
+for (let y = startYear; y <= endYear; y++) {
 const yy = String((y + 1) % 100).padStart(2, '0');
 years.push(y + '-' + yy);
 }
@@ -373,26 +381,28 @@ function geoAcademicYearIsHonours_(year) {
 }
 function geoManualRegistrationByYear_(row, academicYear) {
   const admission = geoExcelValueId_(row, ['Admission Roll','AdmissionRoll','Admission Roll No','Admission No','Admission Number','ভর্তি রোল']);
+  const genericReg = geoExcelValueId_(row, ['RegistrationNumber','Registration','Regi','Reg No','Registration No','Registration Number','Regi No','রেজি নম্বর','রেজিস্ট্রেশন']);
+  
   if (geoAcademicYearIsMasters_(academicYear)) {
-    return geoExcelValueId_(row, [
+    const mReg = geoExcelValueId_(row, [
       'Masters Reg. No.','Masters Reg No','Masters Registration No','Masters Registration Number',
       'Master Reg. No.','Master Reg No','Master Registration No','Master Registration Number',
       'Masters-Reg-No','Masters Regi No','Masters Regi Number'
-    ]) || admission;
+    ]);
+    if(mReg) return mReg;
   }
+  
   if (geoAcademicYearIsHonours_(academicYear)) {
-    return geoExcelValueId_(row, [
+    const hReg = geoExcelValueId_(row, [
       'Hons/Degree-Reg. No.','Hons/Degree Reg. No.','Hons/Degree Reg No','Hons/Degree Registration No','Hons/Degree Registration Number',
       'Hons Degree Reg No','Hons Degree Registration No','Honours/Degree-Reg. No.','Honours/Degree Reg. No.',
       'Honours Degree Reg No','Honours Registration No','Hons Registration No','Hons Reg. No.','Hons Reg No',
       'Degree Registration No','Degree Reg. No.','Degree Reg No'
-    ]) || admission;
+    ]);
+    if(hReg) return hReg;
   }
-  return geoExcelValueId_(row, [
-    'RegistrationNumber','Registration','Regi','Reg No','Registration No','Registration Number','Regi No',
-    'Masters Reg. No.','Masters Reg No','Masters Registration No',
-    'Hons/Degree-Reg. No.','Hons/Degree Reg. No.','Hons Degree Reg No','Hons/Degree Registration No'
-  ]) || admission;
+  
+  return genericReg || admission;
 }
 function geoNormalizeManualSeatRows(rows) {
   return (rows || []).map(r => ({
@@ -558,12 +568,14 @@ if (!user || !user.loggedIn) {
   return null;
 }
 if (role && user.role && user.role !== role) {
+  clearAuthSession();
   location.href = '../index.html';
   return null;
 }
 if (role && !user.role) {
-  user.role = role;
-  syncAuthEverywhere_(user);
+  clearAuthSession();
+  location.href = '../index.html';
+  return null;
 }
 if (role === 'admin' && !user.authToken) {
   clearAuthSession();
@@ -760,14 +772,13 @@ localStorage.removeItem(k);
 } catch(e) {}
 }
 
-const __geoApiGetOriginal = geoApiGet;
-geoApiGet = async function(action, params = {}) {
+async function geoApiGet(action, params = {}) {
 const noCache = params && (params.noCache || params.force);
 if (!noCache) {
 if (action === 'getSubjects') {
 const cachedSubjects = getSubjectMiniCache(params);
 if (cachedSubjects) return cachedSubjects;
-const freshSubjects = await __geoApiGetOriginal(action, params);
+const freshSubjects = await geoApiGetBase(action, params);
 setSubjectMiniCache(params, freshSubjects);
 return freshSubjects;
 }
@@ -776,7 +787,7 @@ const cached = getCachedStudents(params);
 if (cached) return cached;
 const mini = getLiteGetCache(action, params, 1000 * 60 * 2);
 if (mini) return mini;
-const fresh = await __geoApiGetOriginal(action, params);
+const fresh = await geoApiGetBase(action, params);
 setLiteGetCache(action, params, fresh);
 return fresh;
 }
@@ -785,20 +796,20 @@ const cached = getCachedExams(params);
 if (cached) return cached;
 const mini = getLiteGetCache(action, params, 1000 * 60 * 8);
 if (mini) return mini;
-const fresh = await __geoApiGetOriginal(action, params);
+const fresh = await geoApiGetBase(action, params);
 setLiteGetCache(action, params, fresh);
 return fresh;
 }
 if (action === 'getMarksEntryData') {
 const mini = getLiteGetCache(action, params, 1000 * 45);
 if (mini) return mini;
-const fresh = await __geoApiGetOriginal(action, params);
+const fresh = await geoApiGetBase(action, params);
 setLiteGetCache(action, params, fresh);
 return fresh;
 }
 // StudentSubjects can change after subject cleanup, so load fresh.
 if (action === 'getStudentSubjects') {
-return __geoApiGetOriginal(action, Object.assign({}, params, { _t: Date.now() }));
+return geoApiGetBase(action, Object.assign({}, params, { _t: Date.now() }));
 }
 if (action === 'getFinalResults') {
 const cached = getCachedFinalResults(params);
@@ -821,19 +832,18 @@ const rows = getCachedList('notices');
 if (Array.isArray(rows)) return { success:true, notices:rows, source:'browser-preload-cache' };
 }
 }
-return __geoApiGetOriginal(action, params);
-};
+return geoApiGetBase(action, params);
+}
 
-const __geoApiPostOriginal = geoApiPost;
-geoApiPost = async function(payload) {
-const res = await __geoApiPostOriginal(payload);
+async function geoApiPost(payload) {
+const res = await geoApiPostBase(payload);
 // Any write action can make cache stale, so clear it automatically.
 if (payload && payload.action && payload.action !== 'loginUser') {
 clearGeoCache();
 try { localStorage.removeItem(GEO_PRELOAD_ATTEMPT_KEY); } catch(e) {}
 }
 return res;
-};
+}
 
 /* Persistent write queue for marks and critical saves */
 const GEO_WRITE_QUEUE_KEY = 'geo_write_queue_v1';
@@ -2043,9 +2053,16 @@ async function sbRequestOnce_(url, headers, opt){
 async function sbRequest(table, params={}, opt={}){
   const qs = sbQS(params);
   const url = GEO_SUPABASE_REST + '/' + encodeURIComponent(sbTableName(table)) + (qs ? '?' + qs : '');
+  let token = GEO_SUPABASE_PUBLISHABLE_KEY;
+  try {
+    const u = typeof getAuthSession === 'function' ? getAuthSession() : null;
+    if(u && u.loggedIn && u.role === 'admin' && u.authToken && u.authToken !== 'supabase-admin' && u.authToken !== 'supabase-admin-temp'){
+       token = u.authToken;
+    }
+  } catch(e){}
   const headers = {
     apikey: GEO_SUPABASE_PUBLISHABLE_KEY,
-    Authorization: 'Bearer ' + GEO_SUPABASE_PUBLISHABLE_KEY,
+    Authorization: 'Bearer ' + token,
     Accept: 'application/json'
   };
   if(opt.body !== undefined){ headers['Content-Type'] = 'application/json'; headers['Prefer'] = opt.prefer || 'return=representation'; }
@@ -2295,6 +2312,12 @@ async function sbImportManualStudents(data={}){
   }
   return {success: failed.length === 0, message: saved + ' student saved. Inserted: ' + inserted + ', Updated: ' + updated + (failed.length ? ', Failed: ' + failed.length : ''), saved, inserted, updated, failedCount:failed.length, failed};
 }
+async function sbQuery(table, query, limit){
+  const rows = await sbAll(table, {raw:true});
+  const keys = Object.keys(query || {});
+  const filtered = rows.filter(r => keys.every(k => sbClean(r[k]) === sbClean(query[k])));
+  return limit ? filtered.slice(0, limit) : filtered;
+}
 async function sbLogin(data={}){
   const username = sbClean(data.username || data.user || data.email);
   const password = sbClean(data.password || data.pass);
@@ -2304,11 +2327,47 @@ async function sbLogin(data={}){
     if(s && (!s.Password || String(s.Password) === password)) return {success:true, user:Object.assign({}, s, {role:'student', username:s.Roll, authToken:'supabase-student'})};
     return {success:false, message:'Student login failed'};
   }
-  const admins = (await sbAll('Admins')).filter(sbIsActive);
-  const a = admins.find(x => sbClean(x.Username || x.Email || x.Mobile) === username && String(x.Password || '') === password);
-  if(a) return {success:true, user:{role:'admin', name:a.Name || 'Admin', username:a.Username || username, authToken:'supabase-admin', email:a.Email || ''}};
-  if(admins.length === 0 && username === 'admin' && password === 'admin123') return {success:true, user:{role:'admin', name:'Temporary Admin', username:'admin', authToken:'supabase-admin-temp'}};
-  return {success:false, message:'Invalid username or password'};
+  
+  // Try GoTrue first
+  try {
+    const res = await fetch(GEO_SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: {
+        'apikey': GEO_SUPABASE_PUBLISHABLE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email: username, password: password })
+    });
+    const result = await res.json();
+    if(res.ok && result.access_token) {
+      return {
+        success: true, 
+        user: {
+          role: 'admin', 
+          name: result.user?.user_metadata?.name || 'Admin', 
+          username: username, 
+          authToken: result.access_token, 
+          email: username
+        }
+      };
+    }
+  } catch(e) {
+    console.log('GoTrue failed, falling back to Admins table');
+  }
+  
+  // Fallback to legacy Admins table
+  try {
+    const adminData = await sbAll('Admins', {raw:true});
+    const adminUser = (adminData||[]).find(a => sbClean(a.Username) === username || sbClean(a.Email) === username);
+    if(adminUser && String(adminUser.Password) === password) {
+      return {
+        success: true,
+        user: Object.assign({}, adminUser, { role: 'admin', username: adminUser.Username, authToken: GEO_SUPABASE_PUBLISHABLE_KEY })
+      };
+    }
+  } catch(err) {}
+  
+  return {success:false, message: 'Invalid username or password'};
 }
 async function sbGetSubjects(p={}){
   let rows = (await sbAll('Subjects')).map(sbSubjectObj).filter(r=>r.SubjectCode && r.SubjectName).filter(sbIsActive);

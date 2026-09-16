@@ -60,19 +60,8 @@
       statusEl.className = 'status ok';
       statusEl.classList.remove('hide');
     }
-
-    try {
-      const a = document.createElement('a');
-      a.href = target;
-      a.id = 'autoOpenAdminLink';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      setTimeout(() => a.click(), 60);
-    } catch(e) {}
-
-    setTimeout(() => { try { window.location.href = target; } catch(e) {} }, 120);
-    setTimeout(() => { try { window.location.assign(target); } catch(e) {} }, 350);
-    setTimeout(() => { try { window.open(target, '_self'); } catch(e) {} }, 650);
+    // Single clean redirect after short delay to let the status message render
+    setTimeout(() => { window.location.href = target; }, 150);
   }
 
   document.getElementById('adminLoginForm').addEventListener('submit', async e => {

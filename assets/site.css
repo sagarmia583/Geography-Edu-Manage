@@ -81,7 +81,6 @@
 /* PRINT TABLE HEADER CENTER ALIGN FIX */
 @media print{
   table thead th,
-  table tr:first-child th,
   .old-text-result-sheet table th,
   .result-output table th,
   .result-list-table th,
@@ -103,9 +102,7 @@
 @media print{
   table.print-align-table th,
   table.print-align-table thead th,
-  table.print-align-table .print-header-cell,
-  table.print-align-table tr:first-child > th,
-  table.print-align-table tr:first-child > td{
+  table.print-align-table .print-header-cell{
     text-align:center!important;
     vertical-align:middle!important;
   }

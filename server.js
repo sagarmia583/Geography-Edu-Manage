@@ -63,9 +63,6 @@ function listen(port, attempt = 0) {
 
 listen(START_PORT);
 
-// Keep the process alive
-setInterval(() => {}, 1000);
-
 process.on('SIGINT', () => {
   console.log('\nServer shutting down...');
   process.exit(0);

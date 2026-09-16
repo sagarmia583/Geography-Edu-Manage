@@ -383,13 +383,13 @@ function oldTextMarksTableHtml(rows){
         const mark = m.mark ?? m.Marks ?? '';
         const grade = m.grade || m.Grade || '';
         const gp = m.gp ?? m.GP ?? '';
-        return `<tr>
-          <td class="nu-center">${esc(code)}</td>
-          <td>${esc(subject)}</td>
-          <td class="nu-center">${esc(mark)}</td>
-          <td class="nu-center nu-grade">${esc(grade)}</td>
-          <td class="nu-center">${esc(gradePointText(gp))}</td>
-        </tr>`;
+          return `<tr>
+            <td class="nu-center">${esc(code)}</td>
+            <td class="text-left printable-name-cell">${esc(subject)}</td>
+            <td class="nu-center">${esc(mark)}</td>
+            <td class="nu-center nu-grade">${esc(grade)}</td>
+            <td class="nu-center">${esc(gradePointText(gp))}</td>
+          </tr>`;
       }).join('') : `<tr><td colspan="5" class="nu-center">No marks data found</td></tr>`}
     </tbody>
   </table>`;

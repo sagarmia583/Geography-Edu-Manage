@@ -38,7 +38,7 @@ document.getElementById('refreshPreloadBtn')?.addEventListener('click', async()=
 
 const safeSheetStatusBox=document.getElementById('safeSheetStatusBox');
 document.getElementById('safeSheetSetupBtn')?.addEventListener('click',async()=>{
-  if(!confirm('Safe Sheet Optimize চালাবেন? আগের data delete হবে কাশী, শুধু missing sheet/header add এবং extra blank row/column clean হবে।')) return;
+  if(!confirm('Safe Sheet Optimize চালাবেন? আগের data delete হবে না, শুধু missing sheet/header add এবং extra blank row/column clean হবে।')) return;
   const btn=document.getElementById('safeSheetSetupBtn');
   const old=btn.textContent;
   btn.disabled=true; btn.textContent='Optimizing...';

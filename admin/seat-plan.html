@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Seat Plan</title>
-<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/site.css?v=1789598642822">
 <style>
 .seat-tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .room-row{display:grid;grid-template-columns:1.1fr .65fr .55fr 1.3fr .65fr auto;gap:8px;margin-bottom:8px;align-items:center}
@@ -14,11 +14,11 @@
 .seat-column{border:1.4px solid #111;border-radius:12px;background:#fff;overflow:hidden;break-inside:avoid}
 .seat-column-title{text-align:center;background:#eef7f1;color:#0f5c3f;font-weight:900;padding:8px;border-bottom:1px solid #111}
 .column-table{width:100%;border-collapse:collapse;background:#fff}
-.column-table th,.column-table td{border:1px solid #333;padding:7px 5px;vertical-align:middle;text-align:center;font-size:11px;min-height:44px}
+.column-table th,.column-table td{border:1px solid #333;padding:7px 5px;vertical-align:middle;text-align:center;font-size:11px;height:68px;overflow:hidden}
 .column-table th{background:#f4f7f5;color:#0f5c3f;font-weight:900}
 .bench-label{font-weight:900;background:#f8fbf9;color:#0f5c3f;white-space:nowrap;width:38px;text-align:center;font-size:12px}
-.roll-regi-cell{line-height:1.25;min-width:78px;height:44px;text-align:center}
-.roll-regi-cell b,.roll-regi-cell span{display:block;font-size:10px!important;color:#111!important;font-weight:700!important;line-height:1.25!important}
+.roll-regi-cell{line-height:1.25;min-width:78px;height:68px;text-align:center;overflow:hidden}
+.roll-regi-cell b,.roll-regi-cell span{display:block;font-size:15px!important;color:#111!important;font-weight:700!important;line-height:1.25!important}
 .seat-card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6mm}
 .seat-card-page{display:grid;grid-template-columns:repeat(2,1fr);gap:6mm;break-after:page;page-break-after:always;margin-bottom:8mm}
 .seat-card-page:last-child{break-after:auto;page-break-after:auto}
@@ -51,10 +51,10 @@
   .seat-big{display:none!important}
   .room-plan{border:0!important;border-radius:0!important;padding:0!important;margin:0 0 8mm!important}
   .column-layout{display:grid!important;gap:7px!important}
-  .column-table th,.column-table td{font-size:8px!important;padding:2.5px!important;height:auto!important;min-height:10mm!important}
+  .column-table th,.column-table td{font-size:8px!important;padding:2.5px!important;height:14mm!important;overflow:hidden!important}
   .column-table th,.room-plan table th,table thead th{text-align:center!important;vertical-align:middle!important}
-  .roll-regi-cell{height:auto!important;min-height:10mm!important;line-height:1.18!important;text-align:center!important}
-  .roll-regi-cell b,.roll-regi-cell span{font-size:7.8px!important;line-height:1.18!important;font-weight:700!important;color:#111!important}
+  .roll-regi-cell{height:14mm!important;line-height:1.18!important;text-align:center!important;overflow:hidden!important}
+  .roll-regi-cell b,.roll-regi-cell span{font-size:11px!important;line-height:1.18!important;font-weight:700!important;color:#111!important}
 }
 
 .manual-seat-panel{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:14px;background:#fff}
@@ -76,7 +76,7 @@
 </style>
 </head>
 <body>
-<header class="topbar no-print"><div class="inner"><a class="brand" href="index.html"><span class="brand-logo">🪑</span><span>Seat Plan</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu style="display:none!important"></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header>
+<header class="topbar no-print"><div class="inner"><a class="brand" href="index.html"><span class="brand-logo">🪑</span><span>Seat Plan</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu ></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header>
 <div class="panel-layout">
 <aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🪑</div><h3>Seat Plan</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a class="active" href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside>
 <main class="panel-main">
@@ -139,7 +139,7 @@
 </div>
 
 <script src="../assets/geography-api.js"></script>
-<script src="../assets/site.js"></script>
+<script src="../assets/site.js?v=1789598642822"></script>
 <script>const AUTH_USER=requireAuth('admin');attachLogout();</script>
 <script>
 const sessionSelect=document.getElementById('sessionSelect');
@@ -459,7 +459,7 @@ html,body{background:#fff!important;margin:0!important;padding:0!important;color
 .seat-card-head{text-align:center!important;border-bottom:1px solid #111!important;padding-bottom:2px!important;margin-bottom:3px!important}
 .seat-card-head h2{font-size:12.4px!important;margin:0!important;line-height:1.1!important;color:#111!important}
 .seat-card-head h3{font-size:11.2px!important;margin:1px 0!important;line-height:1.1!important;color:#111!important}
-.seat-label{display:inline-block!important;border:1px solid #111!important;padding:1.5px 9px!important;font-weight:900!important;margin-top:2px!important;background:#f7faf7!important;font-size:9.5px!important}
+.seat-label{display:inline-block!important;border:1px solid #111!important;padding:1.5px 9px!important;font-weight:900!important;margin-top:2px!important;background:#f7faf7!important;font-size:11px!important}
 .seat-info{width:100%!important;border-collapse:collapse!important;margin-top:4px!important}
 .seat-info td{border:1px solid #333!important;padding:3.6px 4px!important;font-size:11px!important;line-height:1.25!important;height:6.5mm!important}
 .seat-info td:first-child{width:28%!important;font-weight:900!important;background:#f4f7f5!important}
@@ -470,10 +470,10 @@ html,body{background:#fff!important;margin:0!important;padding:0!important;color
 .seat-column{border:1.2px solid #111!important;border-radius:8px!important;background:#fff!important;overflow:hidden!important;break-inside:avoid!important}
 .seat-column-title{text-align:center!important;background:#eef7f1!important;color:#0f5c3f!important;font-weight:900!important;padding:5px!important;border-bottom:1px solid #111!important}
 .column-table{width:100%!important;border-collapse:collapse!important;background:#fff!important}
-.column-table th,.column-table td{border:1px solid #333!important;padding:3px 2px!important;vertical-align:middle!important;text-align:center!important;font-size:8.2px!important;height:auto!important;min-height:9mm!important}
+.column-table th,.column-table td{border:1px solid #333!important;padding:3px 2px!important;vertical-align:middle!important;text-align:center!important;font-size:8.2px!important;height:14mm!important;overflow:hidden!important}
 .bench-label{font-weight:900!important;background:#f8fbf9!important;color:#0f5c3f!important;white-space:nowrap!important;width:24px!important;text-align:center!important;font-size:8.4px!important}
-.roll-regi-cell{line-height:1.18!important;min-width:44px!important;min-height:9mm!important;text-align:center!important}
-.roll-regi-cell b,.roll-regi-cell span{display:block!important;font-size:7.8px!important;line-height:1.18!important;color:#111!important;font-weight:700!important}
+.roll-regi-cell{line-height:1.18!important;min-width:44px!important;height:14mm!important;text-align:center!important;overflow:hidden!important}
+.roll-regi-cell b,.roll-regi-cell span{display:block!important;font-size:11px!important;line-height:1.18!important;color:#111!important;font-weight:700!important}
 ${isCard?'.room-plan,.column-layout,.column-table{display:none!important}':'.seat-card-page,.seat-card-pages{display:none!important}'}
 /* SEAT PRINT HEADER CENTER ALIGN FIX */
 .column-table th,.room-plan table th,table thead th{text-align:center!important;vertical-align:middle!important}

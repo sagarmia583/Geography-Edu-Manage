@@ -96,11 +96,48 @@ function esc(v) {
   return String(v ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
 }
 
+function geoToast(message, type='info') {
+  if(!message) return;
+  // Don't show toast for loading messages to avoid spam
+  if(type === 'info' && message.toLowerCase().includes('loading')) return;
+  
+  let container = document.getElementById('geo-toast-container');
+  if(!container) {
+    container = document.createElement('div');
+    container.id = 'geo-toast-container';
+    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999999;display:flex;flex-direction:column;gap:12px;pointer-events:none;';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  const bg = type === 'ok' ? '#ebf7f0' : type === 'err' ? '#fff0ed' : '#eff7ff';
+  const color = type === 'ok' ? '#0b5e3c' : type === 'err' ? '#9d1c12' : '#084b78';
+  const border = type === 'ok' ? '#b7e4c7' : type === 'err' ? '#ffb6aa' : '#b8ddff';
+  const icon = type === 'ok' ? '✅ ' : type === 'err' ? '⚠️ ' : 'ℹ️ ';
+  
+  toast.style.cssText = `background:${bg};color:${color};border:1px solid ${border};padding:14px 22px;border-radius:16px;box-shadow:0 12px 35px rgba(0,0,0,0.15);font-weight:800;font-size:0.98rem;opacity:0;transform:translateY(30px);transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);max-width:380px;line-height:1.4;display:flex;gap:8px;align-items:flex-start;`;
+  toast.innerHTML = `<span>${icon}</span><span style="flex:1">${message}</span>`;
+  
+  container.appendChild(toast);
+  
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+  });
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(20px)';
+    setTimeout(() => toast.remove(), 400);
+  }, 4500);
+}
+
 function showStatus(el, type, message) {
-if (!el) return;
-el.className = 'status ' + (type || 'info');
-el.textContent = message || '';
-el.classList.remove('hide');
+  if (el) {
+    el.className = 'status ' + (type || 'info');
+    el.textContent = message || '';
+    el.classList.remove('hide');
+  }
+  geoToast(message, type);
 }
 
 function readFileAsBase64(file) {
@@ -2520,12 +2557,33 @@ async function sbGetExams(p={}){
 }
 async function sbSaveExam(data={}){
   const givenExamId = sbClean(data.examId || data.ExamID);
-  const obj = {Timestamp:sbNow(), ExamID:givenExamId || sbId('EXM'), SessionYear:sbClean(data.sessionYear || data.SessionYear), AcademicYear:sbClean(data.academicYear || data.AcademicYear), ExamType:sbClean(data.examType || data.ExamType), ExamName:sbClean(data.examName || data.ExamName || [data.sessionYear,data.academicYear,data.examType].filter(Boolean).join(' - ')), StartDate:sbClean(data.startDate || data.StartDate), Status:sbClean(data.status || data.Status || 'Active'), ExamComponentMarks:sbClean(data.examComponentMarks || data.ExamComponentMarks), AssignmentMarks:sbClean(data.assignmentMarks || data.AssignmentMarks), AttendanceMarks:sbClean(data.attendanceMarks || data.AttendanceMarks), TestExamMarks:sbClean(data.testExamMarks || data.TestExamMarks), FinalPassMarks:sbClean(data.finalPassMarks || data.FinalPassMarks), PromotionExam:sbClean(data.promotionExam || data.PromotionExam), ResultPublished:sbClean(data.resultPublished || data.ResultPublished || data.Published || ''), Published:sbClean(data.published || data.Published || ''), PublishStatus:sbClean(data.publishStatus || data.PublishStatus || '')};
-  if(!obj.SessionYear || !obj.AcademicYear || !obj.ExamType) throw new Error('Session, Year and Exam Type required');
   const existing = (await sbAll('Exams', {raw:true})).filter(sbIsActive).find(r=>
     (givenExamId && sbClean(r.ExamID)===givenExamId) ||
-    (!givenExamId && sbClean(r.SessionYear)===obj.SessionYear && sbClean(r.AcademicYear)===obj.AcademicYear && sbClean(r.ExamType)===obj.ExamType && sbClean(r.ExamName)===obj.ExamName)
+    (!givenExamId && sbClean(r.SessionYear)===sbClean(data.sessionYear||data.SessionYear) && sbClean(r.AcademicYear)===sbClean(data.academicYear||data.AcademicYear) && sbClean(r.ExamType)===sbClean(data.examType||data.ExamType) && sbClean(r.ExamName)===sbClean(data.examName||data.ExamName||[data.sessionYear,data.academicYear,data.examType].filter(Boolean).join(' - ')))
   );
+  const oldResultPub = existing ? sbClean(existing.ResultPublished) : 'No';
+  const oldPub = existing ? sbClean(existing.Published) : 'No';
+  const oldPubStat = existing ? sbClean(existing.PublishStatus) : 'Unpublished';
+  const obj = {
+    Timestamp:sbNow(),
+    ExamID:givenExamId || (existing&&existing.ExamID) || sbId('EXM'),
+    SessionYear:sbClean(data.sessionYear || data.SessionYear || (existing&&existing.SessionYear)),
+    AcademicYear:sbClean(data.academicYear || data.AcademicYear || (existing&&existing.AcademicYear)),
+    ExamType:sbClean(data.examType || data.ExamType || (existing&&existing.ExamType)),
+    ExamName:sbClean(data.examName || data.ExamName || [data.sessionYear,data.academicYear,data.examType].filter(Boolean).join(' - ')),
+    StartDate:sbClean(data.startDate || data.StartDate || (existing&&existing.StartDate)),
+    Status:sbClean(data.status || data.Status || (existing&&existing.Status) || 'Active'),
+    ExamComponentMarks:sbClean(data.examComponentMarks || data.ExamComponentMarks || (existing&&existing.ExamComponentMarks)),
+    AssignmentMarks:sbClean(data.assignmentMarks || data.AssignmentMarks || (existing&&existing.AssignmentMarks)),
+    AttendanceMarks:sbClean(data.attendanceMarks || data.AttendanceMarks || (existing&&existing.AttendanceMarks)),
+    TestExamMarks:sbClean(data.testExamMarks || data.TestExamMarks || (existing&&existing.TestExamMarks)),
+    FinalPassMarks:sbClean(data.finalPassMarks || data.FinalPassMarks || (existing&&existing.FinalPassMarks)),
+    PromotionExam:sbClean(data.promotionExam || data.PromotionExam || (existing&&existing.PromotionExam)),
+    ResultPublished:sbClean(data.resultPublished || data.ResultPublished || data.Published || oldResultPub),
+    Published:sbClean(data.published || data.Published || oldPub),
+    PublishStatus:sbClean(data.publishStatus || data.PublishStatus || oldPubStat)
+  };
+  if(!obj.SessionYear || !obj.AcademicYear || !obj.ExamType) throw new Error('Session, Year and Exam Type required');
   if(existing && existing.ExamID) obj.ExamID = existing.ExamID;
   const saved = existing && existing.row_id ? await sbPatchByRowId('Exams', existing.row_id, obj) : (await sbInsert('Exams', obj))[0];
   const exam = sbExamObj(Object.assign({}, obj, saved || {}));

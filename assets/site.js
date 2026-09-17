@@ -1,8 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
-const btn = document.querySelector('[data-mobile-menu]');
-const nav = document.querySelector('.navlinks');
-if (btn && nav) btn.addEventListener('click', () => nav.classList.toggle('open'));
-document.querySelectorAll('[data-year]').forEach(el => el.textContent = new Date().getFullYear());
+  const btn = document.querySelector('[data-mobile-menu]');
+  const nav = document.querySelector('.navlinks');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      if(document.querySelector('.panel-sidebar')) {
+        document.body.classList.toggle('sidebar-open');
+        let bd = document.getElementById('sidebarBackdrop');
+        if(!bd){
+          bd = document.createElement('div');
+          bd.id = 'sidebarBackdrop';
+          bd.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:999998;display:none;';
+          document.body.appendChild(bd);
+          bd.addEventListener('click', ()=>{ document.body.classList.remove('sidebar-open'); bd.style.display='none'; });
+        }
+        bd.style.display = document.body.classList.contains('sidebar-open') ? 'block' : 'none';
+      } else if (nav) {
+        nav.classList.toggle('open');
+      }
+    });
+  }
+  document.querySelectorAll('[data-year]').forEach(el => el.textContent = new Date().getFullYear());
 });
 
 function naturalSortValue(value){

@@ -2696,6 +2696,33 @@ async function sbGetMarksEntryData(p={}){
   students = students.map(s=>Object.assign({}, s, mmap[s.Roll] || {}, {Name:s.Name || s.StudentName, StudentName:s.Name || s.StudentName, Roll:s.Roll, RegistrationNumber:s.RegistrationNumber}));
   return {success:true, exam, subject, schedule, students};
 }
+async function sbSaveIndividualMarks(data={}){
+  const exam = (await sbGetExams({examId:data.examId || data.ExamID})).exams[0] || {};
+  if(!exam) throw new Error('Exam not found');
+  const roll = sbClean(data.roll || data.Roll);
+  const reg = sbClean(data.reg || data.RegistrationNumber);
+  if(!roll) throw new Error('Roll is required');
+  let saved = 0;
+  if(Array.isArray(data.subjects)){
+    for(const sub of data.subjects){
+      if(!sub.subjectCode) continue;
+      await sbSaveMarks({
+        examId: exam.ExamID,
+        subjectCode: sub.subjectCode,
+        marks: [{
+          roll: roll,
+          reg: reg,
+          marks: sub.marks,
+          examMarks: sub.marks,
+          assignmentMarks: sub.assignmentMarks,
+          attendanceMarks: sub.attendanceMarks
+        }]
+      });
+      saved++;
+    }
+  }
+  return {success:true, message: `Saved marks for ${saved} subjects`, saved};
+}
 async function sbSaveMarks(data={}){
   const exam = (await sbGetExams({examId:data.examId || data.ExamID})).exams[0] || {};
   const subject = ((await sbGetSubjects({academicYear:exam.AcademicYear || data.academicYear, subjectCode:data.subjectCode || data.SubjectCode})).subjects || [])[0] || {SubjectCode:sbClean(data.subjectCode), SubjectName:''};
@@ -3423,6 +3450,7 @@ async function sbGeoApiPost(payload={}){
     case 'saveExam': return sbSaveExam(data);
     case 'saveExamSchedule': return sbSaveExamSchedule(data);
     case 'setExamBlock': return sbSetExamBlock(data);
+    case 'saveIndividualMarks': return sbSaveIndividualMarks(data);
     case 'saveMarks': case 'saveMarkRow': case 'saveMarkRowDirect': case 'saveMarksGet': case 'saveMarksFastGet': return sbSaveMarks(data);
     case 'saveAttendanceMarks': return sbSaveAttendanceMarks(data);
     case 'saveFinalResults': return sbSaveFinalResults(data);

@@ -341,30 +341,59 @@
 
 /* FORM FILLUP EXACT COLUMNS FINAL */
 .result-type-form,
-.result-list-table{
+.result-type-form.result-list-table{
   table-layout:auto!important;
   width:100%!important;
 }
-.result-type-form th,.result-type-form td{
-  width:auto!important;
-  white-space:normal!important;
+.result-type-form th, .result-type-form td {
+  font-size: 15.5px !important;
+  padding: 10px 8px !important;
+  white-space: normal !important;
+  color: #000 !important;
 }
-.result-type-form th:nth-child(1),.result-type-form td:nth-child(1),
-.result-type-form th:nth-child(2),.result-type-form td:nth-child(2),
-.result-type-form th:nth-child(3),.result-type-form td:nth-child(3),
-.result-type-form th:nth-child(5),.result-type-form td:nth-child(5),
-.result-type-form th:nth-child(6),.result-type-form td:nth-child(6),
-.result-type-form th:nth-child(7),.result-type-form td:nth-child(7),
-.result-type-form th:nth-child(8),.result-type-form td:nth-child(8){
-  text-align:center!important;
-  white-space:nowrap!important;
+.result-type-form th:nth-child(1), .result-type-form td:nth-child(1),
+.result-type-form th:nth-child(2), .result-type-form td:nth-child(2),
+.result-type-form th:nth-child(3), .result-type-form td:nth-child(3) {
+  text-align: center !important;
+  white-space: nowrap !important;
+  width: 1% !important; 
 }
-.result-type-form th:nth-child(4),.result-type-form td:nth-child(4){
-  text-align:left!important;
-  min-width:220px!important;
+.result-type-form th:nth-child(4), .result-type-form td:nth-child(4) {
+  text-align: left !important;
+  width: 100% !important; 
 }
-@media print{
-  .result-type-form,.result-list-table{table-layout:auto!important}
+.result-type-form th:nth-child(5):not(:nth-last-child(3)), 
+.result-type-form td:nth-child(5):not(:nth-last-child(3)) {
+  text-align: center !important;
+  white-space: nowrap !important;
+  width: 1% !important; 
+}
+.result-type-form th:nth-last-child(3), .result-type-form td:nth-last-child(3) {
+  width: 90px !important;
+  min-width: 90px !important;
+  text-align: center !important;
+}
+.result-type-form th:nth-last-child(2), .result-type-form td:nth-last-child(2) {
+  width: 70px !important;
+  min-width: 70px !important;
+  text-align: center !important;
+}
+.result-type-form th:nth-last-child(1), .result-type-form td:nth-last-child(1) {
+  width: 110px !important;
+  min-width: 110px !important;
+  text-align: center !important;
+}
+
+@media print {
+  .result-type-form, .result-type-form.result-list-table {
+    table-layout: auto !important;
+  }
+  #printArea .result-type-form th, #printArea .result-type-form td,
+  .result-output .result-type-form th, .result-output .result-type-form td {
+    font-size: 15.5px !important;
+    padding: 10px 8px !important;
+    color: #000 !important;
+  }
 }
 
 

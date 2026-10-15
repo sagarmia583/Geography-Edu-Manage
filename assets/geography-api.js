@@ -95,6 +95,28 @@ return geoReadJsonResponse_(res);
 function esc(v) {
   return String(v ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
 }
+window.esc = esc;
+window.escapeHtml = esc;
+
+function removeGeoToast(toast, instant = false) {
+  if (!toast || toast._isRemoving) return;
+  toast._isRemoving = true;
+  if (toast._timer) clearTimeout(toast._timer);
+  if (instant) {
+    try { toast.remove(); } catch(e){}
+    return;
+  }
+  toast.style.transition = 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
+  toast.style.opacity = '0';
+  toast.style.transform = 'translateY(16px) scale(0.94)';
+  toast.style.maxHeight = '0px';
+  toast.style.marginTop = '-8px';
+  toast.style.paddingTop = '0px';
+  toast.style.paddingBottom = '0px';
+  setTimeout(() => {
+    try { toast.remove(); } catch(e){}
+  }, 260);
+}
 
 function geoToast(message, type='info') {
   if(!message) return;
@@ -105,17 +127,56 @@ function geoToast(message, type='info') {
   if(!container) {
     container = document.createElement('div');
     container.id = 'geo-toast-container';
-    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999999;display:flex;flex-direction:column;gap:12px;pointer-events:none;';
+    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999999;display:flex;flex-direction:column;gap:10px;pointer-events:none;';
     document.body.appendChild(container);
   }
+
+  // Active (not currently fading out) toasts
+  const activeToasts = Array.from(container.children).filter(el => !el._isRemoving);
+
+  // If the exact same message and type is already showing, do not duplicate
+  const existingSame = activeToasts.find(el => el.dataset.msg === String(message) && el.dataset.type === String(type));
+  if (existingSame) {
+    clearTimeout(existingSame._timer);
+    existingSame.style.transition = 'transform 0.15s ease';
+    existingSame.style.transform = 'scale(1.05)';
+    setTimeout(() => {
+      if (!existingSame._isRemoving) existingSame.style.transform = 'scale(1)';
+    }, 150);
+    existingSame._timer = setTimeout(() => removeGeoToast(existingSame), 2500);
+    return;
+  }
+
+  // Strict limit: Maximum 2 notifications can exist simultaneously.
+  // When a new one arrives, if there are already 2 (or more), dismiss the oldest one immediately
+  while (activeToasts.length >= 2) {
+    const oldest = activeToasts.shift();
+    removeGeoToast(oldest);
+  }
+
+  // "ekta notiflication ashle jeno arekta muche jai":
+  // If there is already 1 notification showing, shorten its lifetime so it fades away quickly
+  if (activeToasts.length === 1) {
+    const prev = activeToasts[0];
+    if (prev && prev._timer) {
+      clearTimeout(prev._timer);
+      prev._timer = setTimeout(() => removeGeoToast(prev), 1200);
+    }
+  }
+
   const toast = document.createElement('div');
+  toast.dataset.msg = String(message);
+  toast.dataset.type = String(type);
+  
   const bg = type === 'ok' ? '#ebf7f0' : type === 'err' ? '#fff0ed' : '#eff7ff';
   const color = type === 'ok' ? '#0b5e3c' : type === 'err' ? '#9d1c12' : '#084b78';
   const border = type === 'ok' ? '#b7e4c7' : type === 'err' ? '#ffb6aa' : '#b8ddff';
   const icon = type === 'ok' ? '✅ ' : type === 'err' ? '⚠️ ' : 'ℹ️ ';
   
-  toast.style.cssText = `background:${bg};color:${color};border:1px solid ${border};padding:14px 22px;border-radius:16px;box-shadow:0 12px 35px rgba(0,0,0,0.15);font-weight:800;font-size:0.98rem;opacity:0;transform:translateY(30px);transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);max-width:380px;line-height:1.4;display:flex;gap:8px;align-items:flex-start;`;
-  toast.innerHTML = `<span>${icon}</span><span style="flex:1">${message}</span>`;
+  toast.style.cssText = `background:${bg};color:${color};border:1px solid ${border};padding:12px 18px;border-radius:14px;box-shadow:0 10px 25px rgba(0,0,0,0.12);font-weight:700;font-size:0.92rem;opacity:0;transform:translateY(20px);transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);max-width:360px;line-height:1.4;display:flex;gap:8px;align-items:flex-start;pointer-events:auto;cursor:pointer;overflow:hidden;`;
+  toast.innerHTML = `<span>${icon}</span><span style="flex:1">${message}</span><span style="opacity:0.4;font-size:12px;margin-left:4px;" title="Dismiss">✕</span>`;
+  
+  toast.addEventListener('click', () => removeGeoToast(toast));
   
   container.appendChild(toast);
   
@@ -124,11 +185,9 @@ function geoToast(message, type='info') {
     toast.style.transform = 'translateY(0)';
   });
   
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(20px)';
-    setTimeout(() => toast.remove(), 400);
-  }, 4500);
+  toast._timer = setTimeout(() => {
+    removeGeoToast(toast);
+  }, 2800);
 }
 
 function showStatus(el, type, message) {
@@ -622,12 +681,27 @@ if (role === 'admin' && !user.authToken) {
 return user;
 }
 function attachLogout() {
-document.querySelectorAll('[data-logout]').forEach(btn => {
-btn.addEventListener('click', () => {
-clearAuthSession();
-location.href = '../index.html';
-});
-});
+  document.querySelectorAll('[data-logout]').forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      clearAuthSession();
+      location.href = '../index.html';
+    };
+  });
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const btn = e.target && e.target.closest && e.target.closest('[data-logout]');
+    if (!btn) return;
+    e.preventDefault();
+    clearAuthSession();
+    const loc = String(window.location.pathname || '').toLowerCase();
+    if (loc.includes('/admin/') || loc.includes('/student/') || loc.includes('/pages/')) {
+      window.location.href = '../index.html';
+    } else {
+      window.location.href = 'index.html';
+    }
+  });
 }
 
 /* Fast preload/cache system */
@@ -1781,19 +1855,19 @@ const GEO_SB_TABLE_NAME_MAP = {
   "ExamBlocks": "examblocks",
   "Marks": "marks",
   "AttendanceMarks": "attendancemarks",
-  "Attendance": "attendance",
+  "Attendance": "Attendance",
   "ResultSummary": "resultsummary",
   "FinalResults": "finalresults",
   "ResultImports": "resultimports",
-  "Notices": "notices",
+  "Notices": "Notices",
   "Books": "books",
   "BookCopies": "bookcopies",
   "LibraryLogs": "librarylogs",
-  "ClassRoutine": "classroutine",
-  "ClassAttendance": "classattendance",
-  "Teachers": "teachers",
-  "StudentFees": "studentfees",
-  "Documents": "documents"
+  "ClassRoutine": "ClassRoutine",
+  "ClassAttendance": "ClassAttendance",
+  "Teachers": "Teachers",
+  "StudentFees": "StudentFees",
+  "Documents": "Documents"
 };
 
 const SB_CACHE = {};
@@ -2000,6 +2074,11 @@ function sbMarkObtainedValue(markRow){
   const hasComponents = sbClean(markRow.ExamMarks) !== '' || sbClean(markRow.AssignmentMarks) !== '' || sbClean(markRow.AttendanceMarks) !== '';
   const absentValue = [markRow.Marks, markRow.ExamMarks].some(v=>['A','AB','ABSENT'].includes(sbClean(v).toUpperCase()));
   if(absentValue) return 'A';
+  const hasMultipleComponents = (sbClean(markRow.AssignmentMarks) !== '' || sbClean(markRow.AttendanceMarks) !== '');
+  if(hasMultipleComponents){
+    const total = sbNum(markRow.ExamMarks || rawMarks) + sbNum(markRow.AssignmentMarks) + sbNum(markRow.AttendanceMarks);
+    return sbRoundMarkValue(total);
+  }
   if(rawMarks !== '') return sbRoundMarkValue(rawMarks);
   if(hasComponents){
     const total = sbNum(markRow.ExamMarks) + sbNum(markRow.AssignmentMarks) + sbNum(markRow.AttendanceMarks);
@@ -2027,7 +2106,7 @@ function sbIsPromotedText(v){
   if(/not\s*promoted|fail|failed|unsuccess|withheld|absent/.test(s)) return false;
   return /promoted|pass|passed|successful/.test(s);
 }
-function sbTableName(table){ return GEO_SB_TABLE_NAME_MAP[table] || String(table || '').toLowerCase(); }
+function sbTableName(table){ return GEO_SB_TABLE_NAME_MAP[table] || String(table || ''); }
 function sbHeaders(table){ return GEO_SB_TABLE_HEADERS[table] || []; }
 function sbPick(table, obj){
   const allowed = {}; sbHeaders(table).forEach(h=>allowed[h]=1);
@@ -2395,12 +2474,22 @@ async function sbLogin(data={}){
   // Fallback to legacy Admins table
   try {
     const adminData = await sbAll('Admins', {raw:true});
-    const adminUser = (adminData||[]).find(a => sbClean(a.Username) === username || sbClean(a.Email) === username);
-    if(adminUser && String(adminUser.Password) === password) {
-      return {
-        success: true,
-        user: Object.assign({}, adminUser, { role: 'admin', username: adminUser.Username, authToken: GEO_SUPABASE_PUBLISHABLE_KEY })
-      };
+    const uClean = String(username || '').trim().toLowerCase();
+    const pClean = String(password || '').trim();
+    const adminUser = (adminData||[]).find(a => 
+      sbClean(a.Username).trim().toLowerCase() === uClean || 
+      sbClean(a.Email).trim().toLowerCase() === uClean
+    );
+    if(adminUser) {
+      const dbPass = String(adminUser.Password || '').trim();
+      if(dbPass === pClean || dbPass.toLowerCase() === pClean.toLowerCase()) {
+        const safeAdmin = Object.assign({}, adminUser);
+        delete safeAdmin.Password;
+        return {
+          success: true,
+          user: Object.assign(safeAdmin, { role: 'admin', username: adminUser.Username, authToken: GEO_SUPABASE_PUBLISHABLE_KEY })
+        };
+      }
     }
   } catch(err) {}
   
@@ -2696,32 +2785,192 @@ async function sbGetMarksEntryData(p={}){
   students = students.map(s=>Object.assign({}, s, mmap[s.Roll] || {}, {Name:s.Name || s.StudentName, StudentName:s.Name || s.StudentName, Roll:s.Roll, RegistrationNumber:s.RegistrationNumber}));
   return {success:true, exam, subject, schedule, students};
 }
+async function sbGetIndividualStudentMarks(p={}){
+  const examId = sbClean(p.examId || p.ExamID);
+  const search = sbClean(p.search || p.roll || p.registrationNumber || p.rollId);
+  const exam = (await sbGetExams({examId})).exams[0];
+  if(!exam) return {success:false, found:false, message:'Exam not found'};
+
+  const student = await sbFindStudent(search);
+  if(!student) return {success:false, found:false, message:'Student not found with Roll/Reg: ' + search};
+
+  const roll = sbClean(student.Roll);
+  const reg = sbClean(student.RegistrationNumber);
+
+  // 1. Get Exam Schedule for this exam
+  const schedRes = await sbGetExamSchedule({
+    examId: exam.ExamID,
+    academicYear: exam.AcademicYear || student.CurrentYear,
+    sessionYear: exam.SessionYear || student.SessionYear,
+    examType: exam.ExamType
+  });
+  const schedules = schedRes.schedules || [];
+
+  // 2. Get all subjects
+  const subjectRes = await sbGetSubjects({academicYear: exam.AcademicYear || student.CurrentYear});
+  const subjectMap = {};
+  (subjectRes.subjects || []).forEach(s => { subjectMap[sbClean(s.SubjectCode)] = s; });
+
+  // 3. Get existing marks directly from Marks table
+  const marksAll = (await sbAll('Marks', {raw:true})).filter(sbIsActive);
+  const existingMarks = marksAll.filter(m =>
+    sbClean(m.ExamID) === exam.ExamID &&
+    (sbClean(m.Roll) === roll || (reg && sbClean(m.RegistrationNumber) === reg))
+  );
+
+  const markMap = {};
+  existingMarks.forEach(m => {
+    markMap[sbClean(m.SubjectCode)] = m;
+  });
+
+  // 4. Build combined subject list
+  const seenCodes = new Set();
+  const subjectsList = [];
+
+  for(const sch of schedules){
+    const code = sbClean(sch.SubjectCode);
+    if(!code || seenCodes.has(code)) continue;
+    seenCodes.add(code);
+
+    const sub = subjectMap[code] || {};
+    const existing = markMap[code] || null;
+
+    subjectsList.push({
+      subjectCode: code,
+      SubjectCode: code,
+      subjectName: sub.SubjectName || sch.SubjectName || (existing && existing.SubjectName) || code,
+      SubjectName: sub.SubjectName || sch.SubjectName || (existing && existing.SubjectName) || code,
+      fullMarks: sch.FullMarks || sub.FullMarks || '',
+      examMarks: existing ? (existing.ExamMarks ?? existing.Marks ?? '') : '',
+      ExamMarks: existing ? (existing.ExamMarks ?? existing.Marks ?? '') : '',
+      assignmentMarks: existing ? (existing.AssignmentMarks ?? '') : '',
+      AssignmentMarks: existing ? (existing.AssignmentMarks ?? '') : '',
+      attendanceMarks: existing ? (existing.AttendanceMarks ?? '') : '',
+      AttendanceMarks: existing ? (existing.AttendanceMarks ?? '') : '',
+      marks: existing ? (existing.Marks ?? '') : '',
+      Marks: existing ? (existing.Marks ?? '') : '',
+      grade: existing ? (existing.Grade ?? '') : '',
+      Grade: existing ? (existing.Grade ?? '') : '',
+      gpa: existing ? (existing.GPA ?? '') : '',
+      GPA: existing ? (existing.GPA ?? '') : '',
+      passFail: existing ? (existing.PassFail ?? '') : '',
+      PassFail: existing ? (existing.PassFail ?? '') : '',
+      hasSavedMarks: !!existing
+    });
+  }
+
+  for(const code of Object.keys(markMap)){
+    if(seenCodes.has(code)) continue;
+    seenCodes.add(code);
+    const existing = markMap[code];
+    const sub = subjectMap[code] || {};
+
+    subjectsList.push({
+      subjectCode: code,
+      SubjectCode: code,
+      subjectName: sub.SubjectName || existing.SubjectName || code,
+      SubjectName: sub.SubjectName || existing.SubjectName || code,
+      fullMarks: sub.FullMarks || '',
+      examMarks: existing.ExamMarks ?? existing.Marks ?? '',
+      ExamMarks: existing.ExamMarks ?? existing.Marks ?? '',
+      assignmentMarks: existing.AssignmentMarks ?? '',
+      AssignmentMarks: existing.AssignmentMarks ?? '',
+      attendanceMarks: existing.AttendanceMarks ?? '',
+      AttendanceMarks: existing.AttendanceMarks ?? '',
+      marks: existing.Marks ?? '',
+      Marks: existing.Marks ?? '',
+      grade: existing.Grade ?? '',
+      Grade: existing.Grade ?? '',
+      gpa: existing.GPA ?? '',
+      GPA: existing.GPA ?? '',
+      passFail: existing.PassFail ?? '',
+      PassFail: existing.PassFail ?? '',
+      hasSavedMarks: true
+    });
+  }
+
+  const studentObj = {
+    roll: roll,
+    Roll: roll,
+    reg: reg,
+    RegistrationNumber: reg,
+    name: student.Name || student.StudentName || '',
+    StudentName: student.Name || student.StudentName || '',
+    session: student.SessionYear || '',
+    SessionYear: student.SessionYear || '',
+    year: student.CurrentYear || student.AcademicYear || '',
+    AcademicYear: student.CurrentYear || student.AcademicYear || ''
+  };
+
+  return {
+    success: true,
+    found: true,
+    student: studentObj,
+    exam: {
+      examId: exam.ExamID,
+      examName: exam.ExamName,
+      sessionYear: exam.SessionYear,
+      academicYear: exam.AcademicYear,
+      examType: exam.ExamType
+    },
+    subjects: subjectsList,
+    markDetails: subjectsList,
+    rows: [{ ...studentObj, markDetails: subjectsList }]
+  };
+}
+
 async function sbSaveIndividualMarks(data={}){
   const exam = (await sbGetExams({examId:data.examId || data.ExamID})).exams[0] || {};
   if(!exam) throw new Error('Exam not found');
   const roll = sbClean(data.roll || data.Roll);
   const reg = sbClean(data.reg || data.RegistrationNumber);
   if(!roll) throw new Error('Roll is required');
+  const student = (await sbFindStudent(roll || reg)) || {};
+
   let saved = 0;
+  let skipped = 0;
+
   if(Array.isArray(data.subjects)){
     for(const sub of data.subjects){
-      if(!sub.subjectCode) continue;
+      const code = sbClean(sub.subjectCode || sub.SubjectCode || sub.code);
+      if(!code) continue;
+
+      const rawExam = sbClean(sub.examMarks ?? sub.ExamMarks ?? sub.marks ?? sub.Marks);
+      const rawAssign = sbClean(sub.assignmentMarks ?? sub.AssignmentMarks);
+      const rawAtt = sbClean(sub.attendanceMarks ?? sub.AttendanceMarks);
+
+      const isInputEmpty = (rawExam === '' && rawAssign === '' && rawAtt === '');
+
+      // CRITICAL FIX: If input is empty:
+      // - Do not overwrite or delete previous saved marks!
+      // - Do not insert a dummy fail record!
+      if(isInputEmpty && !sub.forceDelete){
+        skipped++;
+        continue;
+      }
+
       await sbSaveMarks({
         examId: exam.ExamID,
-        subjectCode: sub.subjectCode,
+        subjectCode: code,
         marks: [{
           roll: roll,
-          reg: reg,
-          marks: sub.marks,
-          examMarks: sub.marks,
-          assignmentMarks: sub.assignmentMarks,
-          attendanceMarks: sub.attendanceMarks
+          reg: reg || student.RegistrationNumber,
+          name: student.Name || student.StudentName,
+          examMarks: rawExam,
+          assignmentMarks: rawAssign,
+          attendanceMarks: rawAtt,
+          marks: (rawExam !== '' && rawAssign === '' && rawAtt === '') ? rawExam : ''
         }]
       });
       saved++;
     }
   }
-  return {success:true, message: `Saved marks for ${saved} subjects`, saved};
+  return {
+    success: true,
+    message: `Marks saved for ${saved} subject(s).${skipped ? ' ' + skipped + ' empty subject(s) preserved without change.' : ''}`,
+    saved,
+    skipped
+  };
 }
 async function sbSaveMarks(data={}){
   const exam = (await sbGetExams({examId:data.examId || data.ExamID})).exams[0] || {};
@@ -2843,35 +3092,110 @@ async function sbGetMissingMarksList(p={}){
   });
   return {success:true, exam, subjects:groups, summary:{subjectCount:groups.length, assignedCount, enteredCount, missingCount}, markingSystem:{}, count:missingCount};
 }
+function sbIsIncourseAbsentRecord(m){
+  if(!m) return false;
+  const grade = sbClean(m.Grade).toUpperCase();
+  const pf = sbClean(m.PassFail).toUpperCase();
+  const isAbs = sbClean(m.IsAbsent || m.Absent).toUpperCase();
+  const examMark = sbClean(m.ExamMarks).toUpperCase();
+  const mark = sbClean(m.Marks).toUpperCase();
+
+  if(grade === 'AB' || pf === 'ABSENT' || pf.includes('ABSENT')) return true;
+  if(isAbs === 'YES' || isAbs === 'TRUE' || isAbs === '1') return true;
+  if(['A', 'AB', 'ABSENT', 'ABS'].includes(examMark)) return true;
+  if(['A', 'AB', 'ABSENT', 'ABS'].includes(mark)) return true;
+  return false;
+}
+
+function sbParseIncourseExamRecord(m){
+  if(!m) return { hasRecord:false, isAbsent:false, isPresent:false, displayMark:'', numericMark:NaN };
+  if(sbIsIncourseAbsentRecord(m)){
+    return { hasRecord:true, isAbsent:true, isPresent:false, displayMark:'A', numericMark:NaN };
+  }
+  const raw = sbClean(m.Marks !== '' && m.Marks !== undefined && m.Marks !== null ? m.Marks : m.ExamMarks);
+  if(raw === ''){
+    return { hasRecord:false, isAbsent:false, isPresent:false, displayMark:'', numericMark:NaN };
+  }
+  const up = raw.toUpperCase();
+  if(['A', 'AB', 'ABSENT', 'ABS'].includes(up)){
+    return { hasRecord:true, isAbsent:true, isPresent:false, displayMark:'A', numericMark:NaN };
+  }
+  const n = Number(raw.replace(/[^0-9.\-]/g,''));
+  if(Number.isFinite(n)){
+    return { hasRecord:true, isAbsent:false, isPresent:true, displayMark:String(Math.round(n)), numericMark:n };
+  }
+  return { hasRecord:true, isAbsent:false, isPresent:false, displayMark:raw, numericMark:NaN };
+}
+
 async function sbGetIncourseAverageSheet(p={}){
   const year = sbClean(p.academicYear || p.AcademicYear);
   const session = sbClean(p.studySessionYear || p.sessionYear || p.currentStudySession);
   if(!year) throw new Error('Academic Year required');
-  let subjects = (await sbGetSubjectsForExamCreate({academicYear:year, examType:'1st Incourse'})).subjects;
+  let subjects = (await sbGetSubjectsForExamCreate({academicYear:year, examType:'1st Incourse'})).subjects || [];
+  if(!subjects.length){
+    subjects = (await sbGetSubjects({academicYear:year})).subjects || [];
+  }
   const students = (await sbGetStudents({academicYear:year, sessionYear:session})).students;
   const assignedRows = await sbGetAssignedRowsForStudents(year, session, students);
   const assignedMap = sbAssignedCodesMap(assignedRows), hasAssignments = assignedRows.length > 0;
   const exams = (await sbGetExams({academicYear:year, sessionYear:session})).exams.filter(e=>e.ExamType==='1st Incourse' || e.ExamType==='2nd Incourse');
-  const firstIds = exams.filter(e=>e.ExamType==='1st Incourse').map(e=>e.ExamID);
-  const secondIds = exams.filter(e=>e.ExamType==='2nd Incourse').map(e=>e.ExamID);
-  const marks = (await sbAll('Marks')).filter(m=>firstIds.includes(sbClean(m.ExamID)) || secondIds.includes(sbClean(m.ExamID)));
+  const firstIds = exams.filter(e=>e.ExamType==='1st Incourse').map(e=>sbClean(e.ExamID));
+  const secondIds = exams.filter(e=>e.ExamType==='2nd Incourse').map(e=>sbClean(e.ExamID));
+  const marks = (await sbAll('Marks')).filter(m=>{
+    const eid = sbClean(m.ExamID);
+    return firstIds.includes(eid) || secondIds.includes(eid) || (!firstIds.length && sbClean(m.ExamType) === '1st Incourse') || (!secondIds.length && sbClean(m.ExamType) === '2nd Incourse');
+  });
   const attendanceRows = (await sbAll('AttendanceMarks')).filter(m=>(!year || sbClean(m.AcademicYear)===year) && (!session || [m.SessionYear,m.StudySessionYear].map(sbClean).includes(session)));
   const markMap = {};
-  marks.forEach(m=>{ const key=sbClean(m.Roll)+'|'+sbClean(m.SubjectCode); if(!markMap[key]) markMap[key]={}; if(firstIds.includes(sbClean(m.ExamID))) markMap[key].first = sbClean(m.Marks || m.ExamMarks); if(secondIds.includes(sbClean(m.ExamID))) markMap[key].second = sbClean(m.Marks || m.ExamMarks); });
-  const attMap = {}; attendanceRows.forEach(a=>{ const key=sbClean(a.Roll)+'|'+sbClean(a.SubjectCode || ''); attMap[key]=sbClean(a.AttendanceMarks || a.Marks); if(!a.SubjectCode) attMap[sbClean(a.Roll)+'|*']=sbClean(a.AttendanceMarks || a.Marks); });
+  marks.forEach(m=>{
+    const roll = sbClean(m.Roll);
+    const code = sbClean(m.SubjectCode);
+    if(!roll || !code) return;
+    const key = roll + '|' + code;
+    if(!markMap[key]) markMap[key] = {};
+    const eid = sbClean(m.ExamID);
+    const isFirst = firstIds.includes(eid) || (!firstIds.length && sbClean(m.ExamType) === '1st Incourse');
+    const isSecond = secondIds.includes(eid) || (!secondIds.length && sbClean(m.ExamType) === '2nd Incourse');
+    if(isFirst){
+      const old = markMap[key].first;
+      if(!old || Number(m.row_id || 0) >= Number(old.row_id || 0)) markMap[key].first = m;
+    }
+    if(isSecond){
+      const old = markMap[key].second;
+      if(!old || Number(m.row_id || 0) >= Number(old.row_id || 0)) markMap[key].second = m;
+    }
+  });
+  const attMap = {};
+  attendanceRows.forEach(a=>{
+    const key = sbClean(a.Roll) + '|' + sbClean(a.SubjectCode || '');
+    attMap[key] = sbClean(a.AttendanceMarks || a.Marks);
+    if(!a.SubjectCode) attMap[sbClean(a.Roll) + '|*'] = sbClean(a.AttendanceMarks || a.Marks);
+  });
   const out = students.map(st=>{
     const SubjectCells = {};
     subjects.forEach(sub=>{
       const assigned = sbStudentAssignedToSubject(st, sub.SubjectCode, assignedMap, hasAssignments);
       if(!assigned){ SubjectCells[sub.SubjectCode] = {assigned:false}; return; }
-      const mm = markMap[st.Roll+'|'+sub.SubjectCode] || {};
-      const n1 = mm.first === 'A' ? NaN : Number(mm.first);
-      const n2 = mm.second === 'A' ? NaN : Number(mm.second);
+      const mm = markMap[st.Roll + '|' + sub.SubjectCode] || {};
+      const r1 = sbParseIncourseExamRecord(mm.first);
+      const r2 = sbParseIncourseExamRecord(mm.second);
+
       let avg = '';
-      if(Number.isFinite(n1) && Number.isFinite(n2)) avg = sbRoundMarkValue((n1+n2)/2);
-      else if(Number.isFinite(n1)) avg = sbRoundMarkValue(n1);
-      else if(Number.isFinite(n2)) avg = sbRoundMarkValue(n2);
-      SubjectCells[sub.SubjectCode] = {assigned:true, first:sbRoundMarkValue(mm.first || ''), second:sbRoundMarkValue(mm.second || ''), average:avg, attendance:sbRoundMarkValue(attMap[st.Roll+'|'+sub.SubjectCode] || attMap[st.Roll+'|*'] || '')};
+      if(r1.isAbsent || r2.isAbsent){
+        avg = 'A';
+      }else if(r1.isPresent && r2.isPresent){
+        avg = sbRoundMarkValue((r1.numericMark + r2.numericMark) / 2);
+      }else{
+        avg = '';
+      }
+
+      SubjectCells[sub.SubjectCode] = {
+        assigned: true,
+        first: r1.displayMark,
+        second: r2.displayMark,
+        average: avg,
+        attendance: sbRoundMarkValue(attMap[st.Roll + '|' + sub.SubjectCode] || attMap[st.Roll + '|*'] || '')
+      };
     });
     return Object.assign({}, st, {SubjectCells});
   });
@@ -3415,6 +3739,7 @@ async function sbGeoApiGet(action, params={}){
     case 'getPublishedExamSessions': return sbGetPublishedExamSessions(params);
     case 'getPublishedExamsForStudent': return sbGetPublishedExamsForStudent(params);
     case 'getStudentResultFast': case 'getResult': case 'getExamResultStudent': return sbGetStudentResultFast(params);
+    case 'getIndividualStudentMarks': case 'getStudentMarksForIndividualEntry': return sbGetIndividualStudentMarks(params);
     case 'getEasyResultChoices': case 'getResultPanelChoices': case 'getResultExamChoices': return sbGetEasyResultChoices(params);
     case 'getEasyResultList': case 'getEasyResultListSafe': case 'getResultPanelData': case 'getResultPanelDataSafe': case 'getExamResultSummaryLists': return sbGetEasyResultList(params);
     case 'getAdmitPublishStatus': return sbGetAdmitPublishStatus(params);
@@ -3432,7 +3757,7 @@ async function sbGeoApiGet(action, params={}){
     case 'getPreloadData': return {success:true, disabled:true, message:'Preload/cache disabled. Use page-wise direct Supabase loading.'};
     case 'refreshAllResultSummaryFromMarks': return sbRefreshResultSummaryFromMarks(params);
     case 'listMarksBackupSheets': return {success:true, sheets:[]};
-    case 'hardRemoveOldSubjects': case 'cleanStudentSubjectsByLiveSubjects': return sbGenericSuccess('Supabase live subject data checked.');
+    case 'hardRemoveOldSubjects': case 'cleanStudentSubjectsByLiveSubjects': case 'forceMarksSheetOldFormat': case 'restoreMarksFromBackup': case 'restoreMarksOldSubjectWiseFromBackup': return sbGenericSuccess('Supabase live subject data checked.');
     case 'getSafeSheetSetupStatus': return {success:true, supabase:true, message:'Supabase connection active'};
     default: return {success:false, message:'Supabase adapter: action not implemented yet: '+action};
   }

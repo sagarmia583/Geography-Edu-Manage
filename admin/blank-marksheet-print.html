@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blank Marksheet Print - Department of Geography & Environment</title>
+  <link rel="stylesheet" href="../assets/site.css?v=atlas_20261013">
+  <style>
+    /* Blank Marksheet Specific Web & Print Styles */
+    :root {
+      --sheet-border: #1e293b;
+      --sheet-cell-pad: 8px 6px;
+    }
+
+    .marksheet-mode-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 10px 14px;
+      background: #f1f5f9;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      align-items: center;
+    }
+    .mode-pill-btn {
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: 1.5px solid #006b3c;
+      background: #fff;
+      color: #006b3c;
+      font-weight: 800;
+      font-size: 13.5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s ease;
+    }
+    .mode-pill-btn.active, .mode-pill-btn:hover {
+      background: #006b3c;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0, 107, 60, 0.25);
+    }
+
+    .format-options-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    .format-options-bar label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #334155;
+    }
+
+    /* Print Document Container */
+    #printArea {
+      margin-top: 20px;
+      background: #fff;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+      border: 1px solid #e2e8f0;
+      min-height: 400px;
+    }
+
+    /* Blank Sheet Page Layout */
+    .blank-sheet-page {
+      background: #fff;
+      color: #000;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      box-sizing: border-box;
+      margin-bottom: 30px;
+    }
+    .blank-sheet-page:not(:last-child) {
+      page-break-after: always;
+      break-after: page;
+    }
+
+    /* Sheet Header */
+    .sheet-header {
+      text-align: center;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .sheet-header h1.college-title-en {
+      font-size: 21px;
+      font-weight: 900;
+      margin: 0;
+      color: #000;
+      letter-spacing: 0.8px;
+      line-height: 1.25;
+      text-transform: uppercase;
+    }
+    .sheet-header h3.dept-title-en {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 4px 0 0 0;
+      color: #1e293b;
+      line-height: 1.3;
+    }
+    .sheet-header .sheet-badge-title {
+      display: inline-block;
+      margin-top: 7px;
+      padding: 4px 22px;
+      border: 1.5px solid #000;
+      border-radius: 4px;
+      font-weight: 900;
+      font-size: 13.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      background: #f8fafc;
+    }
+
+    /* Meta Info Grid */
+    .sheet-meta-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1.1fr 1fr;
+      gap: 6px 14px;
+      font-size: 12.5px;
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      border: 1px solid #000;
+      background: #fafafa;
+      border-radius: 3px;
+    }
+    .meta-item {
+      display: flex;
+      gap: 6px;
+    }
+    .meta-label {
+      font-weight: 800;
+      color: #000;
+      white-space: nowrap;
+    }
+    .meta-value {
+      color: #111;
+      font-weight: 600;
+    }
+
+    /* Table Styles */
+    .blank-sheet-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 11.5px;
+      color: #000;
+    }
+    .blank-sheet-table th, .blank-sheet-table td {
+      border: 1.2px solid #000;
+      padding: 7px 5px;
+      text-align: center;
+      vertical-align: middle;
+      box-sizing: border-box;
+      word-break: break-word;
+    }
+    .blank-sheet-table thead th {
+      background: #006b3c;
+      color: #fff;
+      font-weight: 800;
+      padding: 8px 4px;
+      border: 1.2px solid #004d2b;
+    }
+    .blank-sheet-table thead th small {
+      color: #e2e8f0;
+      font-weight: normal;
+    }
+    .blank-sheet-table thead th.sub-group-head {
+      background: #00542f;
+      font-weight: 900;
+    }
+    .blank-sheet-table tbody tr {
+      height: 33px; /* Comfortable height for examiners to write marks */
+    }
+    .blank-sheet-table tbody tr:nth-child(even) {
+      background: #fbfdff;
+    }
+    .blank-sheet-table td.name-cell {
+      text-align: left;
+      font-weight: 700;
+      padding-left: 8px;
+    }
+    .blank-sheet-table td.sl-cell {
+      font-weight: 800;
+      width: 38px;
+    }
+    .blank-sheet-table td.roll-cell, .blank-sheet-table td.reg-cell {
+      font-family: Arial, sans-serif;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .blank-sheet-table .blank-box {
+      min-height: 24px;
+      display: block;
+    }
+    .blank-sheet-table .not-applicable {
+      color: #888;
+      font-weight: 900;
+    }
+
+    /* Summary Bar below table */
+    .sheet-summary-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding: 7px 12px;
+      border: 1px dashed #444;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: #fafafa;
+    }
+
+    /* Signatures Section */
+    .sheet-signatures {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 36px;
+      padding: 0 10px;
+      font-size: 11.5px;
+      font-weight: 800;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .sign-col {
+      text-align: center;
+      width: 29%;
+    }
+    .sign-line {
+      border-top: 1.5px solid #000;
+      margin-bottom: 5px;
+    }
+    .sign-title {
+      color: #000;
+      line-height: 1.3;
+    }
+    .sign-date-placeholder {
+      font-size: 10px;
+      color: #444;
+      margin-top: 3px;
+      font-weight: normal;
+    }
+
+    /* Master Broadsheet Grid specific styles */
+    .broadsheet-table {
+      font-size: 10.5px;
+    }
+    .broadsheet-table th, .broadsheet-table td {
+      padding: 5px 3px;
+    }
+    .broadsheet-table th.sub-head {
+      font-size: 9.5px;
+      line-height: 1.2;
+      vertical-align: bottom;
+    }
+    .broadsheet-sub-code {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 900;
+    }
+    .broadsheet-sub-marks {
+      display: block;
+      font-size: 8.5px;
+      color: #e2e8f0;
+      font-weight: normal;
+    }
+
+    /* Responsive & Print Media */
+    @media print {
+      html, body {
+        background: #fff !important;
+        color: #000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+      }
+      .no-print, .topbar, .panel-sidebar, .panel-mobile-tabs, .mobile-menu, .filter-row, .marksheet-mode-selector, .academic-banner, .format-options-bar {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        overflow: hidden !important;
+      }
+      .panel-layout {
+        display: block !important;
+        grid-template-columns: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        background: transparent !important;
+      }
+      .panel-main {
+        margin: 0 !important;
+        margin-left: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
+        position: static !important;
+      }
+      #printArea {
+        display: block !important;
+        visibility: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+        min-height: 0 !important;
+        height: auto !important;
+      }
+      .blank-sheet-page {
+        display: block !important;
+        visibility: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        page-break-after: always !important;
+        break-after: page !important;
+      }
+      .blank-sheet-page:last-child {
+        page-break-after: auto !important;
+        break-after: auto !important;
+      }
+      .blank-sheet-table thead th {
+        background: #f1f5f9 !important;
+        color: #000 !important;
+        border: 1.2px solid #000 !important;
+      }
+      .blank-sheet-table thead th small {
+        color: #333 !important;
+      }
+      .blank-sheet-table thead th.sub-group-head {
+        background: #e2e8f0 !important;
+        color: #000 !important;
+      }
+      .broadsheet-sub-marks {
+        color: #333 !important;
+      }
+      .blank-sheet-table thead {
+        display: table-header-group !important;
+      }
+      .blank-sheet-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .sheet-signatures {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .page-break {
+        page-break-after: always !important;
+        break-after: page !important;
+      }
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 8mm 6mm 8mm 6mm;
+    }
+  </style>
+</head>
+<body class="print-orientation-portrait">
+  <!-- Topbar -->
+  <header class="topbar no-print">
+    <div class="inner">
+      <a class="brand" href="../admin/index.html">
+        <span class="brand-logo">🖨️</span>
+        <span>Blank Marksheet Print</span>
+      </a>
+      <button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu></button>
+      <nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav>
+    </div>
+  </header>
+
+  <div class="panel-layout">
+    <!-- Sidebar -->
+    <aside class="panel-sidebar no-print">
+      <div class="panel-user">
+        <div class="avatar">🖨️</div>
+        <h3>Academic Admin</h3>
+      </div>
+      <nav class="panel-menu">
+        <a href="index.html">🏠 Dashboard</a>
+        <a href="student-management.html">👥 Student Management</a>
+        <a href="actual-student-management.html">👤 Actual Students</a>
+        <a href="exam-create.html">📝 Create/Edit Exam</a>
+        <a href="exam-schedule.html">🗓️ Exam Schedule</a>
+        <a href="attendance-sheet.html">📄 Attendance Sheet</a>
+        <a href="seat-plan.html">🪑 Seat Plan</a>
+        <a href="student-subject-entry.html">📌 Student Subjects</a>
+        <a href="marks-entry.html">✍️ Subject Marks Entry</a>
+        <a class="active" href="blank-marksheet-print.html">🖨️ Blank Marksheet</a>
+        <a href="individual-marks-entry.html">👤 Individual Marks Entry</a>
+        <a href="missing-marks-list.html">⚠️ Missing Marks Entry</a>
+        <a href="incourse-result.html">📊 Incourse Average</a>
+        <a href="attendance-marks-entry.html">✅ Attendance Marks</a>
+        <a href="result-management.html">📊 Result Options</a>
+        <a href="admit-card-print.html">🎫 Admit Card</a>
+        <a href="exam-block-management.html">🚫 Exam Block</a>
+        <a href="result-upload.html">⬆️ Final Result Import</a>
+        <a href="library-management.html">📚 Seminar Library</a>
+        <a href="seminar-fee.html">💰 Seminar Fee Management</a>
+        <a href="notice-management.html">📢 Notice Management</a>
+        <a href="../student/index.html">🎓 Student Panel</a>
+        <button type="button" class="btn red small-btn logout-sidebar-btn" data-logout style="margin-top:10px;width:100%;cursor:pointer;font-weight:bold;padding:9px;border:none;border-radius:10px;background:#dc2626;color:#fff">🚪 Logout Admin</button>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="panel-main">
+      <div class="panel-mobile-tabs no-print">
+        <a href="index.html">Dashboard</a>
+        <a href="exam-create.html">Exam</a>
+        <a href="attendance-sheet.html">Attendance</a>
+        <a href="marks-entry.html">Marks Entry</a>
+        <a class="active" href="blank-marksheet-print.html">Blank Marksheet</a>
+        <a href="#" data-logout style="color:#ef4444;font-weight:bold">Logout</a>
+      </div>
+
+      <section class="academic-banner no-print">
+        <h1>Blank Marksheet / Evaluation Sheet Print</h1>
+        <p>কুমিদিনী সরকারি কলেজ, টাঙ্গাইল • ভূগোল ও পরিবেশ বিভাগ | বিষয়ভিত্তিক ও সকল বিষয়ের সম্মিলিত খালি নম্বর ফর্দ প্রিন্ট করুন।</p>
+        <div class="right-actions" style="margin-top:10px">
+          <a class="btn ghost" href="marks-entry.html">✍️ Subject Marks Entry</a>
+          <a class="btn ghost" href="individual-marks-entry.html">👤 Individual Entry</a>
+          <button id="quickPrintBtn" class="btn blue" type="button" onclick="handlePrintSheet()">🖨️ Print Sheet (A4)</button>
+          <button id="downloadCsvBtn" class="btn green" type="button" onclick="downloadBlankCsv()">📥 Download Blank CSV</button>
+        </div>
+      </section>
+
+      <!-- Filter Panel -->
+      <div class="panel no-print">
+        <!-- Print Mode Selector Tabs -->
+        <div class="marksheet-mode-selector">
+          <span style="font-weight:900;color:#0f5238">Print Mode:</span>
+          <button type="button" class="mode-pill-btn active" id="modeSubjectWiseBtn" onclick="setPrintMode('subject-wise')">
+            <span>📄</span> Subject-wise Sheet (বিষয়ভিত্তিক)
+          </button>
+          <button type="button" class="mode-pill-btn" id="modeExamWiseBtn" onclick="setPrintMode('exam-wise')">
+            <span>📑</span> Exam-wise Master Broadsheet (সকল বিষয়)
+          </button>
+          <button type="button" class="mode-pill-btn" id="modeBatchAllBtn" onclick="setPrintMode('batch-all')">
+            <span>🖨️</span> Batch Print All Subjects (এক ক্লিকে সকল বিষয়)
+          </button>
+        </div>
+
+        <div class="filter-row" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto;">
+          <label class="field">
+            <span class="label">Session Year</span>
+            <select id="sessionYear" class="input"></select>
+          </label>
+          <label class="field">
+            <span class="label">Academic Year</span>
+            <select id="academicYear" class="input"></select>
+          </label>
+          <label class="field">
+            <span class="label">Exam Name</span>
+            <select id="examSelect" class="input"></select>
+          </label>
+          <label class="field" id="subjectFilterField">
+            <span class="label">Subject / Course</span>
+            <select id="subjectSelect" class="input"></select>
+          </label>
+          <label class="field">
+            <span class="label">Sort By</span>
+            <select id="sortField" class="input">
+              <option value="roll">Roll No</option>
+              <option value="reg">Reg No</option>
+              <option value="name">Student Name</option>
+              <option value="session">Session</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="label">Order</span>
+            <select id="sortDir" class="input">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </label>
+          <div style="display:flex;align-items:flex-end">
+            <button id="loadSheetBtn" class="btn primary" type="button" style="height:42px;width:100%" onclick="loadBlankMarksheet()">Load Marksheet</button>
+          </div>
+        </div>
+
+        <!-- Extra Display and Layout Options -->
+        <div class="format-options-bar">
+          <span style="font-weight:900;color:#064e3b">Marksheet Columns:</span>
+          <span class="badge blue" style="font-size:12.5px;padding:5px 12px;background:#e0f2fe;color:#0369a1;border-radius:6px;font-weight:700">
+            SL • Roll No • Reg No • Student Name • Session • Written / Test Exam
+          </span>
+          <label style="margin-left:auto">
+            <span>Extra Blank Rows:</span>
+            <select id="extraBlankRowsSelect" class="input" style="width:75px;height:30px;padding:2px 8px;font-size:12px" onchange="handleLayoutOptionChange()">
+              <option value="0">0</option>
+              <option value="3" selected>3 rows</option>
+              <option value="5">5 rows</option>
+              <option value="10">10 rows</option>
+            </select>
+          </label>
+          <label>
+            <span>Student Filter:</span>
+            <select id="studentTypeFilter" class="input" style="width:115px;height:30px;padding:2px 8px;font-size:12px" onchange="handleLayoutOptionChange()">
+              <option value="all" selected>All Students</option>
+              <option value="regular">Regular Only</option>
+              <option value="irregular">Irregular/Imp</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="statusBox" class="status info hide" style="margin-top:12px"></div>
+      </div>
+
+      <!-- Printable Area -->
+      <section id="printArea">
+        <div class="empty" style="text-align:center;padding:50px 20px;color:#64748b">
+          <div style="font-size:48px;margin-bottom:12px">🖨️</div>
+          <h3>Select Session, Academic Year, and Exam above to generate blank marksheet.</h3>
+          <p>বিষয়ভিত্তিক খালি নম্বর ফর্দ অথবা সকল বিষয়ের সম্মিলিত মাস্টার ব্রডশিট প্রিন্ট করার জন্য উপরের অপশনগুলো নির্বাচন করুন।</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/geography-api.js"></script>
+  <script src="../assets/site.js?v=1789598642830"></script>
+  <script>
+    const AUTH_USER = requireAuth('admin');
+    attachLogout();
+
+    // DOM Elements
+    const sessionEl = document.getElementById('sessionYear');
+    const yearEl = document.getElementById('academicYear');
+    const examSelect = document.getElementById('examSelect');
+    const subjectSelect = document.getElementById('subjectSelect');
+    const subjectFilterField = document.getElementById('subjectFilterField');
+    const sortFieldEl = document.getElementById('sortField');
+    const sortDirEl = document.getElementById('sortDir');
+    const statusBox = document.getElementById('statusBox');
+    const printArea = document.getElementById('printArea');
+    const extraRowsEl = document.getElementById('extraBlankRowsSelect');
+    const studentTypeFilterEl = document.getElementById('studentTypeFilter');
+
+    // State Variables
+    let currentMode = 'subject-wise'; // 'subject-wise' | 'exam-wise' | 'batch-all'
+    let allExams = [];
+    let filteredExams = [];
+    let selectedExam = null;
+    let scheduledSubjects = [];
+    let currentStudents = [];
+    let loadedDataCache = null;
+
+    // Helper: Escaping HTML
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    // Helper: Display Name for Exam
+    function displayName(e) {
+      return e.DisplayName || e.ExamName || [e.SessionYear, e.AcademicYear, e.ExamType].filter(Boolean).join(' - ') || e.ExamID;
+    }
+
+    // Helper: Format Date
+    function formatDate(d) {
+      if(!d) return '___________';
+      const date = new Date(d);
+      if(!isNaN(date.getTime())){
+        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+      }
+      return d;
+    }
+
+    // Dynamic Mark Config Extractor: Reads exact configured marks from Exam & Schedule
+    function getExamMarkConfig(exam, schedule, subject, requestedLayout) {
+      exam = exam || {};
+      schedule = schedule || {};
+      subject = subject || {};
+
+      const examType = String(exam.ExamType || schedule.ExamType || '').trim();
+      const kind = typeof sbExamKind === 'function' ? sbExamKind(examType) : (examType.toLowerCase().includes('test') ? 'test' : examType.toLowerCase().includes('incourse') ? 'incourse' : 'other');
+      const isICT = String(subject.SubjectCode || schedule.SubjectCode || '').trim() === '219903';
+
+      // Check if schedule is specifically for this exam
+      const isDirectSchedule = (schedule.ExamID && exam.ExamID && String(schedule.ExamID).trim() === String(exam.ExamID).trim()) ||
+                               (!schedule.ExamID && schedule.ExamType && String(schedule.ExamType).trim() === examType);
+
+      // 1. If user explicitly chose "single" layout:
+      if (requestedLayout === 'single') {
+        let full = 100;
+        if (kind === 'test') {
+          full = Number(schedule.SubjectTestMarks || exam.TestExamMarks || subject.FullMarks || (isICT ? 60 : 80));
+        } else if (kind === 'incourse') {
+          full = Number((isDirectSchedule && schedule.SubjectExamMarks) || exam.ExamComponentMarks || (isICT ? 8 : 15)) +
+                 Number((isDirectSchedule && schedule.SubjectAssignmentMarks) || exam.AssignmentMarks || 0) +
+                 Number((isDirectSchedule && schedule.SubjectAttendanceMarks) || exam.AttendanceMarks || 0);
+        } else {
+          full = Number(schedule.SubjectFullMarks || subject.FullMarks || (isICT ? 75 : 100));
+        }
+        if (!full || full <= 0) full = isICT ? 75 : 100;
+        return {
+          kind,
+          fullMarks: full,
+          components: [
+            { key: 'obtained', title: 'Obtained Marks (প্রাপ্ত নম্বর)', shortTitle: 'Obtained Marks', max: full, width: '130px' }
+          ],
+          totalMax: full,
+          hasInWords: true
+        };
+      }
+
+      // 2. If user explicitly chose "full-incourse":
+      if (requestedLayout === 'full-incourse') {
+        const written = Number(schedule.SubjectExamMarks || exam.ExamComponentMarks || (isICT ? 8 : 15));
+        const assign = Number(schedule.SubjectAssignmentMarks || exam.AssignmentMarks || 5);
+        const attend = Number(schedule.SubjectAttendanceMarks || exam.AttendanceMarks || 5);
+        const total = written + assign + attend;
+        return {
+          kind: 'incourse',
+          fullMarks: total,
+          components: [
+            { key: 'written', title: 'Written Exam (লিখিত পরীক্ষা)', shortTitle: 'Written (লিখিত)', max: written, width: '95px' },
+            { key: 'assignment', title: 'Assignment (অ্যাসাইনমেন্ট)', shortTitle: 'Assign. (অ্যাসাইন.)', max: assign, width: '90px' },
+            { key: 'attendance', title: 'Attendance (উপস্থিতি)', shortTitle: 'Attend. (উপস্থিতি)', max: attend, width: '90px' }
+          ],
+          totalMax: total,
+          hasInWords: false
+        };
+      }
+
+      // 3. DEFAULT: AUTO (Exam Configured Components - Only show columns configured when exam was created)
+      if (kind === 'test') {
+        // TEST EXAMINATION (নির্বাচনী পরীক্ষা)
+        let testMarks = 0;
+        if (isDirectSchedule && Number(schedule.SubjectTestMarks) > 0) {
+          testMarks = Number(schedule.SubjectTestMarks);
+        } else if (isDirectSchedule && Number(schedule.SubjectExamMarks) > 0) {
+          testMarks = Number(schedule.SubjectExamMarks);
+        } else if (Number(exam.TestExamMarks) > 0) {
+          testMarks = Number(exam.TestExamMarks);
+        } else if (Number(subject.FullMarks) > 0) {
+          testMarks = Number(subject.FullMarks);
+        } else {
+          testMarks = isICT ? 60 : 80;
+        }
+
+        return {
+          kind: 'test',
+          fullMarks: testMarks,
+          components: [
+            { key: 'test', title: 'Written / Test Exam (লিখিত পরীক্ষা)', shortTitle: 'Written Exam (লিখিত)', max: testMarks, width: '140px' }
+          ],
+          totalMax: testMarks,
+          hasInWords: true
+        };
+      }
+
+      if (kind === 'incourse') {
+        // INCOURSE EXAMINATION
+        let written = 0;
+        let assign = 0;
+        let attend = 0;
+
+        if (isDirectSchedule && Number(schedule.SubjectExamMarks) > 0) {
+          written = Number(schedule.SubjectExamMarks);
+        } else if (Number(exam.ExamComponentMarks) > 0) {
+          written = Number(exam.ExamComponentMarks);
+        } else {
+          written = isICT ? 8 : 15;
+        }
+
+        if (isDirectSchedule && Number(schedule.SubjectAssignmentMarks) > 0) {
+          assign = Number(schedule.SubjectAssignmentMarks);
+        } else if (Number(exam.AssignmentMarks) > 0) {
+          assign = Number(exam.AssignmentMarks);
+        }
+
+        if (isDirectSchedule && Number(schedule.SubjectAttendanceMarks) > 0) {
+          attend = Number(schedule.SubjectAttendanceMarks);
+        } else if (Number(exam.AttendanceMarks) > 0) {
+          attend = Number(exam.AttendanceMarks);
+        }
+
+        const components = [];
+        if (written > 0) {
+          components.push({
+            key: 'written',
+            title: 'Written Exam (লিখিত পরীক্ষা)',
+            shortTitle: 'Written (লিখিত)',
+            max: written,
+            width: '95px'
+          });
+        }
+        if (assign > 0) {
+          components.push({
+            key: 'assignment',
+            title: 'Assignment (অ্যাসাইনমেন্ট)',
+            shortTitle: 'Assign. (অ্যাসাইন.)',
+            max: assign,
+            width: '90px'
+          });
+        }
+        if (attend > 0) {
+          components.push({
+            key: 'attendance',
+            title: 'Attendance (উপস্থিতি)',
+            shortTitle: 'Attend. (উপস্থিতি)',
+            max: attend,
+            width: '90px'
+          });
+        }
+
+        if (components.length === 0) {
+          components.push({
+            key: 'written',
+            title: 'Exam Marks (পরীক্ষার নম্বর)',
+            shortTitle: 'Exam Marks',
+            max: 15,
+            width: '105px'
+          });
+        }
+
+        const total = components.reduce((s, c) => s + c.max, 0);
+
+        return {
+          kind: 'incourse',
+          fullMarks: total,
+          components,
+          totalMax: total,
+          hasInWords: components.length === 1
+        };
+      }
+
+      // 4. OTHER / FINAL / PRACTICAL
+      let full = Number(schedule.SubjectFullMarks || subject.FullMarks || (isICT ? 75 : 100));
+      return {
+        kind: 'other',
+        fullMarks: full,
+        components: [
+          { key: 'exam', title: 'Obtained Marks (প্রাপ্ত নম্বর)', shortTitle: 'Obtained Marks', max: full, width: '130px' }
+        ],
+        totalMax: full,
+        hasInWords: true
+      };
+    }
+
+    // Initialize Page
+    async function init() {
+      try {
+        fillSelect(yearEl, currentAcademicYears(), 'Select year');
+        const res = await geoApiGet('getExams', { _t: Date.now() });
+        allExams = Array.isArray(res.exams) ? res.exams : [];
+        fillSessionSelectFromExams(sessionEl, allExams, 'Select session');
+        
+        // Auto select first session and year if available
+        if (sessionEl.options.length > 1) sessionEl.selectedIndex = 1;
+        if (yearEl.options.length > 1) yearEl.selectedIndex = 1;
+        
+        loadFilteredExams();
+
+        // Check URL Params
+        const urlExamId = getParam('examId');
+        if (urlExamId) {
+          const ex = allExams.find(e => e.ExamID === urlExamId);
+          if (ex) {
+            sessionEl.value = ex.SessionYear || '';
+            yearEl.value = ex.AcademicYear || '';
+            loadFilteredExams();
+            examSelect.value = urlExamId;
+            await loadExamSubjects();
+            const urlSubject = getParam('subjectCode');
+            if (urlSubject && subjectSelect) subjectSelect.value = urlSubject;
+            loadBlankMarksheet();
+          }
+        }
+      } catch (err) {
+        showStatus(statusBox, 'err', err.message || 'Initialization failed.');
+      }
+    }
+
+    // Load Filtered Exams when Session or Academic Year changes
+    function loadFilteredExams() {
+      const session = sessionEl.value.trim();
+      const year = yearEl.value.trim();
+      if (!session || !year) {
+        examSelect.innerHTML = '<option value="">Select exam</option>';
+        subjectSelect.innerHTML = '<option value="">Select subject</option>';
+        return;
+      }
+
+      filteredExams = allExams.filter(e => 
+        String(e.SessionYear || '').trim() === session && 
+        String(e.AcademicYear || '').trim() === year
+      );
+
+      fillSelect(examSelect, filteredExams.map(e => ({ value: e.ExamID, label: displayName(e) })), 'Select exam');
+
+      if (filteredExams.length > 0) {
+        examSelect.selectedIndex = 1;
+        loadExamSubjects();
+      } else {
+        subjectSelect.innerHTML = '<option value="">Select subject</option>';
+        showStatus(statusBox, 'err', 'No exam found for selected Session + Academic Year.');
+      }
+    }
+
+    // Load Subjects for the selected Exam
+    async function loadExamSubjects() {
+      const examId = examSelect.value;
+      if (!examId) {
+        subjectSelect.innerHTML = '<option value="">Select subject</option>';
+        scheduledSubjects = [];
+        return;
+      }
+
+      selectedExam = allExams.find(e => e.ExamID === examId) || null;
+
+      try {
+        const schedRes = await geoApiGet('getExamSchedule', {
+          examId,
+          sessionYear: sessionEl.value,
+          academicYear: yearEl.value,
+          _t: Date.now()
+        });
+        scheduledSubjects = Array.isArray(schedRes.schedules) ? schedRes.schedules : [];
+        
+        // If empty schedules, fetch active subjects for this academic year as fallback
+        if (!scheduledSubjects.length) {
+          const subRes = await geoApiGet('getSubjects', { academicYear: yearEl.value, _t: Date.now() });
+          scheduledSubjects = (subRes.subjects || []).map(s => ({
+            SubjectCode: s.SubjectCode,
+            SubjectName: s.SubjectName,
+            SubjectType: s.SubjectType,
+            FullMarks: s.FullMarks || (s.SubjectCode === '219903' ? 75 : 100),
+            ExamDate: ''
+          }));
+        }
+
+        fillSelect(subjectSelect, scheduledSubjects.map(s => {
+          const markCfg = getExamMarkConfig(selectedExam, s, s, 'auto');
+          return {
+            value: s.SubjectCode,
+            label: `${s.SubjectCode} - ${s.SubjectName} (${markCfg.fullMarks} Marks)`
+          };
+        }), 'Select subject');
+
+        if (scheduledSubjects.length > 0) {
+          subjectSelect.selectedIndex = 1;
+          loadBlankMarksheet();
+        }
+      } catch (err) {
+        console.error('Error loading subjects:', err);
+      }
+    }
+
+    // Dynamic Page Orientation Style for In-Page Print (Ctrl+P)
+    function updatePageOrientationStyle(mode) {
+      let styleEl = document.getElementById('dynamicPageOrientationStyle');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'dynamicPageOrientationStyle';
+        document.head.appendChild(styleEl);
+      }
+      if (mode === 'exam-wise') {
+        styleEl.textContent = `@page { size: A4 landscape; margin: 6mm 5mm 6mm 5mm; }`;
+      } else {
+        styleEl.textContent = `@page { size: A4 portrait; margin: 8mm 6mm 8mm 6mm; }`;
+      }
+    }
+
+    // Set Print Mode
+    function setPrintMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-pill-btn').forEach(btn => btn.classList.remove('active'));
+      updatePageOrientationStyle(mode);
+      
+      if (mode === 'subject-wise') {
+        document.getElementById('modeSubjectWiseBtn').classList.add('active');
+        subjectFilterField.style.display = 'block';
+        document.body.classList.remove('print-orientation-landscape');
+        document.body.classList.add('print-orientation-portrait');
+      } else if (mode === 'exam-wise') {
+        document.getElementById('modeExamWiseBtn').classList.add('active');
+        subjectFilterField.style.display = 'none';
+        document.body.classList.remove('print-orientation-portrait');
+        document.body.classList.add('print-orientation-landscape');
+      } else if (mode === 'batch-all') {
+        document.getElementById('modeBatchAllBtn').classList.add('active');
+        subjectFilterField.style.display = 'none';
+        document.body.classList.remove('print-orientation-landscape');
+        document.body.classList.add('print-orientation-portrait');
+      }
+
+      if (examSelect.value) {
+        loadBlankMarksheet();
+      }
+    }
+
+    // Handle Format option change (radio button or blank rows)
+    function handleLayoutOptionChange() {
+      if (loadedDataCache) {
+        renderCurrentModeSheet();
+      }
+    }
+
+    // Sort students list helper
+    function sortStudents(list) {
+      const field = sortFieldEl.value;
+      const dir = sortDirEl.value === 'desc' ? -1 : 1;
+      return [...list].sort((a, b) => {
+        let va = String(a[field === 'roll' ? 'Roll' : field === 'reg' ? 'RegistrationNumber' : field === 'name' ? 'Name' : 'SessionYear'] || '').trim();
+        let vb = String(b[field === 'roll' ? 'Roll' : field === 'reg' ? 'RegistrationNumber' : field === 'name' ? 'Name' : 'SessionYear'] || '').trim();
+        if (field === 'roll' || field === 'reg') {
+          const na = Number(va), nb = Number(vb);
+          if (!isNaN(na) && !isNaN(nb)) return (na - nb) * dir;
+        }
+        return va.localeCompare(vb, undefined, { numeric: true }) * dir;
+      });
+    }
+
+    // Filter students by type (Regular vs Irregular)
+    function filterStudentsByType(list) {
+      const filter = studentTypeFilterEl.value;
+      if (filter === 'all') return list;
+      return list.filter(st => {
+        const type = String(st.StudentType || 'Regular').trim().toLowerCase();
+        if (filter === 'regular') return type === 'regular';
+        return type !== 'regular';
+      });
+    }
+
+    // Load Data and Render Sheet
+    async function loadBlankMarksheet() {
+      const examId = examSelect.value;
+      if (!examId) {
+        showStatus(statusBox, 'err', 'Please select an Exam.');
+        return;
+      }
+
+      selectedExam = allExams.find(e => e.ExamID === examId) || null;
+      showStatus(statusBox, 'info', 'Loading student roster and examination schedule...');
+
+      try {
+        if (currentMode === 'subject-wise') {
+          const subjectCode = subjectSelect.value;
+          if (!subjectCode) {
+            showStatus(statusBox, 'err', 'Please select a Subject for Subject-wise mode.');
+            return;
+          }
+
+          const res = await geoApiGet('getMarksEntryData', {
+            examId,
+            subjectCode,
+            studySessionYear: sessionEl.value,
+            academicYear: yearEl.value,
+            _t: Date.now()
+          });
+
+          loadedDataCache = {
+            mode: 'subject-wise',
+            exam: res.exam || selectedExam,
+            subject: res.subject || {},
+            schedule: res.schedule || {},
+            students: res.students || []
+          };
+
+          renderCurrentModeSheet();
+          showStatus(statusBox, 'ok', `Subject marksheet loaded: ${res.students.length} students enrolled.`);
+        } else if (currentMode === 'exam-wise' || currentMode === 'batch-all') {
+          const res = await geoApiGet('getFullAttendanceData', {
+            examId,
+            studySessionYear: sessionEl.value,
+            academicYear: yearEl.value,
+            _t: Date.now()
+          });
+
+          loadedDataCache = {
+            mode: currentMode,
+            exam: res.exam || selectedExam,
+            schedules: res.schedules || res.subjects || scheduledSubjects,
+            students: res.students || []
+          };
+
+          renderCurrentModeSheet();
+          showStatus(statusBox, 'ok', `Exam data loaded: ${res.students.length} students, ${loadedDataCache.schedules.length} subjects.`);
+        }
+      } catch (err) {
+        showStatus(statusBox, 'err', err.message || 'Failed to load marksheet data.');
+      }
+    }
+
+    // Render Current Mode Sheet from Cache
+    function renderCurrentModeSheet() {
+      if (!loadedDataCache) return;
+
+      if (currentMode === 'subject-wise') {
+        renderSubjectWiseSheet(loadedDataCache);
+      } else if (currentMode === 'exam-wise') {
+        renderExamWiseBroadsheet(loadedDataCache);
+      } else if (currentMode === 'batch-all') {
+        renderBatchAllSheets(loadedDataCache);
+      }
+    }
+
+    // Mode 1: Render Subject-wise Sheet with Dynamic Exam Configured Columns
+    function renderSubjectWiseSheet(data) {
+      const exam = data.exam || {};
+      const subject = data.subject || {};
+      const schedule = data.schedule || {};
+      let students = filterStudentsByType(sortStudents(data.students || []));
+      const scoreFormat = document.querySelector('input[name="scoreLayout"]:checked')?.value || 'auto';
+      const extraRows = parseInt(extraRowsEl.value || '0', 10);
+
+      // Determine dynamic components and full marks
+      const markConfig = getExamMarkConfig(exam, schedule, subject, scoreFormat);
+      const fullMarks = markConfig.fullMarks;
+      const components = markConfig.components;
+      const hasMultiple = components.length > 1;
+      const examDate = formatDate(schedule.ExamDate || exam.StartDate);
+
+      let html = `
+        <div class="blank-sheet-page">
+          <!-- College Header -->
+          <div class="sheet-header">
+            <h1 class="college-title-en">Kumudini Govt. College, Tangail</h1>
+            <h3 class="dept-title-en">Department of Geography and Environment</h3>
+            <div class="sheet-badge-title">Subject Evaluation Sheet (Blank Marksheet)</div>
+          </div>
+
+          <!-- Metadata Grid -->
+          <div class="sheet-meta-grid">
+            <div class="meta-item"><span class="meta-label">Examination:</span> <span class="meta-value">${esc(displayName(exam))}</span></div>
+            <div class="meta-item"><span class="meta-label">Academic Year:</span> <span class="meta-value">${esc(exam.AcademicYear || yearEl.value)}</span></div>
+            <div class="meta-item"><span class="meta-label">Session:</span> <span class="meta-value">${esc(exam.SessionYear || sessionEl.value)}</span></div>
+            
+            <div class="meta-item"><span class="meta-label">Course Code:</span> <span class="meta-value"><b>${esc(subject.SubjectCode)}</b></span></div>
+            <div class="meta-item"><span class="meta-label">Course Title:</span> <span class="meta-value">${esc(subject.SubjectName)}</span></div>
+            <div class="meta-item"><span class="meta-label">Full Marks:</span> <span class="meta-value"><b>${fullMarks}</b></span></div>
+
+            <div class="meta-item"><span class="meta-label">Exam Date:</span> <span class="meta-value">${examDate}</span></div>
+            <div class="meta-item"><span class="meta-label">Room / Hall:</span> <span class="meta-value">${esc(schedule.Room || 'Main Dept')}</span></div>
+            <div class="meta-item"><span class="meta-label">Evaluation Type:</span> <span class="meta-value">${esc(exam.ExamType || 'Regular')}</span></div>
+          </div>
+
+          <!-- Main Blank Evaluation Table -->
+          <table class="blank-sheet-table">
+            <thead>
+              <tr>
+                <th style="width:45px">SL</th>
+                <th style="width:130px">Roll No</th>
+                <th style="width:140px">Reg No</th>
+                <th>Student Name</th>
+                <th style="width:110px">Session</th>
+                <th style="width:180px">Written / Test Exam<br><small>(Full Marks: ${fullMarks})</small></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${students.length === 0 && extraRows === 0 ? `
+                <tr><td colspan="6" style="padding:24px;text-align:center;color:#64748b;font-weight:600">No enrolled students found for this subject.</td></tr>
+              ` : ''}
+              ${students.map((st, idx) => `
+                <tr>
+                  <td class="sl-cell">${idx + 1}</td>
+                  <td class="roll-cell">${esc(st.Roll || st.RollNo || '')}</td>
+                  <td class="reg-cell">${esc(st.RegistrationNumber || st.RegNo || st.Reg || '—')}</td>
+                  <td class="name-cell">${esc(st.Name || st.StudentName || '')}</td>
+                  <td>${esc(st.SessionYear || st.StudySessionYear || sessionEl.value || '')}</td>
+                  <td><span class="blank-box"></span></td>
+                </tr>
+              `).join('')}
+              ${Array.from({length: extraRows}).map((_, i) => `
+                <tr style="background:#fffcf0">
+                  <td class="sl-cell">${students.length + i + 1}</td>
+                  <td class="roll-cell"><span class="blank-box"></span></td>
+                  <td class="reg-cell"><span class="blank-box"></span></td>
+                  <td class="name-cell"><span class="blank-box"></span></td>
+                  <td><span class="blank-box"></span></td>
+                  <td><span class="blank-box"></span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <!-- Statistics Summary Bar -->
+          <div class="sheet-summary-bar">
+            <span>Total Enrolled Students: <b>${students.length}</b></span>
+            <span>Total Appeared (উপস্থিত): _________</span>
+            <span>Total Absent (অনুপস্থিত): _________</span>
+            <span>Pass Count: _________</span>
+            <span>Fail Count: _________</span>
+          </div>
+
+          <!-- Bottom Official Signatures -->
+          <div class="sheet-signatures">
+            <div class="sign-col">
+              <div class="sign-line"></div>
+              <div class="sign-title">Prepared By (প্রস্তুতকারী)<br>অফিস সহকারী / কম্পিউটার অপারেটর</div>
+              <div class="sign-date-placeholder">তারিখ: ______________</div>
+            </div>
+            <div class="sign-col">
+              <div class="sign-line"></div>
+              <div class="sign-title">Course Teacher / Examiner<br>কোর্স শিক্ষক / পরীক্ষকের স্বাক্ষর</div>
+              <div class="sign-date-placeholder">তারিখ: ______________</div>
+            </div>
+            <div class="sign-col">
+              <div class="sign-line"></div>
+              <div class="sign-title">Head of Department / Convener<br>বিভাগীয় প্রধান / পরীক্ষা আহ্বায়ক</div>
+              <div class="sign-date-placeholder">তারিখ: ______________</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      printArea.innerHTML = html;
+    }
+
+    // Mode 2: Render Exam-wise Master Tabulation Broadsheet (Landscape)
+    function renderExamWiseBroadsheet(data) {
+      const exam = data.exam || {};
+      const schedules = data.schedules || [];
+      const students = filterStudentsByType(sortStudents(data.students || []));
+      const extraRows = parseInt(extraRowsEl.value || '0', 10);
+
+      let html = `
+        <div class="blank-sheet-page">
+          <!-- College Header -->
+          <div class="sheet-header">
+            <h1 class="college-title-en">Kumudini Govt. College, Tangail</h1>
+            <h3 class="dept-title-en">Department of Geography and Environment</h3>
+            <div class="sheet-badge-title">Master Tabulation Broadsheet (Blank Marksheet)</div>
+          </div>
+
+          <!-- Metadata Grid -->
+          <div class="sheet-meta-grid">
+            <div class="meta-item"><span class="meta-label">Examination:</span> <span class="meta-value">${esc(displayName(exam))}</span></div>
+            <div class="meta-item"><span class="meta-label">Academic Year:</span> <span class="meta-value">${esc(exam.AcademicYear || yearEl.value)}</span></div>
+            <div class="meta-item"><span class="meta-label">Session:</span> <span class="meta-value">${esc(exam.SessionYear || sessionEl.value)}</span></div>
+            <div class="meta-item"><span class="meta-label">Total Subjects:</span> <span class="meta-value">${schedules.length} Subjects</span></div>
+            <div class="meta-item"><span class="meta-label">Total Candidates:</span> <span class="meta-value">${students.length} Students</span></div>
+            <div class="meta-item"><span class="meta-label">Tabulation Date:</span> <span class="meta-value">${formatDate(new Date())}</span></div>
+          </div>
+
+          <!-- Master Broadsheet Table -->
+          <table class="blank-sheet-table broadsheet-table">
+            <thead>
+              <tr>
+                <th style="width:34px" rowspan="2">SL</th>
+                <th style="width:95px" rowspan="2">Roll No</th>
+                <th style="width:105px" rowspan="2">Reg No</th>
+                <th style="width:160px" rowspan="2">Student Name</th>
+                <th style="width:85px" rowspan="2">Session</th>
+                ${schedules.map(s => {
+                  const sMarkCfg = getExamMarkConfig(exam, s, s, 'auto');
+                  return `
+                    <th class="sub-head">
+                      <span class="broadsheet-sub-code">${esc(s.SubjectCode)}</span>
+                      <span class="broadsheet-sub-marks">(${sMarkCfg.fullMarks})</span>
+                    </th>
+                  `;
+                }).join('')}
+                <th style="width:75px" rowspan="2">Grand<br>Total</th>
+                <th style="width:65px" rowspan="2">GPA /<br>Grade</th>
+                <th style="width:75px" rowspan="2">Remarks</th>
+              </tr>
+              <tr>
+                ${schedules.map(s => `<th style="font-size:8.5px;padding:2px;font-weight:600">${esc(s.SubjectName.length > 18 ? s.SubjectName.slice(0,16)+'..' : s.SubjectName)}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      students.forEach((st, idx) => {
+        const studentSubjectCells = st.SubjectCells || [];
+        html += `
+          <tr>
+            <td class="sl-cell">${idx + 1}</td>
+            <td class="roll-cell">${esc(st.Roll)}</td>
+            <td class="reg-cell">${esc(st.RegistrationNumber || '—')}</td>
+            <td class="name-cell">${esc(st.Name || st.StudentName)}</td>
+            <td>${esc(st.SessionYear || sessionEl.value)}</td>
+            ${schedules.map((sch, sIdx) => {
+              const cellVal = studentSubjectCells[sIdx];
+              const isNotTaking = cellVal === 'X' || cellVal === '—' || cellVal === '-';
+              if (isNotTaking) {
+                return '<td class="not-applicable">—</td>';
+              }
+              return '<td><span class="blank-box"></span></td>';
+            }).join('')}
+            <td><span class="blank-box"></span></td>
+            <td><span class="blank-box"></span></td>
+            <td><span class="blank-box"></span></td>
+          </tr>
+        `;
+      });
+
+      for (let i = 1; i <= extraRows; i++) {
+        html += `
+          <tr style="background:#fffcf0">
+            <td class="sl-cell">${students.length + i}</td>
+            <td class="roll-cell"><span class="blank-box"></span></td>
+            <td class="reg-cell"><span class="blank-box"></span></td>
+            <td class="name-cell"><span class="blank-box"></span></td>
+            <td><span class="blank-box"></span></td>
+            ${schedules.map(() => '<td><span class="blank-box"></span></td>').join('')}
+            <td><span class="blank-box"></span></td>
+            <td><span class="blank-box"></span></td>
+            <td><span class="blank-box"></span></td>
+          </tr>
+        `;
+      }
+
+      html += `
+            </tbody>
+          </table>
+
+          <!-- Signatures Section -->
+          <div class="sheet-signatures" style="margin-top:28px">
+            <div class="sign-col">
+              <div class="sign-line"></div>
+              <div class="sign-title">Tabulator 1 / Scrutinizer<br>টেবুলেটর ১ / নিরীক্ষক</div>
+            </div>
+            <div class="sign-col">
+              <div class="sign-line"></div>
+              <div class="sign-title">Tabulator 2<br>টেবুলেটর ২</div>
+            </div>
+            <div class="sign-col">
+              <div class="sign-line"></div>
+              <div class="sign-title">Convener / Head of Department<br>পরীক্ষা আহ্বায়ক / বিভাগীয় প্রধান</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      printArea.innerHTML = html;
+    }
+
+    // Mode 3: Batch Print All Subjects (Sequential A4 portrait pages with page breaks)
+    function renderBatchAllSheets(data) {
+      const exam = data.exam || {};
+      const schedules = data.schedules || [];
+      const allStudents = filterStudentsByType(sortStudents(data.students || []));
+      const scoreFormat = document.querySelector('input[name="scoreLayout"]:checked')?.value || 'auto';
+      const extraRows = parseInt(extraRowsEl.value || '0', 10);
+
+      if (!schedules.length) {
+        printArea.innerHTML = `<div class="empty">No scheduled subjects found for this exam.</div>`;
+        return;
+      }
+
+      let allHtml = '';
+
+      schedules.forEach((sch, sIdx) => {
+        // Filter students enrolled in this particular subject
+        const subjectStudents = allStudents.filter(st => {
+          const cells = st.SubjectCells || [];
+          const cellVal = cells[sIdx];
+          return cellVal !== 'X' && cellVal !== '—' && cellVal !== '-';
+        });
+
+        const markConfig = getExamMarkConfig(exam, sch, sch, scoreFormat);
+        const fullMarks = markConfig.fullMarks;
+        const components = markConfig.components;
+        const hasMultiple = components.length > 1;
+        const examDate = formatDate(sch.ExamDate || exam.StartDate);
+
+        allHtml += `
+          <div class="blank-sheet-page ${sIdx < schedules.length - 1 ? 'page-break' : ''}">
+            <!-- Header -->
+            <div class="sheet-header">
+              <h1 class="college-title-en">Kumudini Govt. College, Tangail</h1>
+              <h3 class="dept-title-en">Department of Geography and Environment</h3>
+              <div class="sheet-badge-title">Subject Evaluation Sheet (Blank Marksheet)</div>
+            </div>
+
+            <!-- Meta Grid -->
+            <div class="sheet-meta-grid">
+              <div class="meta-item"><span class="meta-label">Examination:</span> <span class="meta-value">${esc(displayName(exam))}</span></div>
+              <div class="meta-item"><span class="meta-label">Academic Year:</span> <span class="meta-value">${esc(exam.AcademicYear || yearEl.value)}</span></div>
+              <div class="meta-item"><span class="meta-label">Session:</span> <span class="meta-value">${esc(exam.SessionYear || sessionEl.value)}</span></div>
+              
+              <div class="meta-item"><span class="meta-label">Course Code:</span> <span class="meta-value"><b>${esc(sch.SubjectCode)}</b></span></div>
+              <div class="meta-item"><span class="meta-label">Course Title:</span> <span class="meta-value">${esc(sch.SubjectName)}</span></div>
+              <div class="meta-item"><span class="meta-label">Full Marks:</span> <span class="meta-value"><b>${fullMarks}</b></span></div>
+
+              <div class="meta-item"><span class="meta-label">Exam Date:</span> <span class="meta-value">${examDate}</span></div>
+              <div class="meta-item"><span class="meta-label">Room:</span> <span class="meta-value">${esc(sch.Room || 'Main Dept')}</span></div>
+              <div class="meta-item"><span class="meta-label">Subject No:</span> <span class="meta-value">${sIdx + 1} of ${schedules.length}</span></div>
+            </div>
+
+            <!-- Table -->
+            <table class="blank-sheet-table">
+              <thead>
+                <tr>
+                  <th style="width:45px">SL</th>
+                  <th style="width:130px">Roll No</th>
+                  <th style="width:140px">Reg No</th>
+                  <th>Student Name</th>
+                  <th style="width:110px">Session</th>
+                  <th style="width:180px">Written / Test Exam<br><small>(Full Marks: ${fullMarks})</small></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${subjectStudents.length === 0 && extraRows === 0 ? `
+                  <tr><td colspan="6" style="padding:24px;text-align:center;color:#64748b;font-weight:600">No enrolled students found for this subject.</td></tr>
+                ` : ''}
+                ${subjectStudents.map((st, sRowIdx) => `
+                  <tr>
+                    <td class="sl-cell">${sRowIdx + 1}</td>
+                    <td class="roll-cell">${esc(st.Roll || st.RollNo || '')}</td>
+                    <td class="reg-cell">${esc(st.RegistrationNumber || st.RegNo || st.Reg || '—')}</td>
+                    <td class="name-cell">${esc(st.Name || st.StudentName || '')}</td>
+                    <td>${esc(st.SessionYear || st.StudySessionYear || sessionEl.value || '')}</td>
+                    <td><span class="blank-box"></span></td>
+                  </tr>
+                `).join('')}
+                ${Array.from({length: extraRows}).map((_, i) => `
+                  <tr style="background:#fffcf0">
+                    <td class="sl-cell">${subjectStudents.length + i + 1}</td>
+                    <td class="roll-cell"><span class="blank-box"></span></td>
+                    <td class="reg-cell"><span class="blank-box"></span></td>
+                    <td class="name-cell"><span class="blank-box"></span></td>
+                    <td><span class="blank-box"></span></td>
+                    <td><span class="blank-box"></span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+
+            <div class="sheet-summary-bar">
+              <span>Total Enrolled: <b>${subjectStudents.length}</b></span>
+              <span>Appeared: _________</span>
+              <span>Absent: _________</span>
+              <span>Pass: _________</span>
+              <span>Fail: _________</span>
+            </div>
+
+            <div class="sheet-signatures">
+              <div class="sign-col">
+                <div class="sign-line"></div>
+                <div class="sign-title">Prepared By (প্রস্তুতকারী)<br>অফিস সহকারী</div>
+              </div>
+              <div class="sign-col">
+                <div class="sign-line"></div>
+                <div class="sign-title">Course Teacher / Examiner<br>কোর্স শিক্ষক / পরীক্ষক</div>
+              </div>
+              <div class="sign-col">
+                <div class="sign-line"></div>
+                <div class="sign-title">Head of Department / Convener<br>বিভাগীয় প্রধান / পরীক্ষা আহ্বায়ক</div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      printArea.innerHTML = allHtml;
+    }
+
+    // Print Action (Clean isolated print that never produces a white page)
+    async function handlePrintSheet() {
+      // 1. If not loaded yet, attempt to load automatically
+      if (!loadedDataCache) {
+        if (examSelect.value && (currentMode !== 'subject-wise' || subjectSelect.value)) {
+          showStatus(statusBox, 'info', 'Loading marksheet before printing...');
+          await loadBlankMarksheet();
+        }
+      }
+
+      if (!loadedDataCache) {
+        alert('Please select Exam and Subject first, then click Print.');
+        return;
+      }
+
+      const printEl = document.getElementById('printArea');
+      const sheets = printEl ? printEl.querySelectorAll('.blank-sheet-page') : null;
+      if (!sheets || !sheets.length) {
+        alert('No printable marksheet found. Please load marksheet first.');
+        return;
+      }
+
+      const isLandscape = currentMode === 'exam-wise';
+      const orientation = isLandscape ? 'landscape' : 'portrait';
+      const pageMargin = isLandscape ? '6mm 5mm 6mm 5mm' : '8mm 6mm 8mm 6mm';
+
+      const printHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blank Marksheet Print - Department of Geography & Environment</title>
+  <style>
+    @page {
+      size: A4 ${orientation};
+      margin: ${pageMargin};
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #fff !important;
+      color: #000 !important;
+      font-family: 'Segoe UI', Arial, sans-serif !important;
+      font-size: 11.5px;
+      line-height: 1.3;
+    }
+    .blank-sheet-page {
+      background: #fff;
+      color: #000;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      page-break-after: always;
+      break-after: page;
+    }
+    .blank-sheet-page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+    .page-break {
+      page-break-after: always !important;
+      break-after: page !important;
+    }
+
+    /* Sheet Header */
+    .sheet-header {
+      text-align: center;
+      border-bottom: 2px solid #000;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .sheet-header h1.college-title-en {
+      font-size: 20px;
+      font-weight: 900;
+      margin: 0;
+      color: #000;
+      letter-spacing: 0.8px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+    .sheet-header h3.dept-title-en {
+      font-size: 14.5px;
+      font-weight: 700;
+      margin: 4px 0 0 0;
+      color: #1e293b;
+      line-height: 1.25;
+    }
+    .sheet-header .sheet-badge-title {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 3px 18px;
+      border: 1.5px solid #000;
+      border-radius: 4px;
+      font-weight: 900;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #f8fafc;
+    }
+
+    /* Meta Info Grid */
+    .sheet-meta-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1.1fr 1fr;
+      gap: 6px 14px;
+      font-size: 12px;
+      margin-bottom: 10px;
+      padding: 7px 10px;
+      border: 1px solid #000;
+      background: #fafafa;
+      border-radius: 3px;
+    }
+    .meta-item {
+      display: flex;
+      gap: 6px;
+    }
+    .meta-label {
+      font-weight: 800;
+      color: #000;
+      white-space: nowrap;
+    }
+    .meta-value {
+      color: #111;
+      font-weight: 600;
+    }
+
+    /* Table Styles */
+    .blank-sheet-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 11.5px;
+      color: #000;
+    }
+    .blank-sheet-table th, .blank-sheet-table td {
+      border: 1.2px solid #000;
+      padding: 6px 4px;
+      text-align: center;
+      vertical-align: middle;
+      box-sizing: border-box;
+      word-break: break-word;
+    }
+    .blank-sheet-table thead {
+      display: table-header-group !important;
+    }
+    .blank-sheet-table thead th {
+      background: #f1f5f9 !important;
+      color: #000 !important;
+      font-weight: 800;
+      padding: 7px 4px;
+      border: 1.2px solid #000 !important;
+    }
+    .blank-sheet-table thead th small {
+      color: #333;
+      font-weight: normal;
+    }
+    .blank-sheet-table tbody tr {
+      height: 33px;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    .blank-sheet-table tbody tr:nth-child(even) {
+      background: #fbfdff;
+    }
+    .blank-sheet-table td.name-cell {
+      text-align: left;
+      font-weight: 700;
+      padding-left: 8px;
+    }
+    .blank-sheet-table td.sl-cell {
+      font-weight: 800;
+      width: 38px;
+    }
+    .blank-sheet-table td.roll-cell, .blank-sheet-table td.reg-cell {
+      font-family: Arial, sans-serif;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .blank-sheet-table .blank-box {
+      min-height: 24px;
+      display: block;
+    }
+    .blank-sheet-table .not-applicable {
+      color: #888;
+      font-weight: 900;
+    }
+
+    /* Summary Bar below table */
+    .sheet-summary-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding: 6px 10px;
+      border: 1px dashed #444;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: #fafafa;
+    }
+
+    /* Signatures Section */
+    .sheet-signatures {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 32px;
+      padding: 0 10px;
+      font-size: 11.5px;
+      font-weight: 800;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .sign-col {
+      text-align: center;
+      width: 29%;
+    }
+    .sign-line {
+      border-top: 1.5px solid #000;
+      margin-bottom: 5px;
+    }
+    .sign-title {
+      color: #000;
+      line-height: 1.3;
+    }
+    .sign-date-placeholder {
+      font-size: 10px;
+      color: #444;
+      margin-top: 3px;
+      font-weight: normal;
+    }
+
+    /* Master Broadsheet Grid */
+    .broadsheet-table {
+      font-size: 10.5px;
+    }
+    .broadsheet-table th, .broadsheet-table td {
+      padding: 4px 2px;
+    }
+    .broadsheet-table th.sub-head {
+      font-size: 9.5px;
+      line-height: 1.2;
+      vertical-align: bottom;
+    }
+    .broadsheet-sub-code {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 900;
+    }
+    .broadsheet-sub-marks {
+      display: block;
+      font-size: 8.5px;
+      color: #333;
+      font-weight: normal;
+    }
+  </style>
+</head>
+<body>
+  ${printEl.innerHTML}
+</body>
+</html>`;
+
+      // Try printing via isolated hidden iframe (zero interference, no white page)
+      try {
+        let printFrame = document.getElementById('blankSheetPrintIframe');
+        if (!printFrame) {
+          printFrame = document.createElement('iframe');
+          printFrame.id = 'blankSheetPrintIframe';
+          printFrame.style.position = 'fixed';
+          printFrame.style.right = '0';
+          printFrame.style.bottom = '0';
+          printFrame.style.width = '0';
+          printFrame.style.height = '0';
+          printFrame.style.border = '0';
+          printFrame.style.visibility = 'hidden';
+          document.body.appendChild(printFrame);
+        }
+
+        const frameDoc = printFrame.contentDocument || printFrame.contentWindow.document;
+        frameDoc.open();
+        frameDoc.write(printHtml);
+        frameDoc.close();
+
+        setTimeout(() => {
+          try {
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
+          } catch(e) {
+            console.warn('Iframe print error, falling back to direct print:', e);
+            window.print();
+          }
+        }, 300);
+      } catch (err) {
+        console.warn('Iframe setup error, falling back to window.print():', err);
+        window.print();
+      }
+    }
+
+    // Download Blank CSV for offline Excel mark entry
+    function downloadBlankCsv() {
+      if (!loadedDataCache) {
+        alert('Please load marksheet first.');
+        return;
+      }
+
+      let students = filterStudentsByType(sortStudents(loadedDataCache.students || []));
+      const exam = loadedDataCache.exam || {};
+      const subject = loadedDataCache.subject || {};
+      const scoreFormat = document.querySelector('input[name="scoreLayout"]:checked')?.value || 'auto';
+
+      let csvRows = [];
+      
+      if (currentMode === 'subject-wise') {
+        const markConfig = getExamMarkConfig(exam, loadedDataCache.schedule, subject, scoreFormat);
+        const fullMarks = markConfig.fullMarks;
+        const header = ['SL', 'Roll No', 'Reg No', 'Student Name', 'Session', `Written / Test Exam (Max ${fullMarks})`];
+        csvRows.push(header);
+
+        students.forEach((st, i) => {
+          const row = [
+            i + 1,
+            `"${st.Roll || ''}"`,
+            `"${st.RegistrationNumber || ''}"`,
+            `"${st.Name || st.StudentName || ''}"`,
+            `"${st.SessionYear || sessionEl.value}"`,
+            ''
+          ];
+          csvRows.push(row);
+        });
+      } else {
+        const schedules = loadedDataCache.schedules || [];
+        const header = ['SL', 'Roll No', 'Reg No', 'Student Name', 'Session'];
+        schedules.forEach(s => {
+          const sCfg = getExamMarkConfig(exam, s, s, 'auto');
+          header.push(`${s.SubjectCode} (Max ${sCfg.fullMarks})`);
+        });
+        header.push('Grand Total', 'Remarks');
+        csvRows.push(header);
+
+        students.forEach((st, i) => {
+          const row = [
+            i + 1,
+            `"${st.Roll || ''}"`,
+            `"${st.RegistrationNumber || ''}"`,
+            `"${st.Name || st.StudentName || ''}"`,
+            `"${st.SessionYear || sessionEl.value}"`
+          ];
+          schedules.forEach((sch, sIdx) => {
+            const cell = (st.SubjectCells || [])[sIdx];
+            if (cell === 'X' || cell === '—' || cell === '-') row.push('"N/A"');
+            else row.push('');
+          });
+          row.push('', '');
+          csvRows.push(row);
+        });
+      }
+
+      const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + csvRows.map(e => e.join(',')).join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `blank_marksheet_${currentMode}_${exam.ExamID || 'exam'}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Event Listeners
+    sessionEl.addEventListener('change', loadFilteredExams);
+    yearEl.addEventListener('change', loadFilteredExams);
+    examSelect.addEventListener('change', loadExamSubjects);
+    subjectSelect.addEventListener('change', () => {
+      if (examSelect.value && subjectSelect.value && currentMode === 'subject-wise') {
+        loadBlankMarksheet();
+      }
+    });
+    sortFieldEl.addEventListener('change', () => { if (loadedDataCache) renderCurrentModeSheet(); });
+    sortDirEl.addEventListener('change', () => { if (loadedDataCache) renderCurrentModeSheet(); });
+
+    // Initialize on page load
+    updatePageOrientationStyle(currentMode);
+    init();
+  </script>
+</body>
+</html>

@@ -7,13 +7,30 @@ const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.webp': 'image/webp',
+  '.pdf': 'application/pdf',
   '.txt': 'text/plain; charset=utf-8',
+  '.csv': 'text/csv; charset=utf-8',
   '.gs': 'text/plain; charset=utf-8'
 };
+
+const BLOCKED_FILES = new Set([
+  'server.js',
+  'package.json',
+  'package-lock.json',
+  'netlify.toml',
+  'Code.gs',
+  'appsscript.json',
+  '_redirects',
+  'subjects_seed_list.csv',
+  'temp_headers.txt'
+]);
 
 function makeServer() {
   return http.createServer((req, res) => {
@@ -30,17 +47,56 @@ function makeServer() {
       res.writeHead(403, {'Content-Type': 'text/plain; charset=utf-8'});
       return res.end('Forbidden');
     }
+
+    const base = path.basename(file).toLowerCase();
+    if (base.startsWith('.') || BLOCKED_FILES.has(base) || base.startsWith('fix') || base.startsWith('patch') || base.startsWith('script')) {
+      return serve404(res);
+    }
+
     fs.stat(file, (err, stat) => {
-      if (err || !stat.isFile()) {
-        res.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
-        return res.end('Not found');
+      if (err) {
+        return serve404(res);
       }
-      const ext = path.extname(file).toLowerCase();
-      const headers = {'Content-Type': MIME[ext] || 'application/octet-stream'};
-      if (ext === '.css' || ext === '.js') headers['Cache-Control'] = 'public, max-age=300';
-      res.writeHead(200, headers);
-      fs.createReadStream(file).pipe(res);
+      if (stat.isDirectory()) {
+        const rawPath = req.url.split('?')[0];
+        if (!rawPath.endsWith('/')) {
+          const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+          res.writeHead(302, { 'Location': rawPath + '/' + qs });
+          return res.end();
+        }
+        const indexFile = path.join(file, 'index.html');
+        return fs.stat(indexFile, (iErr, iStat) => {
+          if (!iErr && iStat.isFile()) {
+            return serveFile(res, indexFile);
+          }
+          return serve404(res);
+        });
+      }
+      if (!stat.isFile()) {
+        return serve404(res);
+      }
+      serveFile(res, file);
     });
+  });
+}
+
+function serveFile(res, targetFile) {
+  const ext = path.extname(targetFile).toLowerCase();
+  const headers = {'Content-Type': MIME[ext] || 'application/octet-stream', 'Cache-Control': 'no-cache, must-revalidate'};
+  res.writeHead(200, headers);
+  fs.createReadStream(targetFile).pipe(res);
+}
+
+function serve404(res) {
+  const notFoundPath = path.join(ROOT, '404.html');
+  fs.readFile(notFoundPath, (err, data) => {
+    if (!err) {
+      res.writeHead(404, {'Content-Type': 'text/html; charset=utf-8'});
+      res.end(data);
+    } else {
+      res.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
+      res.end('Not found');
+    }
   });
 }
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seminar Fee Management - Admin Dashboard</title>
-    <link rel="stylesheet" href="../assets/site.css?v=1789598642822">
+    <link rel="stylesheet" href="../assets/site.css?v=atlas_20261013">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -123,6 +123,10 @@
         .slips-row { display: flex; flex-direction: row; gap: 10px; align-items: stretch; }
         .slips-row.two-col .slip { width: calc((100% - 10px) / 2); }
         .slips-row.two-col .slip.env { display: none; }
+        .slips-row.single-copy { display: block; width: 100%; max-width: 97mm; margin: 0 auto; }
+        .slips-row.single-copy .slip.dept { display: none !important; }
+        .slips-row.single-copy .slip.student { display: block !important; width: 100% !important; max-width: 100% !important; margin: 0 auto !important; }
+        .slips-row.single-copy .slip::before { display: none !important; }
 
         .slip {
             width: calc((100% - 10px) / 2);
@@ -225,8 +229,106 @@
             }
             body.print-mode-receipt .slips-row.two-col .slip { width: calc((100% - 10px) / 2) !important; }
             body.print-mode-receipt .slips-row.two-col .slip.env { display: none !important; }
-            body.print-mode-receipt .slips-row:not(.two-col) .slip { width: calc((100% - 10px) / 2) !important; }
+            body.print-mode-receipt .slips-row:not(.two-col):not(.single-copy) .slip { width: calc((100% - 10px) / 2) !important; }
             body.print-mode-receipt .print-note { page-break-before: avoid !important; }
+
+            /* SINGLE COPY (LAND USE) PRINT MODE - A6 SPECIFIC */
+            body.print-mode-landuse #print-area-receipt {
+                padding-top: 2mm !important;
+                margin: 0 auto !important;
+                width: 100% !important;
+                max-width: 97mm !important;
+            }
+            body.print-mode-receipt .slips-row.single-copy {
+                display: block !important;
+                width: 100% !important;
+                max-width: 97mm !important;
+                margin: 0 auto !important;
+            }
+            body.print-mode-receipt .slips-row.single-copy .slip.dept {
+                display: none !important;
+            }
+            body.print-mode-receipt .slips-row.single-copy .slip.student {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 auto !important;
+                border: 1.8px solid #6a1f9e !important;
+                padding: 7px 10px 5px 10px !important;
+                page-break-inside: avoid !important;
+            }
+            body.print-mode-receipt .slips-row.single-copy .slip::before {
+                display: none !important;
+            }
+            body.print-mode-landuse .slip .header .seal {
+                height: 38px !important;
+                margin: 0 auto 2px auto !important;
+            }
+            body.print-mode-landuse .slip .header h3 {
+                font-size: 11px !important;
+                line-height: 1.25 !important;
+                margin: 0 !important;
+            }
+            body.print-mode-landuse .slip .header p.college {
+                font-size: 8.5px !important;
+                margin: 1px 0 0 0 !important;
+            }
+            body.print-mode-landuse .receipt-bar {
+                font-size: 10.5px !important;
+                padding: 2.5px 0 !important;
+                margin-bottom: 5px !important;
+            }
+            body.print-mode-landuse .receipt-meta {
+                font-size: 10px !important;
+                margin-bottom: 4px !important;
+            }
+            body.print-mode-landuse .receipt-meta .rno {
+                font-size: 11px !important;
+            }
+            body.print-mode-landuse .receipt-meta strong {
+                font-size: 12.5px !important;
+            }
+            body.print-mode-landuse .slip .row-p {
+                margin: 2px 0 !important;
+                padding-bottom: 1.5px !important;
+            }
+            body.print-mode-landuse .slip .row-p span.label {
+                font-size: 10px !important;
+            }
+            body.print-mode-landuse .slip .row-p strong {
+                font-size: 12px !important;
+            }
+            body.print-mode-landuse .amount-box {
+                margin-top: 5px !important;
+                font-size: 10px !important;
+            }
+            body.print-mode-landuse .amount-box .box {
+                height: 17px !important;
+                font-size: 12px !important;
+                min-width: 70px !important;
+            }
+            body.print-mode-landuse .words-box {
+                margin-top: 4px !important;
+                padding: 3px 6px !important;
+                min-height: 20px !important;
+                font-size: 11px !important;
+                line-height: 1.25 !important;
+            }
+            body.print-mode-landuse .words-box .lbl {
+                font-size: 9.5px !important;
+                margin-bottom: 1px !important;
+            }
+            body.print-mode-landuse .footer-sign {
+                margin-top: 14px !important;
+                font-size: 9.5px !important;
+                width: 90px !important;
+                padding-top: 2px !important;
+            }
+            body.print-mode-landuse .print-note {
+                margin-top: 5px !important;
+                font-size: 8.5px !important;
+                page-break-before: avoid !important;
+            }
 
             /* REPORT MODE */
             body.print-mode-report .topbar,
@@ -262,27 +364,7 @@
 <div class="panel-layout">
     <aside class="panel-sidebar no-print">
         <div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div>
-        <nav class="panel-menu">
-            <a href="index.html">🏠 Dashboard</a>
-            <a href="student-management.html">👥 Student Management</a>
-            <a href="actual-student-management.html">👤 Actual Students</a>
-            <a href="exam-create.html">📝 Create/Edit Exam</a>
-            <a href="exam-schedule.html">🗓️ Exam Schedule</a>
-            <a href="attendance-sheet.html">📄 Attendance Sheet</a>
-            <a href="seat-plan.html">🪑 Seat Plan</a>
-            <a href="student-subject-entry.html">📌 Student Subjects</a>
-            <a href="marks-entry.html">✍️ Subject Marks Entry</a>
-            <a href="missing-marks-list.html">⚠️ Missing Marks Entry</a>
-            <a href="incourse-result.html">📊 Incourse Average</a>
-            <a href="attendance-marks-entry.html">✅ Attendance Marks</a>
-            <a href="result-management.html">📊 Result Options</a>
-            <a href="admit-card-print.html">🎫 Admit Card</a>
-            <a href="exam-block-management.html">🚫 Exam Block</a>
-            <a href="result-upload.html">⬆️ Final Result Import</a>
-            <a href="library-management.html">📚 Seminar Library</a>
-            <a class="active" href="seminar-fee.html">💰 Seminar Fee Management</a>
-            <a href="../student/index.html">🎓 Student Panel</a>
-        </nav>
+        <nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="blank-marksheet-print.html">🖨️ Blank Marksheet</a><a href="individual-marks-entry.html">👤 Individual Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a class="active" href="seminar-fee.html">💰 Seminar Fee Management</a><a href="notice-management.html">📢 Notice Management</a><a href="../student/index.html">🎓 Student Panel</a><button type="button" class="btn red small-btn logout-sidebar-btn" data-logout style="margin-top:10px;width:100%;cursor:pointer;font-weight:bold;padding:9px;border:none;border-radius:10px;background:#dc2626;color:#fff">🚪 Logout Admin</button></nav>
     </aside>
 
     <main class="panel-main">
@@ -1274,19 +1356,27 @@
         }
     }
 
-    function setPrintStyle(size, orientation) {
+    function setPrintStyle(size, orientation, margin) {
         let style = document.getElementById('print-page-style');
         if (!style) {
             style = document.createElement('style');
             style.id = 'print-page-style';
             document.head.appendChild(style);
         }
-        // Increase top margin more to prevent copy labels from being cut off
-        style.innerHTML = `@page { size: ${size} ${orientation}; margin: 15mm 6mm 6mm 6mm; }`;
+        const m = margin || (size === 'A6' ? '4mm' : '15mm 6mm 6mm 6mm');
+        style.innerHTML = `@page { size: ${size} ${orientation}; margin: ${m}; }`;
     }
 
     function resetPrintClasses() {
-        document.body.classList.remove('print-mode-receipt', 'print-mode-report');
+        document.body.classList.remove('print-mode-receipt', 'print-mode-report', 'print-mode-landuse');
+        const slipsRow = document.querySelector('.slips-row');
+        if (slipsRow) slipsRow.classList.remove('single-copy');
+        const deptSlip = document.querySelector('.slip.dept');
+        if (deptSlip) deptSlip.style.display = '';
+        const studentSlip = document.querySelector('.slip.student');
+        if (studentSlip) studentSlip.style.display = '';
+        const printArea = document.getElementById('print-area-receipt');
+        if (printArea) printArea.style.paddingTop = '10mm';
     }
     
     window.addEventListener('afterprint', resetPrintClasses);
@@ -1308,18 +1398,35 @@
 
         const slipsRow = document.querySelector('.slips-row');
         const deptSlip = document.querySelector('.slip.dept');
+        const studentSlip = document.querySelector('.slip.student');
         
         if (feeType === 'LandUse') {
-            slipsRow.classList.add('two-col');
-            deptSlip.setAttribute('data-first', 'true');
+            slipsRow.classList.remove('two-col');
+            slipsRow.classList.add('single-copy');
+            if (deptSlip) {
+                deptSlip.style.display = 'none';
+                deptSlip.removeAttribute('data-first');
+            }
+            if (studentSlip) {
+                studentSlip.style.display = 'block';
+                studentSlip.removeAttribute('data-first');
+            }
             
             document.getElementById('p2_ad_roll_row').style.display = 'none';
             document.getElementById('p3_ad_roll_row').style.display = 'none';
-            document.getElementById('p2_reg_row').style.display = 'flex';
+            document.getElementById('p2_reg_row').style.display = 'none';
             document.getElementById('p3_reg_row').style.display = 'flex';
         } else {
+            slipsRow.classList.remove('single-copy');
             slipsRow.classList.remove('two-col');
-            deptSlip.setAttribute('data-first', 'true');
+            if (deptSlip) {
+                deptSlip.style.display = 'block';
+                deptSlip.setAttribute('data-first', 'true');
+            }
+            if (studentSlip) {
+                studentSlip.style.display = 'block';
+                studentSlip.removeAttribute('data-first');
+            }
             
             document.getElementById('p2_ad_roll_row').style.display = 'flex';
             document.getElementById('p3_ad_roll_row').style.display = 'flex';
@@ -1343,20 +1450,140 @@
             document.getElementById(prefix + '_words').innerText = document.getElementById('amount_in_words').value;
         });
 
-        setPrintStyle('A5', 'landscape');
-        document.body.className = "print-mode-receipt";
-        
-        setTimeout(() => {
-            try {
-                if (window.stableDirectPrint) {
-                    window.stableDirectPrint(document.getElementById('print-area-receipt'), 'Fee Receipt', '@page { size: A5 landscape; margin: 15mm 6mm 6mm 6mm; }');
-                } else {
+        if (feeType === 'LandUse') {
+            document.getElementById('print-area-receipt').style.paddingTop = '2mm';
+            setPrintStyle('A6', 'portrait', '4mm');
+            document.body.className = "print-mode-receipt print-mode-landuse";
+            
+            const landUseCss = `
+                @page { size: A6 portrait; margin: 4mm; }
+                body.original-layout-print #print-area-receipt {
+                    padding-top: 2mm !important;
+                    margin: 0 auto !important;
+                    width: 100% !important;
+                    max-width: 97mm !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                }
+                body.original-layout-print .slips-row.single-copy {
+                    display: block !important;
+                    width: 100% !important;
+                    max-width: 97mm !important;
+                    margin: 0 auto !important;
+                }
+                body.original-layout-print .slips-row.single-copy .slip.dept {
+                    display: none !important;
+                }
+                body.original-layout-print .slips-row.single-copy .slip.student {
+                    display: block !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    margin: 0 auto !important;
+                    border: 1.8px solid #6a1f9e !important;
+                    padding: 7px 10px 5px 10px !important;
+                    page-break-inside: avoid !important;
+                }
+                body.original-layout-print .slips-row.single-copy .slip::before {
+                    display: none !important;
+                }
+                body.original-layout-print.print-mode-landuse .slip .header .seal {
+                    height: 38px !important;
+                    margin: 0 auto 2px auto !important;
+                }
+                body.original-layout-print.print-mode-landuse .slip .header h3 {
+                    font-size: 11px !important;
+                    line-height: 1.25 !important;
+                    margin: 0 !important;
+                }
+                body.original-layout-print.print-mode-landuse .slip .header p.college {
+                    font-size: 8.5px !important;
+                    margin: 1px 0 0 0 !important;
+                }
+                body.original-layout-print.print-mode-landuse .receipt-bar {
+                    font-size: 10.5px !important;
+                    padding: 2.5px 0 !important;
+                    margin-bottom: 5px !important;
+                }
+                body.original-layout-print.print-mode-landuse .receipt-meta {
+                    font-size: 10px !important;
+                    margin-bottom: 4px !important;
+                }
+                body.original-layout-print.print-mode-landuse .receipt-meta .rno {
+                    font-size: 11px !important;
+                }
+                body.original-layout-print.print-mode-landuse .receipt-meta strong {
+                    font-size: 12.5px !important;
+                }
+                body.original-layout-print.print-mode-landuse .slip .row-p {
+                    margin: 2px 0 !important;
+                    padding-bottom: 1.5px !important;
+                }
+                body.original-layout-print.print-mode-landuse .slip .row-p span.label {
+                    font-size: 10px !important;
+                }
+                body.original-layout-print.print-mode-landuse .slip .row-p strong {
+                    font-size: 12px !important;
+                }
+                body.original-layout-print.print-mode-landuse .amount-box {
+                    margin-top: 5px !important;
+                    font-size: 10px !important;
+                }
+                body.original-layout-print.print-mode-landuse .amount-box .box {
+                    height: 17px !important;
+                    font-size: 12px !important;
+                    min-width: 70px !important;
+                }
+                body.original-layout-print.print-mode-landuse .words-box {
+                    margin-top: 4px !important;
+                    padding: 3px 6px !important;
+                    min-height: 20px !important;
+                    font-size: 11px !important;
+                    line-height: 1.25 !important;
+                }
+                body.original-layout-print.print-mode-landuse .words-box .lbl {
+                    font-size: 9.5px !important;
+                    margin-bottom: 1px !important;
+                }
+                body.original-layout-print.print-mode-landuse .footer-sign {
+                    margin-top: 14px !important;
+                    font-size: 9.5px !important;
+                    width: 90px !important;
+                    padding-top: 2px !important;
+                }
+                body.original-layout-print.print-mode-landuse .print-note {
+                    margin-top: 5px !important;
+                    font-size: 8.5px !important;
+                    page-break-before: avoid !important;
+                }
+            `;
+            setTimeout(() => {
+                try {
+                    if (window.stableDirectPrint) {
+                        window.stableDirectPrint(document.getElementById('print-area-receipt'), 'Land Use Fee Receipt', landUseCss);
+                    } else {
+                        window.print();
+                    }
+                } catch(e) {
                     window.print();
                 }
-            } catch(e) {
-                window.print();
-            }
-        }, 150);
+            }, 150);
+        } else {
+            document.getElementById('print-area-receipt').style.paddingTop = '10mm';
+            setPrintStyle('A5', 'landscape', '15mm 6mm 6mm 6mm');
+            document.body.className = "print-mode-receipt";
+            
+            setTimeout(() => {
+                try {
+                    if (window.stableDirectPrint) {
+                        window.stableDirectPrint(document.getElementById('print-area-receipt'), 'Seminar Fee Receipt', '@page { size: A5 landscape; margin: 15mm 6mm 6mm 6mm; }');
+                    } else {
+                        window.print();
+                    }
+                } catch(e) {
+                    window.print();
+                }
+            }, 150);
+        }
     }
 
     function printReport() {

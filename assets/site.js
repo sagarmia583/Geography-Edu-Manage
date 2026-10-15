@@ -70,38 +70,11 @@ if(!btn) return;
 if(btn.classList.contains('no-reaction')) return;
 if(btn.disabled || btn.getAttribute('aria-disabled') === 'true') return;
 
-btn.classList.remove('btn-clicked');
-void btn.offsetWidth;
-btn.classList.add('btn-clicked');
-
-const oldText = btn.tagName === 'INPUT' ? btn.value : btn.textContent;
-const canShowWait =
-btn.tagName === 'BUTTON' &&
-!btn.dataset.keepText &&
-!btn.classList.contains('logout-btn') &&
-!btn.closest('.navlinks') &&
-!btn.closest('.panel-menu') &&
-!btn.closest('.panel-mobile-tabs');
-
-if(canShowWait){
-btn.dataset.oldText = oldText;
-const lower = String(oldText || '').toLowerCase();
-if(!lower.includes('print') && !lower.includes('logout') && !lower.includes('menu')){
-btn.classList.add('btn-working');
-if(!lower.includes('wait') && !lower.includes('loading') && !lower.includes('saving')){
-btn.textContent = 'Please wait...';
-}
-setTimeout(function(){
-if(btn.classList.contains('btn-working')){
-btn.classList.remove('btn-working');
-if(btn.dataset.oldText) btn.textContent = btn.dataset.oldText;
-}
-}, 1800);
-}
-}
-
-setTimeout(function(){ btn.classList.remove('btn-clicked'); }, 650);
-}, true);
+    btn.classList.remove('btn-clicked');
+    void btn.offsetWidth;
+    btn.classList.add('btn-clicked');
+    setTimeout(function(){ btn.classList.remove('btn-clicked'); }, 650);
+  }, true);
 })();
 
 (function(){

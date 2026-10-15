@@ -1,5 +1,12 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Excel Style Attendance Sheet</title><link rel="stylesheet" href="../assets/site.css?v=1789598642822">
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Excel Style Attendance Sheet</title><link rel="stylesheet" href="../assets/site.css?v=atlas_20261013">
 <style>
+.excel-table .name-head {
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
 @media print{
   table.print-align-table th,
   table.print-align-table thead th,
@@ -9,7 +16,7 @@
   table.print-align-table td.printable-name-cell{text-align:left!important}
 }
 </style>
-</head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">📄</span><span>Attendance Sheet</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu ></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a class="active" href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="../student/index.html">🎓 Student Panel</a></nav></aside><main class="panel-main"><div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-subject-entry.html">Student Subjects</a><a href="exam-create.html">Exam</a><a href="exam-schedule.html">Schedule</a><a class="active" href="attendance-sheet.html">Attendance</a></div><section class="academic-banner no-print"><h1>Attendance Sheet</h1></section><div class="panel no-print"><div class="filter-row" style="grid-template-columns:1fr 1fr auto 1fr 1fr 1fr auto auto"><label class="field"><span class="label">Session Year</span><select id="sessionYear" class="input"></select></label><label class="field"><span class="label">Academic Year</span><select id="academicYear"></select></label><label class="field"><span class="label">Exam</span><select id="examSelect"></select></label><label class="field"><span class="label">Sort By</span><select id="sortField" class="input"><option value="roll">Roll</option><option value="reg">Regi No</option><option value="name">Name</option></select></label><label class="field"><span class="label">Order</span><select id="sortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label><button id="loadSheet" class="btn primary" type="button">Load Attendance Sheet</button><button onclick="printFastAttendance()" class="btn ghost" type="button">Print Stable A4</button><button class="btn green" type="button" onclick="exportTableToCSV('attendanceTable', 'attendance_sheet.csv')">Download CSV</button><button id="cleanupSubjectsBtn" class="btn red" type="button">Clean Removed Subjects</button></div><div id="attendanceStatus" class="status info hide"></div></div><section class="panel print-panel" style="margin-top:14px"><div id="printArea" class="excel-attendance-page"><div class="excel-title"><h2>Geography and Environment Department</h2><h3>Kumudini Govt. College, Tangail</h3><h4 id="examTitle">Attendance Sheet</h4></div><div class="attendance-print-container"><table class="excel-table"><thead id="attendanceHead"><tr><th class="sl-col">SL</th><th class="reg-col">Reg No</th><th class="roll-col">Roll No</th><th class="name-col">Student Name</th></tr></thead><tbody id="attendanceTable"><tr><td colspan="4">Select exam and load attendance.</td></tr></tbody></table></div><div class="teacher-signature-row"><div class="teacher-signature-box">Hall Duty Teacher Signature</div><div class="teacher-signature-box">Course Teacher Signature</div></div></div></section></main></div>
+</head><body><header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">📄</span><span>Attendance Sheet</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu ></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header><div class="panel-layout"><aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a class="active" href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="blank-marksheet-print.html">🖨️ Blank Marksheet</a><a href="individual-marks-entry.html">👤 Individual Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="seminar-fee.html">💰 Seminar Fee Management</a><a href="notice-management.html">📢 Notice Management</a><a href="../student/index.html">🎓 Student Panel</a><button type="button" class="btn red small-btn logout-sidebar-btn" data-logout style="margin-top:10px;width:100%;cursor:pointer;font-weight:bold;padding:9px;border:none;border-radius:10px;background:#dc2626;color:#fff">🚪 Logout Admin</button></nav></aside><main class="panel-main"><div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-subject-entry.html">Student Subjects</a><a href="exam-create.html">Exam</a><a href="exam-schedule.html">Schedule</a><a class="active" href="attendance-sheet.html">Attendance</a><a href="#" data-logout style="color:#ef4444;font-weight:bold">Logout</a></div><section class="academic-banner no-print"><h1>Attendance Sheet</h1></section><div class="panel no-print"><div class="filter-row" style="grid-template-columns:1fr 1fr auto 1fr 1fr 1fr auto auto"><label class="field"><span class="label">Session Year</span><select id="sessionYear" class="input"></select></label><label class="field"><span class="label">Academic Year</span><select id="academicYear"></select></label><label class="field"><span class="label">Exam</span><select id="examSelect"></select></label><label class="field"><span class="label">Sort By</span><select id="sortField" class="input"><option value="roll">Roll</option><option value="reg">Regi No</option><option value="name">Name</option></select></label><label class="field"><span class="label">Order</span><select id="sortDir" class="input"><option value="asc">Ascending</option><option value="desc">Descending</option></select></label><button id="loadSheet" class="btn primary" type="button">Load Attendance Sheet</button><button onclick="printFastAttendance()" class="btn ghost" type="button">Print Stable A4</button><button class="btn green" type="button" onclick="exportTableToCSV('attendanceFullTable', 'attendance_sheet.csv')">Download CSV</button><button id="cleanupSubjectsBtn" class="btn red" type="button">Clean Removed Subjects</button></div><div id="attendanceStatus" class="status info hide"></div></div><section class="panel print-panel" style="margin-top:14px"><div id="printArea" class="excel-attendance-page"><div class="excel-title"><h2>Geography and Environment Department</h2><h3>Kumudini Govt. College, Tangail</h3><h4 id="examTitle">Attendance Sheet</h4></div><div class="attendance-print-container"><table id="attendanceFullTable" class="excel-table"><thead id="attendanceHead"><tr><th class="sl-col">SL</th><th class="reg-col">Reg No</th><th class="roll-col">Roll No</th><th class="name-col">Student Name</th></tr></thead><tbody id="attendanceTable"><tr><td colspan="4">Select exam and load attendance.</td></tr></tbody></table></div><div class="teacher-signature-row"><div class="teacher-signature-box">Hall Duty Teacher Signature</div><div class="teacher-signature-box">Course Teacher Signature</div></div></div></section></main></div>
 <script src="../assets/geography-api.js"></script>
 <script src="../assets/site.js?v=1789598642822"></script>
 <script>const AUTH_USER = requireAuth('admin'); attachLogout();</script>
@@ -21,6 +28,11 @@ const head = document.getElementById('attendanceHead');
 const table = document.getElementById('attendanceTable');
 const statusEl = document.getElementById('attendanceStatus');
 let exams = [], filteredExams = [];
+let currentAttendanceData = { exam: null, subjects: [], students: [] };
+
+function esc(v){
+  return String(v ?? '').replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
 
 function displayName(e){
   return e.DisplayName || e.ExamName || [e.SessionYear,e.AcademicYear,e.ExamType].filter(Boolean).join(' - ') || e.ExamID;
@@ -30,6 +42,7 @@ function clearAttendanceExam(msg='Select exam and load attendance.'){
   examSelect.innerHTML='<option value="">Select exam</option>';
   head.innerHTML='<tr><th class="sl-col">SL</th><th class="reg-col">Reg No</th><th class="roll-col">Roll No</th><th class="name-col">Student Name</th></tr>';
   table.innerHTML = `<tr><td colspan="4">${msg}</td></tr>`;
+  currentAttendanceData = { exam: null, subjects: [], students: [] };
 }
 function loadFilteredExams(){
   const sessionYear = sessionEl.value.trim();
@@ -57,14 +70,8 @@ function formatDate(d){
   return d;
 }
 
-function shortSubjectName(name){
-  return String(name || '')
-    .replace(/&/g, 'and')
-    .replace(/\s+and\s+/gi, '<br>and<br>')
-    .replace(/\s+of\s+/gi, '<br>of<br>')
-    .replace(/\s+Regional\s+/gi, '<br>Regional<br>')
-    .replace(/\s+Geography/gi, '<br>Geography')
-    .replace(/Practical[-– ]*/gi, 'Practical-<br>');
+function cleanSubjectName(name){
+  return String(name || '').replace(/\s+/g, ' ').trim();
 }
 
 function renderAttendanceCell(c){
@@ -106,6 +113,8 @@ async function loadAttendance(){
     const students = sortStudentList(Array.isArray(res.students)?res.students:[], document.getElementById('sortField').value, document.getElementById('sortDir').value);
     const exam = res.exam || {};
 
+    currentAttendanceData = { exam, subjects, students };
+
     document.getElementById('examTitle').textContent = displayName(exam);
 
     const dateRow = `<tr>
@@ -115,8 +124,8 @@ async function loadAttendance(){
       <th class="name-col" rowspan="3">Student Name</th>
       ${subjects.map(s=>`<th class="subject-col date-head">${formatDate(s.ExamDate)}</th>`).join('')}
     </tr>`;
-    const codeRow = `<tr>${subjects.map(s=>`<th class="subject-col code-head">${s.SubjectCode || ''}</th>`).join('')}</tr>`;
-    const nameRow = `<tr>${subjects.map(s=>`<th class="subject-col name-head">${shortSubjectName(s.SubjectName)}</th>`).join('')}</tr>`;
+    const codeRow = `<tr>${subjects.map(s=>`<th class="subject-col code-head">${esc(s.SubjectCode || '')}</th>`).join('')}</tr>`;
+    const nameRow = `<tr>${subjects.map(s=>`<th class="subject-col name-head" data-subject-code="${esc(s.SubjectCode || '')}" data-subject-name="${esc(s.SubjectName || '')}" title="${esc(s.SubjectName || '')}">${esc(cleanSubjectName(s.SubjectName))}</th>`).join('')}</tr>`;
     head.innerHTML = dateRow + codeRow + nameRow;
 
     if(!students.length){
@@ -200,27 +209,6 @@ function printFastAttendance(){
 
   function text(cell){ return (cell?.textContent || '').replace(/\s+/g,' ').trim(); }
   function esc(v){ return String(v ?? '').replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
-  function proper(v){
-    return String(v ?? '')
-      .replace(/<br\s*\/?>/gi,' ')
-      .replace(/\s+/g,' ')
-      .trim()
-      .toLowerCase()
-      .replace(/\b([a-z])/g, m=>m.toUpperCase())
-      .replace(/\bIct\b/g,'ICT')
-      .replace(/\bAnd\b/g,'and')
-      .replace(/\bOf\b/g,'of')
-      .replace(/\bThe\b/g,'the')
-      .replace(/\bIi\b/g,'II')
-      .replace(/\bIii\b/g,'III')
-      .replace(/\bIv\b/g,'IV')
-      .replace(/\bVi\b/g,'VI')
-      .replace(/\bVii\b/g,'VII')
-      .replace(/\bViii\b/g,'VIII')
-      .replace(/\bIx\b/g,'IX')
-      .replace(/\bUsa\b/g,'USA');
-  }
-
   const dateCells = [...headRows[0].children].slice(4);
   const codeCells = [...headRows[1].children];
   const nameCells = [...headRows[2].children];
@@ -228,17 +216,20 @@ function printFastAttendance(){
 
   const subjects = [];
   for(let i=0;i<subjectCount;i++){
+    const rawSub = (currentAttendanceData.subjects && currentAttendanceData.subjects[i]) || {};
+    const subName = cleanSubjectName(rawSub.SubjectName || nameCells[i]?.dataset?.subjectName || (nameCells[i]?.innerHTML || '').replace(/<br\s*\/?>/gi, ' ') || text(nameCells[i]));
     subjects.push({
       idx:i,
-      date:text(dateCells[i]),
-      code:text(codeCells[i]),
-      name:proper(text(nameCells[i]))
+      date: rawSub.ExamDate ? formatDate(rawSub.ExamDate) : text(dateCells[i]),
+      code: rawSub.SubjectCode || text(codeCells[i]),
+      name: subName
     });
   }
 
   const studentRows = bodyRowsRaw
     .filter(row => !row.classList.contains('course-sign-row'))
     .map((row, i)=>{
+      const rawStudent = (currentAttendanceData.students && currentAttendanceData.students[i]) || {};
       const cells = [...row.children];
       const subjectCells = [];
       for(let s=0;s<subjectCount;s++){
@@ -249,9 +240,9 @@ function printFastAttendance(){
       }
       return {
         sl:i+1,
-        reg:text(cells[1]),
-        roll:text(cells[2]),
-        name:proper(text(cells[3])),
+        reg: rawStudent.RegistrationNumber || text(cells[1]),
+        roll: rawStudent.Roll || text(cells[2]),
+        name: rawStudent.Name || text(cells[3]),
         cells:subjectCells
       };
     });
@@ -405,7 +396,9 @@ thead th{font-weight:900;text-align:center!important;vertical-align:middle!impor
   line-height:1.06;
   white-space:normal;
   word-break:normal;
-  overflow-wrap:anywhere;
+  overflow-wrap:break-word;
+  text-align:center!important;
+  vertical-align:middle!important;
 }
 tbody td{
   height:${rowHeight.toFixed(1)}mm;

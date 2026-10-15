@@ -23,7 +23,13 @@ function typeBadge(type){
   return `<span class="student-type-badge ${cls}">${t}</span>`;
 }
 function valueOrDash(v){
-  return v === '' || v === undefined || v === null ? '—' : esc(v);
+  if(v === '' || v === undefined || v === null) return '—';
+  const s = String(v).trim();
+  if(!s) return '—';
+  if(s.toUpperCase() === 'ABSENT' || s.toUpperCase() === 'A' || s.toUpperCase() === 'AB'){
+    return '<span style="color:#dc2626;font-weight:700">A</span>';
+  }
+  return esc(s);
 }
 function nat(v){
   const t=String(v??'').trim();

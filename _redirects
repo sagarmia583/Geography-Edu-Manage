@@ -5,5 +5,8 @@
 /subjects_seed_list.csv /404.html 404
 /netlify.toml /404.html 404
 /appsscript.json /404.html 404
-/script3.js /404.html 404
-/script4.js /404.html 404
+/temp_headers.txt /404.html 404
+/patch* /404.html 404
+/fix* /404.html 404
+/script* /404.html 404
+

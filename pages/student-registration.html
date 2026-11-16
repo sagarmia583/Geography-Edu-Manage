@@ -60,7 +60,8 @@ form.addEventListener('submit', async e=>{
       nonMajorGroup:fd.get('nonMajorGroup'), nonMajor1:fd.get('nonMajor1'), nonMajor2:fd.get('nonMajor2'),
       profilePicture:base64, status:'Active'
     });
-    showStatus(statusEl,res.success?'ok':'err',res.message || 'Saved');
+    if(!res?.success) throw new Error(res?.message || 'Student was not saved.');
+    showStatus(statusEl,'ok',res.message || 'Student saved.');
     if(res.success) {
       const box = document.getElementById('generatedLoginBox');
       const userEl = document.getElementById('generatedUsername');
@@ -72,7 +73,7 @@ form.addEventListener('submit', async e=>{
       passEl.dataset.visible = '0';
       passEl.textContent = '••••••••';
       toggle.textContent = 'Show';
-      box.classList.remove('hide');
+      box.classList.toggle('hide', !password);
       form.reset();
     }
   }catch(err){ showStatus(statusEl,'err',err.message); }

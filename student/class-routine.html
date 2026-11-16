@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Class Routine &amp; Course Distribution | Geography Department</title>
+  <link rel="stylesheet" href="../assets/class-routine.css?v=20261116-level-colors">
+  <link rel="stylesheet" href="../assets/class-routine-print.css?v=20261116-level-colors">
+  <script defer src="../assets/supabase-config.js"></script>
+  <script defer src="../assets/class-routine-checks.js?v=20261116-level-colors"></script><script defer src="../assets/class-routine-store.js?v=20261116-level-colors"></script>
+  <script defer src="../assets/class-routine-subjects.js?v=20261116-level-colors"></script><script defer src="../assets/class-routine-format.js?v=20261116-level-colors"></script><script defer src="../assets/class-routine-print.js?v=20261116-level-colors"></script>
+  <script defer src="../assets/class-routine-pdf.js?v=20261116-level-colors"></script><script defer src="../assets/class-routine-loader.js?v=20261116-level-colors"></script>
+</head>
+<body class="routine-page">
+  <a class="skip-link" href="#today-dashboard">Skip to class routine</a>
+  <header class="routine-nav no-print">
+    <div class="routine-shell nav-inner">
+      <a class="brand" href="index.html"><span aria-hidden="true">◈</span> Geography &amp; Environment</a>
+      <nav aria-label="Student navigation"><a href="index.html">Student Panel</a><a href="result-check.html">Results</a><a href="../index.html">Main Login</a></nav>
+    </div>
+  </header>
+  <main class="routine-shell">
+    <section class="routine-hero" aria-labelledby="page-title">
+      <div><p class="eyebrow">Kumudini Govt. College, Tangail</p><h1 id="page-title">Class routine <span>&amp; course distribution</span></h1><p class="hero-detail">Department of Geography &amp; Environment · XI, XII, Degree, Honours &amp; Masters</p></div>
+      <div class="effective-block"><span>Routine effective from</span><strong id="effective-date">Loading…</strong><small id="distribution-date"></small></div>
+    </section>
+
+    <section class="content-panel no-print live-dashboard" id="today-dashboard" aria-labelledby="today-heading" tabindex="-1">
+      <div class="section-heading"><div><p class="eyebrow">Your daily schedule</p><h2 id="today-heading">Now &amp; next</h2></div><p id="routine-clock" role="timer" aria-live="off"></p></div>
+      <p class="section-description" id="today-scope"></p>
+      <div class="today-grid">
+        <section aria-labelledby="now-heading"><h3 id="now-heading">Now / Ongoing classes</h3><div id="now-classes"></div></section>
+        <section class="next-class-panel" aria-labelledby="next-heading"><h3 id="next-heading">Up next</h3><div id="next-classes"></div></section>
+      </div>
+      <section class="today-list" aria-labelledby="day-heading"><h3 id="day-heading">Today's classes</h3><p class="section-description">All of today’s time slots, together at a glance.</p><div id="day-classes" class="today-cards" tabindex="0" role="region" aria-label="Today’s classes by time"></div></section>
+    </section>
+    <section class="filter-panel no-print" aria-labelledby="filter-title">
+      <h2 id="filter-title" class="visually-hidden">Choose a view</h2>
+      <div class="routine-view-buttons" role="group" aria-label="Choose a view"><button type="button" data-student-view="routine" aria-pressed="true">Class Routine</button><button type="button" data-student-view="courses" aria-pressed="false">Course Distribution</button></div><label hidden class="view-choice" for="routine-view">View
+        <select id="routine-view"><option value="routine">Class Routine</option><option value="courses">Course Distribution</option></select>
+      </label>
+      <details class="view-filter-options" id="view-filter-options"><summary>Filter options</summary><div class="action-row"><button type="button" class="button secondary" id="today-classes">Today’s classes</button><button type="button" class="text-button" id="reset-filters">Reset filters</button></div><div class="filter-grid">
+        <label for="routine-level">Academic level<select id="routine-level"><option value="">All levels</option></select></label>
+        <details id="extra-filters" class="extra-filters"><summary>Teacher &amp; day filters</summary><div class="extra-filter-fields"><label for="routine-teacher">Teacher<select id="routine-teacher"><option value="">All teachers</option></select></label>
+        <label id="routine-day-label" for="routine-day">Day<select id="routine-day"><option value="">All days</option></select></label>
+        </div></details>
+      </div>
+      <div class="load-actions"><button type="button" class="button" id="load-view">Load routine</button><button type="button" class="button secondary" id="load-full-routine">View full routine</button></div>
+      <p class="filter-help">Choose filters, then click Load. The full routine prints on one A4 landscape page; filtered routines and course distribution print on one A4 portrait page.</p></details>
+    </section>
+
+    <p id="routine-export-status" class="no-print" role="status" aria-live="polite"></p>
+    <button type="button" class="text-button no-print" id="back-to-today" hidden>← Back to Today</button><p class="result-summary" id="result-summary" role="status" aria-live="polite"></p>
+    <p class="filter-caption" id="filter-caption"></p>
+    <section class="content-panel" id="routine-panel" hidden aria-labelledby="routine-heading">
+      <div class="section-heading"><div><p class="eyebrow">Weekly timetable</p><h2 id="routine-heading">Class routine</h2></div><div class="action-row no-print"><button type="button" class="button secondary" id="export-routine">Download CSV</button><button type="button" class="button secondary" id="download-routine">Download PDF</button><button type="button" class="button" id="print-routine">Print routine</button></div></div>
+      <p class="section-description" id="routine-description">Class times, rooms and teachers are shown below. Break: 12:00–12:30.</p>
+      <p class="conflict-note" id="teacher-conflicts" hidden></p>
+      <div id="routine-grid" class="timetable-wrap" tabindex="0" role="region" aria-label="Weekly class routine table"></div>
+      <div id="routine-cards" class="routine-cards"></div>
+      <div id="routine-empty" class="empty-state" hidden><h3>No classes in this selection</h3><p>No classes match these filters. Choose another selection or reset the filters.</p></div>
+    </section>
+
+    <section class="content-panel" id="courses-panel" hidden aria-labelledby="courses-heading">
+      <div class="section-heading"><div><p class="eyebrow">Teaching responsibilities</p><h2 id="courses-heading">Course distribution</h2></div><div class="action-row no-print"><button type="button" class="button secondary" id="export-courses">Download CSV</button><button type="button" class="button secondary" id="download-courses">Download PDF</button><button type="button" class="button" id="print-courses">Print courses</button></div></div>
+      <p class="section-description">Course distribution for your selected academic level and teacher.</p>
+      <div id="course-groups"></div>
+      <div id="courses-empty" class="empty-state" hidden><h3>No course allocation in this selection</h3><p>No courses match the selected academic level and teacher.</p></div>
+    </section>
+
+    <noscript><p class="empty-state">Enable JavaScript to view the routine. </p></noscript>
+  </main>
+  <footer class="routine-shell page-footer no-print">Department of Geography &amp; Environment · Kumudini Govt. College, Tangail</footer>
+</body>
+</html>

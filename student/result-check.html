@@ -271,6 +271,13 @@
   }
 }
 
+#marksheetView .old-text-result-sheet :is(.nu-info-table,.old-text-marks-table){
+  border:1px solid #222!important;
+  border-collapse:collapse!important;
+}
+#marksheetView .old-text-result-sheet :is(.nu-info-table,.old-text-marks-table) :is(th,td){
+  border:1px solid #222!important;
+}
 </style>
 
 <style>
@@ -283,7 +290,7 @@
   table.print-align-table td.printable-name-cell{text-align:left!important}
 }
 </style>
-</head><body class="student-card-page"><header class="topbar student-topbar-full no-print student-card-topbar"><div class="inner"><a class="brand" href="index.html"><span class="brand-logo">📊</span><span>Result Check</span></a><button class="mobile-menu" data-mobile-menu>Menu</button><nav class="navlinks student-card-nav"><a href="index.html">Student Home</a><a class="active" href="result-check.html">Result Check</a><a href="profile-check.html">Profile Check</a><a href="seminar-library.html">Seminar Library</a><a href="admit-card.html">Admit Card</a><a class="nav-cta" href="../index.html">Main Login</a></nav></div></header><main class="page-pad student-card-main"><div class="container"><section class="public-student-hero no-print"><h1>Result Check</h1></section><form id="resultForm" class="panel no-print"><div class="student-result-controls"><label class="field"><span class="label">Session Year</span><select id="sessionSelect" class="input" required></select></label><label class="field"><span class="label">Exam Name</span><select id="examSelect" class="input" required></select></label><label class="field"><span class="label">Roll or Registration</span><input id="searchInput" class="input" placeholder="Enter Roll or Registration" required></label><button class="btn primary" type="submit">Search Result</button></div><div id="resultStatus" class="status info hide"></div></form><section id="resultBox" class="hide"><div class="print-actions no-print"><button class="btn primary" onclick="printStudentResult()">Print Result</button></div><div id="marksheetView" class="marksheet-view"></div></section></div></main>
+</head><body class="student-card-page"><header class="topbar student-topbar-full no-print student-card-topbar"><div class="inner"><a class="brand" href="index.html"><span class="brand-logo">📊</span><span>Result Check</span></a><button class="mobile-menu" data-mobile-menu>Menu</button><nav class="navlinks student-card-nav"><a href="class-routine.html">Class Routine</a><a href="index.html">Student Home</a><a class="active" href="result-check.html">Result Check</a><a href="profile-check.html">Profile Check</a><a href="seminar-library.html">Seminar Library</a><a href="admit-card.html">Admit Card</a><a class="nav-cta" href="../index.html">Main Login</a></nav></div></header><main class="page-pad student-card-main"><div class="container"><section class="public-student-hero no-print"><h1>Result Check</h1></section><form id="resultForm" class="panel no-print"><div class="student-result-controls"><label class="field"><span class="label">Session Year</span><select id="sessionSelect" class="input" required></select></label><label class="field"><span class="label">Exam Name</span><select id="examSelect" class="input" required></select></label><label class="field"><span class="label">Roll or Registration</span><input id="searchInput" class="input" placeholder="Enter Roll or Registration" required></label><button class="btn primary" type="submit">Search Result</button></div><div id="resultStatus" class="status info hide"></div></form><section id="resultBox" class="hide"><div class="print-actions no-print"><button class="btn primary" onclick="printStudentResult()">Print Result</button></div><div id="marksheetView" class="marksheet-view"></div></section></div></main>
 <script src="../assets/geography-api.js"></script>
 <script>
 function componentMarksTableHtml(rows){
@@ -402,9 +409,11 @@ function renderMarksheet(res){
   const resultStatus = res.cgpa === 'FAIL' ? 'FAILED' : 'PASS';
   marksheetView.innerHTML = `
     <div class="nu-result-sheet old-text-result-sheet">
-      <div class="nu-main-title">Kumudini Govt. College, Tangail</div>
-      <div class="nu-sub-title">Department of Geography and Environment</div>
-      <div class="nu-online-title">Individual Result Marksheet</div>
+      <div class="student-result-heading">
+        <div class="nu-main-title">Kumudini Govt. College, Tangail</div>
+        <div class="nu-sub-title">Department of Geography and Environment</div>
+        <div class="nu-online-title">Individual Result Marksheet</div>
+      </div>
       <div class="nu-blue-line"></div>
 
       <table class="nu-info-table">
@@ -451,7 +460,8 @@ function printStudentResult(){
   if(!content){alert('Result আগে search করুন।');return;}
   resultBox.classList.remove('hide');
   stableDirectPrint(resultBox,'Student Result Print',`
-    @page{size:A4 portrait;margin:8mm}
+    @page student-result{size:A4 portrait;margin:8mm}
+    html:has(body.original-layout-print){page:student-result}
     .stable-print-target .old-text-result-sheet{background:#fff!important;width:100%!important;max-width:100%!important}
   `);
 }

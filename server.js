@@ -25,7 +25,7 @@ const BLOCKED_FILES = new Set([
   'package.json',
   'package-lock.json',
   'netlify.toml',
-  'Code.gs',
+  'code.gs',
   'appsscript.json',
   '_redirects',
   'subjects_seed_list.csv',

@@ -15,11 +15,11 @@
 .manual-preview-box th{background:#f4faf6;color:var(--primary);position:sticky;top:0}
 @media(max-width:1000px){.manual-entry-grid{grid-template-columns:1fr}.manual-entry-head{display:block}}
 </style>
-</head>
+<link rel="stylesheet" href="../assets/admin-modules.css?v=20261115"><script defer src="../assets/admin-modules.js?v=20261115"></script></head>
 <body>
 <header class="topbar no-print"><div class="inner"><a class="brand" href="../admin/index.html"><span class="brand-logo">🛠️</span><span>Student Management</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu ></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header>
 <div class="panel-layout">
-<aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a class="active" href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="blank-marksheet-print.html">🖨️ Blank Marksheet</a><a href="individual-marks-entry.html">👤 Individual Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="seminar-fee.html">💰 Seminar Fee Management</a><a href="notice-management.html">📢 Notice Management</a><a href="../student/index.html">🎓 Student Panel</a><button type="button" class="btn red small-btn logout-sidebar-btn" data-logout style="margin-top:10px;width:100%;cursor:pointer;font-weight:bold;padding:9px;border:none;border-radius:10px;background:#dc2626;color:#fff">🚪 Logout Admin</button></nav></aside>
+<aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🛠️</div><h3>Academic Admin</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a class="active" href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="class-routine.html">📅 Class Routine</a><a href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="blank-marksheet-print.html">🖨️ Blank Marksheet</a><a href="individual-marks-entry.html">👤 Individual Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="seminar-fee.html">💰 Seminar Fee Management</a><a href="notice-management.html">📢 Notice Management</a><a href="../student/index.html">🎓 Student Panel</a><button type="button" class="btn red small-btn logout-sidebar-btn" data-logout style="margin-top:10px;width:100%;cursor:pointer;font-weight:bold;padding:9px;border:none;border-radius:10px;background:#dc2626;color:#fff">🚪 Logout Admin</button></nav></aside>
 <main class="panel-main">
 <div class="panel-mobile-tabs no-print"><a href="index.html">Dashboard</a><a href="student-management.html">Students</a><a href="subject-management.html">Subjects</a><a href="exam-create.html">Exam</a><a href="attendance-sheet.html">Attendance</a><a href="marks-entry.html">Marks</a><a href="final-result.html">Result</a><a href="promotion-management.html">Promotion</a><a href="#" data-logout style="color:#ef4444;font-weight:bold">Logout</a></div>
 <section class="academic-banner"><h1>Student Management</h1></section>
@@ -155,10 +155,14 @@ async function importManualStudents(){
     showStatus(manualStatus,'info','Saving students to Supabase...');
     const res = await geoApiPost({action:'importManualStudents', rows:manualRows, defaults:manualDefaults()});
     if(res && res.failedCount){
-      showStatus(manualStatus,'err',res.message || 'Some rows failed.');
+      const firstFailure = res.failed?.[0];
+      showStatus(manualStatus,'err',(res.message || 'Some rows failed.') +
+        (firstFailure ? ' Row ' + firstFailure.row + ': ' + firstFailure.message : ''));
       console.table(res.failed || []);
-    }else{
+    }else if(res?.success){
       showStatus(manualStatus,'ok',(res && res.message) || 'Students saved successfully.');
+    }else{
+      throw new Error(res?.message || 'Students were not saved.');
     }
     const year = document.getElementById('manualAcademicYear').value;
     if(year) document.getElementById('yearFilter').value = year;

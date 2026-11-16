@@ -8,6 +8,15 @@
 <style>
 .seat-tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .room-row{display:grid;grid-template-columns:1.1fr .65fr .55fr 1.3fr .65fr auto;gap:8px;margin-bottom:8px;align-items:center}
+.room-bench-setup{grid-column:1/-1;display:grid;gap:4px;margin-bottom:8px}
+.room-bench-columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:8px}
+.room-bench-columns > div{padding:8px 10px;border:1px solid #d7e1eb;border-radius:8px}
+.room-bench-columns span{display:block}
+.extra-room-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+#extraRooms[hidden],#extraRooms [hidden],#seatCapacityNotice[hidden]{display:none!important}
+.seat-plan-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:14px}
+.seat-plan-actions .muted{margin-right:auto}
+.seat-position{text-align:center;font-weight:800}
 .room-plan{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff;margin-bottom:14px;break-inside:avoid;page-break-inside:avoid}
 .room-title{text-align:center;color:var(--primary);font-size:25px;margin:0 0 10px;font-weight:900}
 .column-layout{display:grid;gap:10px;align-items:start}
@@ -16,6 +25,7 @@
 .column-table{width:100%;border-collapse:collapse;background:#fff}
 .column-table th,.column-table td{border:1px solid #333;padding:7px 5px;vertical-align:middle;text-align:center;font-size:11px;height:68px;overflow:hidden}
 .column-table th{background:#f4f7f5;color:#0f5c3f;font-weight:900}
+.column-table thead th{height:auto}
 .bench-label{font-weight:900;background:#f8fbf9;color:#0f5c3f;white-space:nowrap;width:38px;text-align:center;font-size:12px}
 .roll-regi-cell{line-height:1.25;min-width:78px;height:68px;text-align:center;overflow:hidden}
 .roll-regi-cell b,.roll-regi-cell span{display:block;font-size:15px!important;color:#111!important;font-weight:700!important;line-height:1.25!important}
@@ -51,10 +61,14 @@
   .seat-big{display:none!important}
   .room-plan{border:0!important;border-radius:0!important;padding:0!important;margin:0 0 8mm!important}
   .column-layout{display:grid!important;gap:7px!important}
+  .column-table{table-layout:fixed!important}
   .column-table th,.column-table td{font-size:8px!important;padding:2.5px!important;height:14mm!important;overflow:hidden!important}
+  .column-table thead th{height:5mm!important}
   .column-table th,.room-plan table th,table thead th{text-align:center!important;vertical-align:middle!important}
   .roll-regi-cell{height:14mm!important;line-height:1.18!important;text-align:center!important;overflow:hidden!important}
-  .roll-regi-cell b,.roll-regi-cell span{font-size:11px!important;line-height:1.18!important;font-weight:700!important;color:#111!important}
+  .roll-regi-cell b,.roll-regi-cell span{font-size:10px!important;line-height:11px!important;font-weight:700!important;color:#111!important}
+  .roll-regi-cell b{display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;max-height:22px;overflow:hidden;overflow-wrap:anywhere}
+  .roll-regi-cell span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
 
 .manual-seat-panel{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:14px;background:#fff}
@@ -74,11 +88,11 @@
   table.print-align-table td.printable-name-cell{text-align:left!important}
 }
 </style>
-</head>
+<link rel="stylesheet" href="../assets/admin-modules.css?v=20261115"><script defer src="../assets/admin-modules.js?v=20261115"></script></head>
 <body>
 <header class="topbar no-print"><div class="inner"><a class="brand" href="index.html"><span class="brand-logo">🪑</span><span>Seat Plan</span></a><button class="mobile-menu admin-topbar-menu-hidden" data-mobile-menu ></button><nav class="navlinks admin-topbar-nav-hidden" aria-hidden="true"></nav></div></header>
 <div class="panel-layout">
-<aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🪑</div><h3>Seat Plan</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a class="active" href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="blank-marksheet-print.html">🖨️ Blank Marksheet</a><a href="individual-marks-entry.html">👤 Individual Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="seminar-fee.html">💰 Seminar Fee Management</a><a href="notice-management.html">📢 Notice Management</a><a href="../student/index.html">🎓 Student Panel</a><button type="button" class="btn red small-btn logout-sidebar-btn" data-logout style="margin-top:10px;width:100%;cursor:pointer;font-weight:bold;padding:9px;border:none;border-radius:10px;background:#dc2626;color:#fff">🚪 Logout Admin</button></nav></aside>
+<aside class="panel-sidebar no-print"><div class="panel-user"><div class="avatar">🪑</div><h3>Seat Plan</h3></div><nav class="panel-menu"><a href="index.html">🏠 Dashboard</a><a href="student-management.html">👥 Student Management</a><a href="actual-student-management.html">👤 Actual Students</a><a href="exam-create.html">📝 Create/Edit Exam</a><a href="exam-schedule.html">🗓️ Exam Schedule</a><a href="attendance-sheet.html">📄 Attendance Sheet</a><a href="class-routine.html">📅 Class Routine</a><a class="active" href="seat-plan.html">🪑 Seat Plan</a><a href="student-subject-entry.html">📌 Student Subjects</a><a href="marks-entry.html">✍️ Subject Marks Entry</a><a href="blank-marksheet-print.html">🖨️ Blank Marksheet</a><a href="individual-marks-entry.html">👤 Individual Marks Entry</a><a href="missing-marks-list.html">⚠️ Missing Marks Entry</a><a href="incourse-result.html">📊 Incourse Average</a><a href="attendance-marks-entry.html">✅ Attendance Marks</a><a href="result-management.html">📊 Result Options</a><a href="admit-card-print.html">🎫 Admit Card</a><a href="exam-block-management.html">🚫 Exam Block</a><a href="result-upload.html">⬆️ Final Result Import</a><a href="library-management.html">📚 Seminar Library</a><a href="seminar-fee.html">💰 Seminar Fee Management</a><a href="notice-management.html">📢 Notice Management</a><a href="../student/index.html">🎓 Student Panel</a><button type="button" class="btn red small-btn logout-sidebar-btn" data-logout style="margin-top:10px;width:100%;cursor:pointer;font-weight:bold;padding:9px;border:none;border-radius:10px;background:#dc2626;color:#fff">🚪 Logout Admin</button></nav></aside>
 <main class="panel-main">
 <section class="academic-banner no-print"><h1>Seat Plan</h1><p>Column-wise seat count, roll/regi sort, exam-wise student seat plan।</p></section>
 
@@ -108,14 +122,22 @@
     <div id="manualSeatPreview" class="manual-seat-preview">No manual Excel loaded.</div>
   </div>
   <div class="panel" style="margin-top:14px">
-    <div class="panel-title"><div><h2>Column-wise Room / Bench Setup</h2><p class="muted">Column Seats এ comma দিয়ে দিন: যেমন 20,20,18। Empty রাখলে capacity সমানভাবে ভাগ হবে।</p></div><button id="addRoomBtn" type="button" class="btn ghost">Add Room</button></div>
+    <div class="panel-title"><div><h2>Column-wise Room / Bench Setup</h2><p class="muted">Enter bench counts in column order, for example 8,8,9. Capacity and bench numbers are calculated automatically.</p></div></div>
     <div class="room-row" style="font-weight:800;color:var(--primary)">
-      <div>Room Name</div><div>Capacity</div><div>Columns</div><div>Column Seats</div><div>Per Bench</div><div></div>
+      <div>Room Name</div><div>Capacity</div><div>Columns</div><div>Benches per Column</div><div>Per Bench</div><div></div>
     </div>
     <div id="roomsBox"></div>
+    <p id="seatCapacityNotice" class="status info" role="status" hidden></p>
+    <details id="extraRooms">
+      <summary>Add Room</summary>
+      <div class="extra-room-options">
+        <button type="button" class="btn ghost" data-add-room="Room 409">Add Room 409</button>
+        <button type="button" class="btn ghost" data-add-room="Seminar Room">Add Seminar Room</button>
+      </div>
+    </details>
   </div>
-  <div class="filter-row" style="grid-template-columns:1fr auto auto;margin-top:14px">
-    <div class="muted">Seat plan format: <b>Column A</b> → <b>B1</b> | Student 1 | Student 3 | Student 5</div>
+  <div class="seat-plan-actions">
+    <div class="muted">Use Print Full Plan for numbered benches.</div>
     <button id="generateBtn" class="btn primary" type="button">Generate Seat Plan</button>
     <button id="printCardsBtn" class="btn blue" type="button">Print Seat Cards</button>
     <button id="printPlanBtn" class="btn blue" type="button">Print Full Plan</button>
@@ -189,44 +211,104 @@ function clearSeatPlanAfterFilter(){
   allStudents=[]; allocated=[];
   fullPlanOutput.innerHTML='<div class="empty">Select exam, load exam students and generate seat plan.</div>';
   seatCardOutput.innerHTML='<div class="empty">Seat cards will appear here.</div>';
+  updateRoomAvailability();
 }
-function parseColumnSeats(text,columns,capacity){
-  const nums=String(text||'').split(',').map(x=>Number(x.trim())).filter(n=>n>0);
-  if(nums.length){
-    const arr=nums.slice(0,Math.max(columns,nums.length));
-    while(arr.length<columns)arr.push(0);
-    return arr;
+function calculateRoom(name, benchText, perBench){
+  const values = benchText.trim().split(',').map(value=>value.trim());
+  if(!values.every(value=>/^\d+$/.test(value) && Number.isSafeInteger(Number(value)) && Number(value)>0)){
+    throw new Error(name + ': enter positive bench counts separated by commas.');
   }
-  columns=Math.max(1,Number(columns||1));
-  capacity=Math.max(0,Number(capacity||0));
-  const base=Math.floor(capacity/columns), extra=capacity%columns;
-  return Array.from({length:columns},(_,i)=>base+(i<extra?1:0));
-}
-function addRoom(name='',capacity='',columns=2,columnSeats='',perBench=3){
-  const div=document.createElement('div');
-  div.className='room-row';
-  div.innerHTML=`<input class="input room-name" placeholder="Room Name e.g. Room 101" value="${esc(name)}"><input class="input room-capacity" type="number" min="1" placeholder="Capacity" value="${esc(capacity)}"><input class="input room-columns" type="number" min="1" value="${esc(columns)}" placeholder="Columns"><input class="input room-column-seats" placeholder="Column Seats e.g. 20,20,18" value="${esc(columnSeats)}"><input class="input room-perbench" type="number" min="1" value="${esc(perBench)}" placeholder="Per Bench"><button type="button" class="btn danger room-remove">Remove</button>`;
-  div.querySelector('.room-remove').addEventListener('click',()=>div.remove());
-  div.querySelector('.room-column-seats').addEventListener('input',()=>{
-    const nums=String(div.querySelector('.room-column-seats').value||'').split(',').map(x=>Number(x.trim())).filter(n=>n>0);
-    if(nums.length){
-      div.querySelector('.room-columns').value=nums.length;
-      div.querySelector('.room-capacity').value=nums.reduce((a,b)=>a+b,0);
-    }
+  if(!Number.isInteger(perBench) || perBench < 1 || perBench > 26){
+    throw new Error(name + ': Per Bench must be a whole number from 1 to 26.');
+  }
+  const benchCounts = values.map(Number);
+  const columnSeats = benchCounts.map(count=>count*perBench);
+  const capacity = columnSeats.reduce((sum,count)=>sum+count,0);
+  if(!Number.isSafeInteger(capacity)) throw new Error(name + ': capacity is too large.');
+  let offset = 0;
+  const benchOffsets = benchCounts.map(count=>{
+    const start = offset;
+    offset += count;
+    return start;
   });
-  roomsBox.appendChild(div);
+  return {name,capacity,columns:benchCounts.length,perBench,columnSeats,benchCounts,benchOffsets};
+}
+function readRoom(row){
+  return calculateRoom(row.dataset.roomName, row.querySelector('.room-bench-counts').value,
+    Number(row.querySelector('.room-perbench').value));
+}
+function updateRoomPreview(row){
+  const capacity = row.querySelector('.room-capacity');
+  const columns = row.querySelector('.room-columns');
+  const preview = row.querySelector('.room-bench-columns');
+  try {
+    const room = readRoom(row);
+    capacity.value = room.capacity;
+    columns.value = room.columns;
+    preview.innerHTML = room.benchCounts.map((count,index)=>{
+      const first = room.benchOffsets[index]+1;
+      const last = room.benchOffsets[index]+count;
+      const range = first === last ? String(first) : first + '–' + last;
+      return '<div><strong>Column ' + columnName(index+1) + '</strong><span>Bench ' +
+        range + ' · ' + room.columnSeats[index] + ' seats</span></div>';
+    }).join('');
+  } catch(error) {
+    capacity.value = '';
+    columns.value = '';
+    preview.textContent = row.querySelector('.room-bench-counts').value.trim() ? error.message : '';
+  }
+}
+function addRoom(name, benchCounts='', perBench=2){
+  if([...roomsBox.children].some(row=>row.dataset.roomName===name)) return;
+  const row = document.createElement('div');
+  row.className = 'room-row';
+  row.dataset.roomName = name;
+  row.innerHTML = '<input class="input room-name" aria-label="Room name" readonly>' +
+    '<input class="input room-capacity" aria-label="Capacity" readonly>' +
+    '<input class="input room-columns" aria-label="Columns" readonly>' +
+    '<input class="input room-bench-counts" aria-label="Benches per column" placeholder="e.g. 8,8,9">' +
+    '<input class="input room-perbench" aria-label="Seats per bench" type="number" min="1" max="26" step="1">' +
+    (name === 'Room 408' ? '<span></span>' : '<button type="button" class="btn danger room-remove">Remove</button>') +
+    '<div class="room-bench-setup"><div class="room-bench-columns"></div></div>';
+  row.querySelector('.room-name').value = name;
+  row.querySelector('.room-bench-counts').value = benchCounts;
+  row.querySelector('.room-perbench').value = perBench;
+  row.querySelector('.room-remove')?.addEventListener('click',()=>{
+    row.remove();
+    roomSetupChanged();
+  });
+  row.addEventListener('input',()=>{
+    updateRoomPreview(row);
+    roomSetupChanged();
+  });
+  roomsBox.appendChild(row);
+  updateRoomPreview(row);
+  roomSetupChanged();
 }
 function getRooms(){
-  return [...roomsBox.querySelectorAll('.room-row')].map((r,i)=>{
-    const cap=Number(r.querySelector('.room-capacity').value||0);
-    const colText=r.querySelector('.room-column-seats').value.trim();
-    const parsed=String(colText||'').split(',').map(x=>Number(x.trim())).filter(n=>n>0);
-    const cols=Math.max(1,parsed.length || Number(r.querySelector('.room-columns').value||1));
-    const per=Math.max(1,Number(r.querySelector('.room-perbench').value||1));
-    const colSeats=parseColumnSeats(colText,cols,cap);
-    const total=colSeats.reduce((a,b)=>a+b,0);
-    return {name:r.querySelector('.room-name').value.trim()||`Room ${i+1}`,capacity:total||cap,columns:colSeats.length,perBench:per,columnSeats:colSeats};
-  }).filter(r=>r.capacity>0);
+  return [...roomsBox.children].map(readRoom);
+}
+function updateRoomAvailability(){
+  const notice = document.getElementById('seatCapacityNotice');
+  const choices = document.getElementById('extraRooms');
+  const configured = new Set([...roomsBox.children].map(row=>row.dataset.roomName));
+  const buttons = [...choices.querySelectorAll('[data-add-room]')];
+  buttons.forEach(button=>{button.hidden=configured.has(button.dataset.addRoom);});
+  choices.hidden = buttons.every(button=>button.hidden);
+  const capacity = [...roomsBox.children].reduce((total,row)=>total+Number(row.querySelector('.room-capacity').value||0),0);
+  const shortage = Math.max(0,filteredStudents().length-capacity);
+  notice.hidden = shortage===0;
+  notice.textContent = shortage ? shortage + ' more seats needed. ' +
+    (choices.hidden ? 'Check the bench counts and seats per bench.' : 'Add Room 409 or Seminar Room if available.') : '';
+  if(shortage && !choices.hidden) choices.open = true;
+}
+function roomSetupChanged(){
+  if(allocated.length){
+    allocated = [];
+    fullPlanOutput.innerHTML = '<div class="empty">Room setup changed. Generate Seat Plan again.</div>';
+    seatCardOutput.innerHTML = '<div class="empty">Seat cards will appear here.</div>';
+  }
+  updateRoomAvailability();
 }
 function sortStudents(rows){
   const mode=document.getElementById('sortSelect').value||'roll-asc';
@@ -272,6 +354,7 @@ async function loadStudents(){
       CurrentYear:s.CurrentYear||s.AcademicYear||'',
       SubjectCount:s.SubjectCount||0
     })));
+    roomSetupChanged();
     const ex=res.exam||selectedExam();
     if(ex){
       if(ex.SessionYear) sessionSelect.value=ex.SessionYear;
@@ -304,6 +387,7 @@ async function loadManualSeatStudents(){
     manualSeatMode=true;
     manualSeatExamName=document.getElementById('manualExamName').value.trim()||'Manual Seat Plan';
     allStudents=sortStudents(rows);
+    updateRoomAvailability();
     allocated=[];
     document.getElementById('planTitle').textContent=manualSeatExamName;
     fullPlanOutput.innerHTML='<div class="empty">Manual Excel loaded. Now click Generate Seat Plan.</div>';
@@ -329,26 +413,37 @@ function filteredStudents(){
   return rows;
 }
 function generateSeatPlan(){
-  const rooms=getRooms();
   if(!allStudents.length){showMsg('err','আগে Exam students load করুন অথবা Manual Excel load করুন।');return;}
-  if(!rooms.length){showMsg('err','কমপক্ষে 1টা room capacity দিন।');return;}
   const students=filteredStudents();
+  if(!students.length){showMsg('err','No students match the current search.');return;}
+  let rooms;
+  try {
+    rooms=getRooms();
+  } catch(error) {
+    showMsg('err',error.message);
+    return;
+  }
   const totalCap=rooms.reduce((s,r)=>s+r.capacity,0);
-  if(students.length>totalCap){showMsg('err',`Student ${students.length}, কিন্তু room capacity ${totalCap}. Capacity বাড়ান।`);return;}
+  if(students.length>totalCap){
+    updateRoomAvailability();
+    showMsg('err',`${students.length-totalCap} more seats needed to generate the plan.`);
+    return;
+  }
   allocated=[];
   let idx=0;
   rooms.forEach(room=>{
     for(let col=1;col<=room.columns;col++){
       const colCap=Number(room.columnSeats[col-1]||0);
-      const benchCount=Math.ceil(colCap/room.perBench);
-      // Fill one student in B1, then B2, then B3... after all benches, start again from B1.
+      const seatsToFill=Math.min(colCap, students.length-idx);
+      const benchCount=Math.ceil(seatsToFill/room.perBench);
+      // Spread rolls across the occupied benches while leaving unused benches at the back.
       for(let pos=1;pos<=room.perBench;pos++){
         for(let bench=1;bench<=benchCount;bench++){
           if(idx>=students.length)return;
           const seatInColumn=((bench-1)*room.perBench)+pos;
-          if(seatInColumn>colCap)continue;
+          if(seatInColumn>seatsToFill)continue;
           const st=students[idx++];
-          allocated.push({student:st,room:room.name,roomCapacity:room.capacity,columnNo:col,columnName:columnName(col),columnCapacity:colCap,benchNo:bench,benchSeat:pos,perBench:room.perBench,columns:room.columns,displayOrder:seatInColumn});
+          allocated.push({student:st,room:room.name,roomCapacity:room.capacity,columnNo:col,columnName:columnName(col),columnCapacity:colCap,benchNo:bench,benchNumber:room.benchOffsets[col-1]+bench,benchSeat:pos,perBench:room.perBench,columns:room.columns,displayOrder:seatInColumn});
         }
       }
     }
@@ -375,7 +470,7 @@ function renderFullPlan(){
     rows.forEach(x=>{(cols[x.columnNo]||(cols[x.columnNo]=[])).push(x);});
     const colCount=rows[0]?.columns||Object.keys(cols).length||1;
     const roomTitle=document.getElementById('roomTitleInput').value.trim();
-    return `<section class="room-plan"><h2 class="room-title">${esc(roomTitle||room)} <small style="font-size:13px;color:#555">(Capacity: ${rows[0]?.roomCapacity||rows.length})</small></h2><div class="column-layout" style="grid-template-columns:repeat(${colCount},minmax(0,1fr))">`+
+    return `<section class="room-plan"><h2 class="room-title">${esc(roomTitle ? roomTitle + ' · ' + room : room)} <small style="font-size:13px;color:#555">(Capacity: ${rows[0]?.roomCapacity||rows.length})</small></h2><div class="column-layout" style="grid-template-columns:repeat(${colCount},minmax(0,1fr))">`+
       Object.keys(cols).sort((a,b)=>Number(a)-Number(b)).map(c=>{
         const list=cols[c].sort((a,b)=>{
           if(a.benchNo!==b.benchNo) return a.benchNo-b.benchNo;
@@ -384,10 +479,13 @@ function renderFullPlan(){
         const per=list[0]?.perBench||3;
         const benches={};
         list.forEach(x=>{(benches[x.benchNo]||(benches[x.benchNo]=[])).push(x);});
-        return `<div class="seat-column"><div class="seat-column-title">Column ${esc(columnName(c))} <small>(${list[0]?.columnCapacity||list.length} seats)</small></div><table class="column-table"><tbody>`+
+        const seatHeader = '<thead><tr><th scope="col" class="bench-label">Bench</th>' +
+          Array.from({length:per},(_,i)=>`<th scope="col" class="seat-position">${columnName(i+1)}</th>`).join('') +
+          '</tr></thead>';
+        return `<div class="seat-column"><div class="seat-column-title">Column ${esc(columnName(c))} <small>(${list[0]?.columnCapacity||list.length} seats)</small></div><table class="column-table">${seatHeader}<tbody>`+
           Object.keys(benches).sort((a,b)=>Number(a)-Number(b)).map(b=>{
             const students=benches[b].sort((a,b)=>a.benchSeat-b.benchSeat);
-            return `<tr><td class="bench-label">B${esc(b)}</td>`+
+            return `<tr><td class="bench-label">${esc(students[0].benchNumber)}</td>`+
               Array.from({length:per},(_,i)=>rollRegiCell(students[i])).join('')+
               `</tr>`;
           }).join('')+
@@ -469,11 +567,14 @@ html,body{background:#fff!important;margin:0!important;padding:0!important;color
 .column-layout{display:grid!important;gap:6px!important;align-items:start!important}
 .seat-column{border:1.2px solid #111!important;border-radius:8px!important;background:#fff!important;overflow:hidden!important;break-inside:avoid!important}
 .seat-column-title{text-align:center!important;background:#eef7f1!important;color:#0f5c3f!important;font-weight:900!important;padding:5px!important;border-bottom:1px solid #111!important}
-.column-table{width:100%!important;border-collapse:collapse!important;background:#fff!important}
+.column-table{width:100%!important;table-layout:fixed!important;border-collapse:collapse!important;background:#fff!important}
 .column-table th,.column-table td{border:1px solid #333!important;padding:3px 2px!important;vertical-align:middle!important;text-align:center!important;font-size:8.2px!important;height:14mm!important;overflow:hidden!important}
+.column-table thead th{height:5mm!important}
 .bench-label{font-weight:900!important;background:#f8fbf9!important;color:#0f5c3f!important;white-space:nowrap!important;width:24px!important;text-align:center!important;font-size:8.4px!important}
 .roll-regi-cell{line-height:1.18!important;min-width:44px!important;height:14mm!important;text-align:center!important;overflow:hidden!important}
-.roll-regi-cell b,.roll-regi-cell span{display:block!important;font-size:11px!important;line-height:1.18!important;color:#111!important;font-weight:700!important}
+.roll-regi-cell b,.roll-regi-cell span{display:block!important;font-size:10px!important;line-height:11px!important;color:#111!important;font-weight:700!important}
+.roll-regi-cell b{display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;max-height:22px;overflow:hidden;overflow-wrap:anywhere}
+.roll-regi-cell span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${isCard?'.room-plan,.column-layout,.column-table{display:none!important}':'.seat-card-page,.seat-card-pages{display:none!important}'}
 /* SEAT PRINT HEADER CENTER ALIGN FIX */
 .column-table th,.room-plan table th,table thead th{text-align:center!important;vertical-align:middle!important}
@@ -488,15 +589,17 @@ sessionSelect.addEventListener('change',()=>{fillExamSelect();clearSeatPlanAfter
 yearSelect.addEventListener('change',()=>{fillExamSelect();clearSeatPlanAfterFilter();});
 examSelect.addEventListener('change',()=>{syncFromExam();clearSeatPlanAfterFilter();});
 document.getElementById('sortSelect').addEventListener('change',()=>{if(allStudents.length){allStudents=sortStudents(allStudents);if(allocated.length)generateSeatPlan();}});
-document.getElementById('addRoomBtn').addEventListener('click',()=>addRoom('',40,2,'20,20',3));
+document.querySelectorAll('[data-add-room]').forEach(button=>{
+  button.addEventListener('click',()=>addRoom(button.dataset.addRoom));
+});
+document.getElementById('studentSearch').addEventListener('input',roomSetupChanged);
 document.getElementById('loadStudentsBtn').addEventListener('click',loadStudents);
 document.getElementById('loadManualSeatBtn').addEventListener('click',loadManualSeatStudents);
 document.getElementById('clearManualSeatBtn').addEventListener('click',clearManualSeat);
 document.getElementById('generateBtn').addEventListener('click',generateSeatPlan);
 document.getElementById('printCardsBtn').addEventListener('click',()=>printArea('seatCardPrintArea','Seat Cards'));
 document.getElementById('printPlanBtn').addEventListener('click',()=>printArea('seatPlanPrintArea','Full Seat Plan'));
-addRoom('Room 101',40,2,'20,20',3);
-addRoom('Room 102',40,2,'20,20',3);
+addRoom('Room 408','8,8,9',2);
 loadExamChoices();
 </script>
 </body>

@@ -2162,20 +2162,86 @@ async function sbRequestOnce_(url, headers, opt){
   try{ data = text ? JSON.parse(text) : null; }catch(e){ data = text; }
   if(!res.ok){
     const msg = (data && (data.message || data.details || data.hint)) || text || ('Supabase HTTP ' + res.status);
-    throw new Error('Supabase HTTP ' + res.status + ': ' + msg);
+    const error = new Error('Supabase HTTP ' + res.status + ': ' + msg);
+    error.code = data?.code;
+    error.status = res.status;
+    throw error;
   }
   return data;
 }
+let sbRefreshPromise_ = null;
+function sbTokenExpiry_(user){
+  if(Number(user?.authExpiresAt)) return Number(user.authExpiresAt);
+  try {
+    const part = user.authToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return Number(JSON.parse(atob(part)).exp) || 0;
+  } catch(e){ return 0; }
+}
+async function sbAdminAccessToken_(forceRefresh=false, rejectedToken=''){
+  const user = getAuthSession();
+  if(!user?.loggedIn || user.role !== 'admin') return null;
+  if(!/^[\w-]+\.[\w-]+\.[\w-]+$/.test(user.authToken || '')){
+    throw new Error('Please use Admin Login on the home page before continuing.');
+  }
+  if(forceRefresh && rejectedToken && user.authToken !== rejectedToken) return user.authToken;
+  const expiry = sbTokenExpiry_(user);
+  if(!forceRefresh && (!expiry || expiry > Date.now()/1000 + 60)) return user.authToken;
+  if(sbRefreshPromise_) return sbRefreshPromise_;
+  const refresh = async () => {
+    // Re-read after acquiring the cross-tab lock: another tab may have refreshed.
+    const current = getAuthSession();
+    if(!current?.loggedIn || current.role !== 'admin') throw new Error('Your session ended. Sign in again.');
+    if(current.authToken !== user.authToken) return current.authToken;
+    if(!current.authRefreshToken) throw new Error('This older session cannot renew itself. Sign out and use Admin Login once.');
+    const response = await sbFetchWithTimeout_(GEO_SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method:'POST', headers:{apikey:GEO_SUPABASE_PUBLISHABLE_KEY, 'Content-Type':'application/json'},
+      body:JSON.stringify({refresh_token:current.authRefreshToken})
+    }, 30000);
+    const result = await response.json();
+    if(!response.ok || !result.access_token || !result.refresh_token){
+      throw new Error(response.status >= 500 ? 'Could not renew your session. Please retry shortly.' : 'Your session has ended. Sign in again from the home page.');
+    }
+    const latest = getAuthSession();
+    if(!latest?.loggedIn || latest.authToken !== current.authToken){
+      throw new Error('Your login changed while renewing the session. Please retry.');
+    }
+    saveAuthSession(Object.assign({}, latest, {
+      authToken:result.access_token, authRefreshToken:result.refresh_token,
+      authExpiresAt:result.expires_at || Math.floor(Date.now()/1000) + Number(result.expires_in || 3600)
+    }));
+    return result.access_token;
+  };
+  sbRefreshPromise_ = (async () => {
+    try {
+      return typeof navigator !== 'undefined' && navigator.locks?.request
+        ? await navigator.locks.request('geo-admin-auth-refresh', refresh) : await refresh();
+    } finally { sbRefreshPromise_ = null; }
+  })();
+  return sbRefreshPromise_;
+}
+// The fee SDK and the REST adapter share one session and one refresh mechanism.
+window.geoAdminAccessToken = sbAdminAccessToken_;
+window.geoSupabaseFetch = async function(url, options={}){
+  const target = new URL(typeof url === 'string' ? url : url.url, GEO_SUPABASE_URL);
+  if(target.origin !== new URL(GEO_SUPABASE_URL).origin || !target.pathname.startsWith('/rest/v1/')){
+    return fetch(url, options);
+  }
+  let token = await sbAdminAccessToken_();
+  const headers = new Headers(options.headers || {});
+  if(token) headers.set('Authorization', 'Bearer ' + token);
+  let response = await fetch(url, Object.assign({}, options, {headers}));
+  if(response.status === 401 && token){
+    token = await sbAdminAccessToken_(true, token);
+    headers.set('Authorization', 'Bearer ' + token);
+    response = await fetch(url, Object.assign({}, options, {headers}));
+  }
+  return response;
+};
 async function sbRequest(table, params={}, opt={}){
   const qs = sbQS(params);
   const url = GEO_SUPABASE_REST + '/' + encodeURIComponent(sbTableName(table)) + (qs ? '?' + qs : '');
-  let token = GEO_SUPABASE_PUBLISHABLE_KEY;
-  try {
-    const u = typeof getAuthSession === 'function' ? getAuthSession() : null;
-    if(u && u.loggedIn && u.role === 'admin' && u.authToken && u.authToken !== 'supabase-admin' && u.authToken !== 'supabase-admin-temp'){
-       token = u.authToken;
-    }
-  } catch(e){}
+  const adminToken = await sbAdminAccessToken_();
+  let token = adminToken || GEO_SUPABASE_PUBLISHABLE_KEY;
   const headers = {
     apikey: GEO_SUPABASE_PUBLISHABLE_KEY,
     Authorization: 'Bearer ' + token,
@@ -2188,13 +2254,30 @@ async function sbRequest(table, params={}, opt={}){
   const canRetry = method === 'GET' || method === 'PATCH' || method === 'DELETE' || opt.retryPost === true;
   const tries = canRetry ? 4 : 1;
   let lastErr = null;
+  let authRetried = false;
   for(let i=0;i<tries;i++){
     try{
       return await sbRequestOnce_(url, headers, Object.assign({}, opt, {method}));
     }catch(err){
       lastErr = err;
+      if(err.status === 401 && adminToken && !authRetried){
+        authRetried = true;
+        token = await sbAdminAccessToken_(true, token);
+        headers.Authorization = 'Bearer ' + token;
+        i--; // A rejected authentication request did not apply the write.
+        continue;
+      }
       if(!canRetry || !sbRetryableError_(err) || i === tries - 1) break;
       await sbSleep_(450 * Math.pow(2, i));
+    }
+  }
+  if(method !== 'GET'){
+    if(lastErr?.status === 401){
+      throw new Error('Your admin session is invalid or expired. Sign in again before saving.');
+    }
+    if(lastErr?.code === '42501'){
+      throw new Error('Supabase denied ' + ({PATCH:'UPDATE', POST:'INSERT', DELETE:'DELETE'}[method] || method) +
+        ' on ' + sbTableName(table) + '. Check the signed-in admin account’s policy and table privileges.');
     }
   }
   throw lastErr;
@@ -2214,11 +2297,19 @@ function sbDedupeRows(table, rows){
     return Array.from(m.values());
   }
   if(table === 'Students' || table === 'ActualStudents') return latestBy(r=>sbClean(r.Roll) || sbClean(r.RegistrationNumber));
-  if(table === 'Subjects') return latestBy(r=>sbClean(r.AcademicYear) + '|' + sbClean(r.SubjectCode));
+  if(table === 'Subjects') return latestBy(r=>{
+    const subject = sbSubjectObj(r);
+    return subject.AcademicYear + '|' + subject.SubjectCode;
+  });
   if(table === 'StudentSubjects') return latestBy(r=>[sbClean(r.AcademicYear), sbClean(r.StudySessionYear || r.CurrentStudySession || r.SessionYear), sbClean(r.Roll || r.RegistrationNumber)].join('|'));
   if(table === 'NonMajorGroups') return latestBy(r=>sbClean(r.AcademicYear) + '|' + sbClean(r.GroupName || r.GroupID));
   if(table === 'Exams') return latestBy(r=>sbClean(r.ExamID) || [r.SessionYear,r.AcademicYear,r.ExamType,r.ExamName].map(sbClean).join('|'));
-  if(table === 'ExamSchedule') return latestBy(r=>sbClean(r.ExamID) + '|' + sbClean(r.SubjectCode));
+  if(table === 'ExamSchedule') return latestBy(r=>{
+    const subject = sbSubjectObj(r);
+    const exam = sbClean(r.ExamID);
+    const context = exam ? ['exam', exam] : ['legacy', r.SessionYear, subject.AcademicYear, r.ExamType];
+    return [...context, subject.SubjectCode].map(sbClean).join('|');
+  });
   if(table === 'ExamBlocks') return latestBy(r=>sbClean(r.ExamID) + '|' + sbClean(r.Roll || r.RegistrationNumber));
   if(table === 'Marks') return latestBy(r=>sbClean(r.ExamID) + '|' + sbClean(r.SubjectCode) + '|' + sbClean(r.Roll || r.RegistrationNumber));
   if(table === 'AttendanceMarks') return latestBy(r=>[r.ExamID,r.SessionYear,r.AcademicYear,r.SubjectCode,r.Roll||r.RegistrationNumber].map(sbClean).join('|'));
@@ -2256,11 +2347,15 @@ async function sbPatchByRowId(table, rowId, obj){
   const picked = sbPick(table, obj);
   const data = await sbRequest(table, {row_id:'eq.'+rowId}, {method:'PATCH', body:picked});
   if(Array.isArray(data) && data.length) return data[0];
-  const check = await sbRequest(table, {select:'*', row_id:'eq.'+rowId, limit:1}, {method:'GET'});
-  if(Array.isArray(check) && check.length) return check[0];
-  throw new Error('Update failed: saved row not found in ' + table);
+  throw new Error('Update was not applied to ' + sbTableName(table) + '. Check the row and the admin UPDATE policy.');
 }
-async function sbDeleteByRowId(table, rowId){ sbClearCache(); return await sbRequest(table, {row_id:'eq.'+rowId}, {method:'DELETE', prefer:'return=representation'}); }
+async function sbDeleteByRowId(table, rowId){
+  if(!rowId) throw new Error('Delete failed: row id missing for ' + table);
+  sbClearCache();
+  const rows = await sbRequest(table, {row_id:'eq.'+rowId}, {method:'DELETE', prefer:'return=representation'});
+  if(!Array.isArray(rows) || !rows.length) throw new Error('Delete was not applied to ' + sbTableName(table) + '. Reload the row and check the admin DELETE policy.');
+  return rows;
+}
 async function sbFindOne(table, predicate, opt={}){ return (await sbAll(table, opt)).find(predicate) || null; }
 async function sbUpsertBy(table, predicate, obj){
   const found = await sbFindOne(table, predicate, {raw:true});
@@ -2270,8 +2365,11 @@ async function sbUpsertBy(table, predicate, obj){
     return Array.isArray(ins) ? ins[0] : ins;
   }catch(err){
     // If internet failed after Supabase saved the row, verify before showing failure.
+    if(!sbRetryableError_(err)) throw err;
     const saved = await sbFindOne(table, predicate, {raw:true}).catch(()=>null);
-    if(saved && saved.row_id) return saved;
+    const expected = sbPick(table, obj);
+    if(saved && saved.row_id && Object.keys(expected).every(key =>
+      sbClean(saved[key]) === sbClean(expected[key]))) return saved;
     throw err;
   }
 }
@@ -2307,9 +2405,9 @@ function sbStudentObj(row){
 function sbSubjectObj(row){
   row = row || {};
   const out = Object.assign({}, row);
-  out.AcademicYear = sbClean(out.AcademicYear || out['Academic Year']);
-  out.SubjectCode = sbClean(out.SubjectCode || out['Subject Code'] || out.Code);
-  out.SubjectName = sbClean(out.SubjectName || out['Subject Name'] || out.Name);
+  out.AcademicYear = sbClean(out.AcademicYear || out['Academic Year'] || out.academic_year || out.academicYear);
+  out.SubjectCode = sbClean(out.SubjectCode || out['Subject Code'] || out.subject_code || out.subjectCode || out.Code);
+  out.SubjectName = sbClean(out.SubjectName || out['Subject Name'] || out.subject_name || out.subjectName || out.Name);
   out.SubjectType = sbNormalizeType(out.SubjectType || out['Subject Type'] || out.Type);
   out.FullMarks = sbClean(out.FullMarks || out['Full Marks'] || 100);
   out.PassMarks = sbClean(out.PassMarks || out['Pass Marks'] || 40);
@@ -2362,16 +2460,22 @@ async function sbGetStudent(p={}){
 }
 async function sbRegisterStudent(data={}){
   const roll = sbClean(data.roll || data.Roll || data.rollId || data.classRoll);
-  const reg = sbClean(data.registrationNumber || data.regNo || data.RegistrationNumber);
+  const reg = sbClean(data.registrationNumber || data.regNo || data.RegistrationNumber || data.Registration);
   const explicitRowId = sbClean(data.row_id || data.rowId || data.Row || data.studentRowId);
   let existing = null;
   if(explicitRowId){
     const exactRows = await sbAll('Students', {raw:true});
     const exact = exactRows.find(r => sbClean(r.row_id) === explicitRowId);
-    if(exact) existing = sbStudentObj(exact);
+    if(!exact) throw new Error('The student to update is unavailable. Reload the student before saving.');
+    existing = sbStudentObj(exact);
   }
   if(!existing){
-    existing = (roll ? await sbFindStudent(roll) : null) || (reg ? await sbFindStudent(reg) : null);
+    const rollMatch = roll ? await sbFindStudent(roll) : null;
+    const regMatch = reg ? await sbFindStudent(reg) : null;
+    if(rollMatch && regMatch && rollMatch.row_id !== regMatch.row_id){
+      throw new Error('The roll and registration number belong to different student records.');
+    }
+    existing = rollMatch || regMatch;
   }
   const obj = {
     Timestamp: sbNow(),
@@ -2395,8 +2499,8 @@ async function sbRegisterStudent(data={}){
     NonMajor2: sbClean(data.nonMajor2 || data.NonMajor2 || (existing && existing.NonMajor2)),
     Group: sbClean(data.group || data.Group || (existing && existing.Group)),
     Password: sbClean(data.password || data.Password || (existing && existing.Password)),
-    StudySessionYear: sbClean(data.studySessionYear || data.currentStudySession || (existing && (existing.StudySessionYear || existing.SessionYear))),
-    CurrentStudySession: sbClean(data.currentStudySession || data.studySessionYear || (existing && (existing.CurrentStudySession || existing.SessionYear))),
+    StudySessionYear: sbClean(data.studySessionYear || data.currentStudySession || (existing && (existing.StudySessionYear || existing.SessionYear)) || data.sessionYear || data.SessionYear || data.session),
+    CurrentStudySession: sbClean(data.currentStudySession || data.studySessionYear || (existing && (existing.CurrentStudySession || existing.SessionYear)) || data.sessionYear || data.SessionYear || data.session),
     StudyStatus: sbClean(data.studyStatus || data.StudyStatus || (existing && existing.StudyStatus) || 'Continuing'),
     Status: sbClean(data.status || data.Status || (existing && existing.Status) || 'Active')
   };
@@ -2444,7 +2548,6 @@ async function sbLogin(data={}){
     return {success:false, message:'Student login failed'};
   }
   
-  // Try GoTrue first
   try {
     const res = await fetch(GEO_SUPABASE_URL + '/auth/v1/token?grant_type=password', {
       method: 'POST',
@@ -2462,38 +2565,17 @@ async function sbLogin(data={}){
           role: 'admin', 
           name: result.user?.user_metadata?.name || 'Admin', 
           username: username, 
-          authToken: result.access_token, 
+          authToken: result.access_token,
+          authRefreshToken: result.refresh_token,
+          authExpiresAt: result.expires_at || Math.floor(Date.now()/1000) + Number(result.expires_in || 3600),
           email: username
         }
       };
     }
+    return {success:false, message:'Admin sign-in failed. Use the email and password registered in this project’s Supabase Authentication. If your account was only in the old Admins table, ask the project owner to set up its Auth account.'};
   } catch(e) {
-    console.log('GoTrue failed, falling back to Admins table');
+    return {success:false, message:'Could not reach Supabase Authentication. Check your connection and retry.'};
   }
-  
-  // Fallback to legacy Admins table
-  try {
-    const adminData = await sbAll('Admins', {raw:true});
-    const uClean = String(username || '').trim().toLowerCase();
-    const pClean = String(password || '').trim();
-    const adminUser = (adminData||[]).find(a => 
-      sbClean(a.Username).trim().toLowerCase() === uClean || 
-      sbClean(a.Email).trim().toLowerCase() === uClean
-    );
-    if(adminUser) {
-      const dbPass = String(adminUser.Password || '').trim();
-      if(dbPass === pClean || dbPass.toLowerCase() === pClean.toLowerCase()) {
-        const safeAdmin = Object.assign({}, adminUser);
-        delete safeAdmin.Password;
-        return {
-          success: true,
-          user: Object.assign(safeAdmin, { role: 'admin', username: adminUser.Username, authToken: GEO_SUPABASE_PUBLISHABLE_KEY })
-        };
-      }
-    }
-  } catch(err) {}
-  
-  return {success:false, message: 'Invalid username or password'};
 }
 async function sbGetSubjects(p={}){
   let rows = (await sbAll('Subjects')).map(sbSubjectObj).filter(r=>r.SubjectCode && r.SubjectName).filter(sbIsActive);
@@ -2501,12 +2583,16 @@ async function sbGetSubjects(p={}){
   const type = sbNormalizeType(p.subjectType || p.SubjectType);
   const code = sbClean(p.subjectCode || p.SubjectCode);
   const q = sbLower(p.search || p.q || p.keyword);
-  if(year) rows = rows.filter(r=>r.AcademicYear === year);
+  if(year) rows = rows.filter(r=>sbSameAcademicYear(r.AcademicYear, year));
   if(type) rows = rows.filter(r=>sbNormalizeType(r.SubjectType) === type);
   if(code) rows = rows.filter(r=>r.SubjectCode === code);
   if(q) rows = rows.filter(r=>[r.SubjectCode,r.SubjectName,r.SubjectType,r.AcademicYear].join(' ').toLowerCase().includes(q));
   rows = sbSortSubjects(rows);
   return {success:true, subjects:rows, count:rows.length, source:'supabase_subject_serial'};
+}
+function sbSameAcademicYear(left, right){
+  const rank = sbAcademicRank(left);
+  return sbLower(left) === sbLower(right) || (rank !== 99 && rank === sbAcademicRank(right));
 }
 function sbSubjectAllowedForExam(exam, s){
   const examType = sbClean(exam.ExamType || exam.examType);
@@ -2521,15 +2607,29 @@ function sbSubjectAllowedForExam(exam, s){
 async function sbGetSubjectsForExamCreate(p={}){
   const res = await sbGetSubjects(p);
   const exam = {ExamType: sbClean(p.examType || p.ExamType)};
-  const rows = (res.subjects || []).filter(s=>sbSubjectAllowedForExam(exam, s));
+  const subjects = new Map(res.subjects.map(s=>[s.SubjectCode, s]));
+  if(p.examId){
+    const { schedules } = await sbGetExamSchedule({examId:p.examId});
+    for(const schedule of schedules){
+      if(schedule.SubjectCode && !subjects.has(schedule.SubjectCode)){
+        subjects.set(schedule.SubjectCode, sbSubjectObj(schedule));
+      }
+    }
+  }
+  const rows = sbSortSubjects([...subjects.values()].filter(s=>sbSubjectAllowedForExam(exam, s)));
   return {success:true, subjects:rows, count:rows.length};
 }
 async function sbSaveSubject(data={}){
   const code = sbClean(data.subjectCode || data.SubjectCode);
   const year = sbClean(data.academicYear || data.AcademicYear);
-  if(!code || !year) throw new Error('Academic Year and Subject Code required');
+  if(!code || !year || !sbClean(data.subjectName || data.SubjectName)) throw new Error('Academic Year, Subject Code and Subject Name are required');
   const obj = {Timestamp:sbNow(), SubjectID:sbClean(data.subjectId || data.SubjectID) || sbId('SUB'), AcademicYear:year, SubjectType:sbNormalizeType(data.subjectType || data.SubjectType), SubjectCode:code, SubjectName:sbClean(data.subjectName || data.SubjectName), FullMarks:sbClean(data.fullMarks || data.FullMarks || 100), PassMarks:sbClean(data.passMarks || data.PassMarks || 40), Credits:sbClean(data.credits || data.Credits || ''), Status:sbClean(data.status || 'Active')};
-  const saved = await sbUpsertBy('Subjects', r=>sbClean(r.AcademicYear)===year && sbClean(r.SubjectCode)===code, obj);
+  const existing = (await sbAll('Subjects')).find(row=>{
+    const subject = sbSubjectObj(row);
+    return sbSameAcademicYear(subject.AcademicYear,year) && subject.SubjectCode===code;
+  });
+  if(existing?.SubjectID) obj.SubjectID = existing.SubjectID;
+  const saved = existing?.row_id ? await sbPatchByRowId('Subjects',existing.row_id,obj) : (await sbInsert('Subjects',obj))[0];
   return {success:true, message:'Subject saved successfully', subject:saved || obj};
 }
 function sbNonMajorGroupKey(v){
@@ -2559,7 +2659,7 @@ async function sbGetStudentSubjects(p={}){
   let rows = (await sbAll('StudentSubjects', {raw:true})).filter(sbIsActive);
   const year = sbClean(p.academicYear || p.AcademicYear), roll = sbClean(p.roll || p.Roll), q = sbLower(p.search || p.q);
   const session = sbClean(p.studySessionYear || p.currentStudySession || p.sessionYear || p.SessionYear || p.StudySessionYear);
-  if(year) rows = rows.filter(r=>sbClean(r.AcademicYear) === year);
+  if(year) rows = rows.filter(r=>sbSameAcademicYear(r.AcademicYear,year));
   if(session) rows = rows.filter(r=>!sbClean(r.StudySessionYear || r.CurrentStudySession || r.SessionYear) || sbClean(r.StudySessionYear || r.CurrentStudySession || r.SessionYear) === session);
   if(roll) rows = rows.filter(r=>sbClean(r.Roll) === roll || sbClean(r.RegistrationNumber) === roll);
   if(q) rows = rows.filter(r=>[r.Roll,r.RegistrationNumber,r.StudentName,r.SubjectCodes,r.SubjectNames,r.SessionYear,r.StudySessionYear,r.CurrentStudySession,r.AcademicYear,r.NonMajorGroup].join(' ').toLowerCase().includes(q));
@@ -2604,6 +2704,7 @@ async function sbGetAssignedRowsForStudents(year, studySession, students){
 async function sbSaveStudentSubjects(data={}){
   const roll = sbClean(data.roll || data.Roll || data.studentKey);
   const year = sbClean(data.academicYear || data.AcademicYear);
+  if(!roll || !year) throw new Error('Student roll and academic year are required.');
   const student = await sbFindStudent(roll);
   if(!student) throw new Error('Student not found');
   const passed = Array.isArray(data.subjects) ? data.subjects : [];
@@ -2614,7 +2715,10 @@ async function sbSaveStudentSubjects(data={}){
   }
   const studySession = sbClean(data.studySessionYear || data.currentStudySession || data.sessionYear || data.SessionYear || student.StudySessionYear || student.CurrentStudySession || student.SessionYear);
   const obj = {Timestamp:sbNow(), StudentSubjectID:sbClean(data.studentSubjectId || data.StudentSubjectID) || sbId('SSUB'), SessionYear:studySession, AcademicYear:year, Roll:student.Roll, RegistrationNumber:student.RegistrationNumber, StudentName:student.Name, SubjectCodes:subjects.map(s=>s.SubjectCode).join(','), SubjectNames:subjects.map(s=>s.SubjectName).join(' | '), SubjectTypes:subjects.map(s=>s.SubjectType).join(','), NonMajorGroup:sbClean(data.nonMajorGroup || student.NonMajorGroup), Status:'Active'};
-  const existing = (await sbAll('StudentSubjects', {raw:true})).find(r=>sbClean(r.Roll)===student.Roll && sbClean(r.AcademicYear)===year && (!studySession || !sbClean(r.SessionYear) || sbClean(r.SessionYear)===studySession) && sbIsActive(r));
+  const matching = (await sbAll('StudentSubjects', {raw:true})).filter(r=>
+    sbClean(r.Roll)===student.Roll && sbSameAcademicYear(r.AcademicYear,year) && sbIsActive(r));
+  const existing = matching.findLast(r=>sbClean(r.SessionYear)===studySession) ||
+    matching.findLast(r=>!sbClean(r.SessionYear));
   obj.StudentSubjectID = existing && existing.StudentSubjectID ? existing.StudentSubjectID : obj.StudentSubjectID;
   const saved = existing && existing.row_id ? await sbPatchByRowId('StudentSubjects', existing.row_id, obj) : (await sbInsert('StudentSubjects', obj))[0];
   return {success:true, message:'Student subjects saved successfully', subjectRow:saved || obj};
@@ -2650,6 +2754,7 @@ async function sbSaveExam(data={}){
     (givenExamId && sbClean(r.ExamID)===givenExamId) ||
     (!givenExamId && sbClean(r.SessionYear)===sbClean(data.sessionYear||data.SessionYear) && sbClean(r.AcademicYear)===sbClean(data.academicYear||data.AcademicYear) && sbClean(r.ExamType)===sbClean(data.examType||data.ExamType) && sbClean(r.ExamName)===sbClean(data.examName||data.ExamName||[data.sessionYear,data.academicYear,data.examType].filter(Boolean).join(' - ')))
   );
+  if(givenExamId && !existing) throw new Error('Exam to update was not found or is unavailable to this account.');
   const oldResultPub = existing ? sbClean(existing.ResultPublished) : 'No';
   const oldPub = existing ? sbClean(existing.Published) : 'No';
   const oldPubStat = existing ? sbClean(existing.PublishStatus) : 'Unpublished';
@@ -2673,13 +2778,19 @@ async function sbSaveExam(data={}){
     PublishStatus:sbClean(data.publishStatus || data.PublishStatus || oldPubStat)
   };
   if(!obj.SessionYear || !obj.AcademicYear || !obj.ExamType) throw new Error('Session, Year and Exam Type required');
+  if(obj.AssignmentMarks !== '' && (!Number.isFinite(Number(obj.AssignmentMarks)) || Number(obj.AssignmentMarks) < 0)){
+    throw new Error('Assignment Marks must be zero or a positive number.');
+  }
   if(existing && existing.ExamID) obj.ExamID = existing.ExamID;
   const saved = existing && existing.row_id ? await sbPatchByRowId('Exams', existing.row_id, obj) : (await sbInsert('Exams', obj))[0];
   const exam = sbExamObj(Object.assign({}, obj, saved || {}));
   return {success:true, message:'Exam saved successfully', examId:exam.ExamID, ExamID:exam.ExamID, exam, updated:!!existing};
 }
 async function sbGetExamSchedule(p={}){
-  const all = (await sbAll('ExamSchedule')).filter(sbIsActive);
+  const all = (await sbAll('ExamSchedule')).filter(sbIsActive).map(row=>{
+    const subject = sbSubjectObj(row);
+    return {...row, AcademicYear:subject.AcademicYear, SubjectCode:subject.SubjectCode, SubjectName:subject.SubjectName};
+  });
   const examId=sbClean(p.examId||p.ExamID), year=sbClean(p.academicYear||p.AcademicYear), code=sbClean(p.subjectCode||p.SubjectCode);
   const session = sbClean(p.sessionYear || p.studySessionYear || p.SessionYear);
   const type = sbClean(p.examType || p.ExamType);
@@ -2690,29 +2801,44 @@ async function sbGetExamSchedule(p={}){
   if(examId){
     rows = rows.filter(r=>sbClean(r.ExamID)===examId);
     // Imported old schedules may have blank ExamID. Fall back to Session + Year + ExamType.
-    if(!rows.length && (exam.SessionYear || session) && (exam.AcademicYear || year)){
-      rows = all.filter(r=>
+    if((exam.SessionYear || session) && (exam.AcademicYear || year)){
+      const scheduledCodes = new Set(rows.map(r=>r.SubjectCode));
+      const examType = exam.ExamType || type;
+      const legacyRows = all.filter(r=>
+        !sbClean(r.ExamID) &&
+        !scheduledCodes.has(r.SubjectCode) &&
         sbClean(r.SessionYear)===(exam.SessionYear || session) &&
-        sbClean(r.AcademicYear)===(exam.AcademicYear || year) &&
-        (!exam.ExamType || !sbClean(r.ExamType) || sbClean(r.ExamType)===exam.ExamType)
+        sbSameAcademicYear(r.AcademicYear, exam.AcademicYear || year) &&
+        (!examType || !sbClean(r.ExamType) || sbClean(r.ExamType)===examType)
       );
+      rows = rows.concat(legacyRows);
     }
   } else {
     if(session) rows=rows.filter(r=>sbClean(r.SessionYear)===session);
-    if(year) rows=rows.filter(r=>sbClean(r.AcademicYear)===year);
+    if(year) rows=rows.filter(r=>sbSameAcademicYear(r.AcademicYear, year));
     if(type) rows=rows.filter(r=>sbClean(r.ExamType)===type);
   }
-  if(year) rows=rows.filter(r=>!sbClean(r.AcademicYear) || sbClean(r.AcademicYear)===year);
+  if(year) rows=rows.filter(r=>!sbClean(r.AcademicYear) || sbSameAcademicYear(r.AcademicYear, year));
   if(code) rows=rows.filter(r=>sbClean(r.SubjectCode)===code);
 
   const latest = new Map();
   rows.forEach((r,idx)=>{
-    const k=[sbClean(r.ExamID)||examId||'', sbClean(r.SubjectCode), sbClean(r.SessionYear), sbClean(r.AcademicYear), sbClean(r.ExamType)].join('|') || ('row_'+(r.row_id||idx));
+    const k=examId && r.SubjectCode
+      ? r.SubjectCode
+      : [sbClean(r.ExamID), r.SubjectCode, sbClean(r.SessionYear), r.AcademicYear, sbClean(r.ExamType)].join('|') || ('row_'+(r.row_id||idx));
     const old=latest.get(k);
     if(!old || Number(r.row_id||0) >= Number(old.row_id||0)) latest.set(k,r);
   });
   rows = Array.from(latest.values());
-  const subjectRows = (await sbGetSubjects({academicYear:exam.AcademicYear || year || (rows[0] && rows[0].AcademicYear) || ''})).subjects;
+  const subjectRows = (await sbGetSubjects({academicYear:exam.AcademicYear || year})).subjects;
+  rows = rows.map(row=>{
+    const schedule = sbSubjectObj(row);
+    const catalog = subjectRows.find(s=>s.SubjectCode === schedule.SubjectCode &&
+      sbSameAcademicYear(s.AcademicYear, schedule.AcademicYear || exam.AcademicYear || year));
+    return {...row, SubjectCode:schedule.SubjectCode,
+      SubjectName:schedule.SubjectName && schedule.SubjectName !== schedule.SubjectCode
+        ? schedule.SubjectName : (catalog?.SubjectName || '')};
+  });
   const order = sbSubjectOrderMap(subjectRows);
   rows = rows.sort((a,b)=>{
     const ao = order[sbClean(a.SubjectCode)] || sbSubjectSerialNum(a, 999999);
@@ -2723,8 +2849,11 @@ async function sbGetExamSchedule(p={}){
   return {success:true, exam, schedule:code ? (rows[0] || null) : rows, schedules:rows, rows};
 }
 async function sbSaveExamSchedule(data={}){
-  const exam = (await sbGetExams({examId:data.examId || data.ExamID})).exams[0] || {};
+  const examId = sbClean(data.examId || data.ExamID);
   const subjectCode = sbClean(data.subjectCode || data.SubjectCode);
+  if(!examId || !subjectCode) throw new Error('Select a saved exam and subject.');
+  const exam = (await sbGetExams({examId})).exams[0];
+  if(!exam) throw new Error('Selected exam is unavailable to this account.');
   const subj = ((await sbGetSubjects({academicYear: data.academicYear || exam.AcademicYear, subjectCode})).subjects || [])[0] || {};
   const givenScheduleId = sbClean(data.scheduleId || data.ScheduleID);
   const obj = {Timestamp:sbNow(), ScheduleID:givenScheduleId || sbId('SCH'), ExamID:sbClean(data.examId || data.ExamID || exam.ExamID), SessionYear:sbClean(data.sessionYear || exam.SessionYear), AcademicYear:sbClean(data.academicYear || exam.AcademicYear), ExamType:sbClean(data.examType || exam.ExamType), ExamName:sbClean(data.examName || exam.ExamName), SubjectCode:subjectCode, SubjectName:subj.SubjectName || '', ExamDate:sbClean(data.examDate || data.ExamDate), ExamTime:sbClean(data.examTime || data.ExamTime), Room:sbClean(data.room || data.Room), Note:sbClean(data.note || data.Note), Status:sbClean(data.status || 'Active'), SubjectExamMarks:sbClean(data.subjectExamMarks || data.SubjectExamMarks), SubjectAssignmentMarks:sbClean(data.subjectAssignmentMarks || data.SubjectAssignmentMarks), SubjectAttendanceMarks:sbClean(data.subjectAttendanceMarks || data.SubjectAttendanceMarks), SubjectTestMarks:sbClean(data.subjectTestMarks || data.SubjectTestMarks), SubjectFinalPassMarks:sbClean(data.subjectFinalPassMarks || data.SubjectFinalPassMarks), SubjectFullMarks:sbClean(data.subjectFullMarks || data.SubjectFullMarks || data.subjectExamMarks || data.SubjectExamMarks || subj.FullMarks)};
@@ -2732,11 +2861,21 @@ async function sbSaveExamSchedule(data={}){
   if(!obj.SubjectCode) throw new Error('Subject required.');
 
   const existing = (await sbAll('ExamSchedule', {raw:true})).filter(sbIsActive).find(r=>
-    (givenScheduleId && sbClean(r.ScheduleID)===givenScheduleId) ||
-    (sbClean(r.ExamID)===obj.ExamID && sbClean(r.SubjectCode)===obj.SubjectCode) ||
-    (!sbClean(r.ExamID) && sbClean(r.SessionYear)===obj.SessionYear && sbClean(r.AcademicYear)===obj.AcademicYear && (!sbClean(r.ExamType) || sbClean(r.ExamType)===obj.ExamType) && sbClean(r.SubjectCode)===obj.SubjectCode)
+    (!givenScheduleId || sbClean(r.ScheduleID)===givenScheduleId) &&
+    sbSubjectObj(r).SubjectCode===obj.SubjectCode &&
+    (sbClean(r.ExamID)===obj.ExamID ||
+      (!sbClean(r.ExamID) && sbClean(r.SessionYear)===obj.SessionYear &&
+        sbSameAcademicYear(r.AcademicYear,obj.AcademicYear) &&
+        (!sbClean(r.ExamType) || sbClean(r.ExamType)===obj.ExamType)))
   );
+  if(givenScheduleId && !existing) throw new Error('Schedule to update does not match the selected exam and subject. Reload the schedule.');
   if(existing && existing.ScheduleID) obj.ScheduleID = existing.ScheduleID;
+  if(existing && data.preserveScheduleDetails === true){
+    for(const field of ['ExamDate','ExamTime','Room','Note','Status','SubjectAssignmentMarks','SubjectAttendanceMarks']){
+      obj[field] = sbClean(existing[field]);
+    }
+  }
+  if(!obj.SubjectName && existing) obj.SubjectName = sbSubjectObj(existing).SubjectName;
   const saved = existing && existing.row_id ? await sbPatchByRowId('ExamSchedule', existing.row_id, obj) : (await sbInsert('ExamSchedule', obj))[0];
   return {success:true, message:'Schedule saved successfully', scheduleId:obj.ScheduleID, ScheduleID:obj.ScheduleID, schedule:saved || obj, updated:!!existing};
 }
@@ -2770,19 +2909,49 @@ function sbStudentAssignedToSubject(student, subjectCode, assignedMap, hasAnyAss
   return !!(set && set.has(sbClean(subjectCode)));
 }
 async function sbGetMarksForExamSubject(examId, subjectCode){ return (await sbAll('Marks')).filter(r=>sbClean(r.ExamID)===sbClean(examId) && (!subjectCode || sbClean(r.SubjectCode)===sbClean(subjectCode))).filter(sbIsActive); }
+function sbSelectSavedExamMarks(rows, exam, subjectCode){
+  const examId = sbClean(exam.ExamID);
+  if(!examId) return [];
+  const selected = new Map();
+  for(const row of rows){
+    const code = sbClean(row.SubjectCode);
+    const roll = sbClean(row.Roll || row.RegistrationNumber);
+    if(!code || !roll || (subjectCode && code !== subjectCode) || !sbIsActive(row)) continue;
+    const rowExam = sbClean(row.ExamID);
+    const exact = rowExam === examId;
+    const legacy = !rowExam && exam.SessionYear && exam.AcademicYear && exam.ExamType &&
+      sbClean(row.SessionYear) === sbClean(exam.SessionYear) &&
+      sbSameAcademicYear(row.AcademicYear, exam.AcademicYear) &&
+      sbLower(row.ExamType) === sbLower(exam.ExamType);
+    if(!exact && !legacy) continue;
+    const key = JSON.stringify([code, roll]);
+    const previous = selected.get(key);
+    if(!previous || (exact && !previous.exact) ||
+      (exact === previous.exact && Number(row.row_id || 0) >= Number(previous.row.row_id || 0))){
+      selected.set(key, {row, exact});
+    }
+  }
+  return [...selected.values()].map(entry=>entry.row);
+}
 async function sbGetMarksEntryData(p={}){
   const exam = (await sbGetExams({examId:p.examId})).exams[0]; if(!exam) throw new Error('Exam not found');
   const subject = ((await sbGetSubjects({academicYear:exam.AcademicYear, subjectCode:p.subjectCode})).subjects || [])[0] || {SubjectCode:sbClean(p.subjectCode), SubjectName:''};
   const schedRes = await sbGetExamSchedule({examId:exam.ExamID, subjectCode:subject.SubjectCode});
   const schedule = schedRes.schedule || null;
+  if(!subject.SubjectName && schedule?.SubjectName) subject.SubjectName = schedule.SubjectName;
   const stAll = (await sbGetStudents({academicYear:exam.AcademicYear, sessionYear:p.studySessionYear || p.currentStudySession || exam.SessionYear})).students;
   const selectedStudySession = sbClean(p.studySessionYear || p.currentStudySession || p.sessionYear || exam.SessionYear);
   const assignedRows = await sbGetAssignedRowsForStudents(exam.AcademicYear, selectedStudySession, stAll);
   const assignedMap = sbAssignedCodesMap(assignedRows);
   const hasAssignments = assignedRows.length > 0;
-  let students = stAll.filter(s=>sbStudentAssignedToSubject(s, subject.SubjectCode, assignedMap, hasAssignments));
-  const marks = await sbGetMarksForExamSubject(exam.ExamID, subject.SubjectCode); const mmap={}; marks.forEach(m=>mmap[sbClean(m.Roll)]=m);
-  students = students.map(s=>Object.assign({}, s, mmap[s.Roll] || {}, {Name:s.Name || s.StudentName, StudentName:s.Name || s.StudentName, Roll:s.Roll, RegistrationNumber:s.RegistrationNumber}));
+  const marks = sbSelectSavedExamMarks(await sbAll('Marks', {raw:true}), exam, subject.SubjectCode);
+  const mmap = new Map(marks.map(m=>[sbClean(m.Roll), m]));
+  const enrolled = new Set(stAll.map(s=>sbClean(s.Roll)));
+  let students = stAll.filter(s=>mmap.has(sbClean(s.Roll)) || sbStudentAssignedToSubject(s, subject.SubjectCode, assignedMap, hasAssignments));
+  if(selectedStudySession === sbClean(exam.SessionYear)){
+    students.push(...marks.filter(m=>m.Roll && !enrolled.has(sbClean(m.Roll))));
+  }
+  students = students.map(s=>Object.assign({}, s, mmap.get(sbClean(s.Roll)) || {}, {Name:s.Name || s.StudentName, StudentName:s.Name || s.StudentName, Roll:s.Roll, RegistrationNumber:s.RegistrationNumber}));
   return {success:true, exam, subject, schedule, students};
 }
 async function sbGetIndividualStudentMarks(p={}){
@@ -2813,8 +2982,7 @@ async function sbGetIndividualStudentMarks(p={}){
 
   // 3. Get existing marks directly from Marks table
   const marksAll = (await sbAll('Marks', {raw:true})).filter(sbIsActive);
-  const existingMarks = marksAll.filter(m =>
-    sbClean(m.ExamID) === exam.ExamID &&
+  const existingMarks = sbSelectSavedExamMarks(marksAll, exam).filter(m =>
     (sbClean(m.Roll) === roll || (reg && sbClean(m.RegistrationNumber) === reg))
   );
 
@@ -2920,7 +3088,9 @@ async function sbGetIndividualStudentMarks(p={}){
 }
 
 async function sbSaveIndividualMarks(data={}){
-  const exam = (await sbGetExams({examId:data.examId || data.ExamID})).exams[0] || {};
+  const examId = sbClean(data.examId || data.ExamID);
+  if(!examId) throw new Error('Select an exam before saving marks.');
+  const exam = (await sbGetExams({examId})).exams[0];
   if(!exam) throw new Error('Exam not found');
   const roll = sbClean(data.roll || data.Roll);
   const reg = sbClean(data.reg || data.RegistrationNumber);
@@ -2954,7 +3124,7 @@ async function sbSaveIndividualMarks(data={}){
         subjectCode: code,
         marks: [{
           roll: roll,
-          reg: reg || student.RegistrationNumber,
+          registrationNumber: reg || student.RegistrationNumber,
           name: student.Name || student.StudentName,
           examMarks: rawExam,
           assignmentMarks: rawAssign,
@@ -2973,10 +3143,15 @@ async function sbSaveIndividualMarks(data={}){
   };
 }
 async function sbSaveMarks(data={}){
-  const exam = (await sbGetExams({examId:data.examId || data.ExamID})).exams[0] || {};
+  const examId = sbClean(data.examId || data.ExamID);
+  const subjectCode = sbClean(data.subjectCode || data.SubjectCode);
+  if(!examId || !subjectCode) throw new Error('Select an exam and subject before saving marks.');
+  const exam = (await sbGetExams({examId})).exams[0];
+  if(!exam) throw new Error('Selected exam is unavailable to this account. Reload the exam list before saving.');
   const subject = ((await sbGetSubjects({academicYear:exam.AcademicYear || data.academicYear, subjectCode:data.subjectCode || data.SubjectCode})).subjects || [])[0] || {SubjectCode:sbClean(data.subjectCode), SubjectName:''};
   const schedRes = await sbGetExamSchedule({examId:exam.ExamID || data.examId, subjectCode:subject.SubjectCode || data.subjectCode});
   const schedule = schedRes.schedule || {};
+  if(!subject.SubjectName && schedule.SubjectName) subject.SubjectName = schedule.SubjectName;
   const rows = Array.isArray(data.marks) ? data.marks : [data];
   const existingRows = await sbGetMarksForExamSubject(exam.ExamID || data.examId, subject.SubjectCode || data.subjectCode);
   const emap = {}; existingRows.forEach(r=>emap[sbClean(r.Roll)] = r);
@@ -3078,19 +3253,22 @@ async function sbGetMissingMarksList(p={}){
   const selectedStudySession = sbClean(p.studySessionYear || p.currentStudySession || p.sessionYear || exam.SessionYear);
   const assignedRows = await sbGetAssignedRowsForStudents(exam.AcademicYear, selectedStudySession, students);
   const assignedMap = sbAssignedCodesMap(assignedRows), hasAssignments = assignedRows.length > 0;
-  const allMarks = (await sbAll('Marks')).filter(m=>sbClean(m.ExamID)===exam.ExamID && sbIsActive(m));
+  const visibleMarks = await sbAll('Marks', {raw:true});
+  const allMarks = sbSelectSavedExamMarks(visibleMarks, exam, singleCode);
   const q = sbLower(p.search || p.q);
   let assignedCount=0, enteredCount=0, missingCount=0;
   const groups = subjects.map(sub=>{
     const subjectStudents = students.filter(st=>sbStudentAssignedToSubject(st, sub.SubjectCode, assignedMap, hasAssignments)).filter(st=>!q || [st.Roll,st.RegistrationNumber,st.Name].join(' ').toLowerCase().includes(q));
-    const entered = {}; allMarks.filter(m=>sbClean(m.SubjectCode)===sbClean(sub.SubjectCode) && sbClean(m.Marks || m.ExamMarks) !== '').forEach(m=>entered[sbClean(m.Roll)] = true);
-    const missing = subjectStudents.filter(st=>!entered[sbClean(st.Roll)]).map(st=>({Roll:st.Roll, RegistrationNumber:st.RegistrationNumber, Name:st.Name, SessionYear:st.SessionYear, StudySessionYear:st.StudySessionYear || st.CurrentStudySession || st.SessionYear, StudentType:st.StudentType || 'Regular', Reason:'Marks not entered'}));
+    const entered = new Set(allMarks.filter(m=>sbClean(m.SubjectCode)===sbClean(sub.SubjectCode) &&
+      [m.Marks, m.ExamMarks].some(value=>sbClean(value) !== '')).map(m=>sbClean(m.Roll || m.RegistrationNumber)));
+    const missing = subjectStudents.filter(st=>!entered.has(sbClean(st.Roll)) &&
+      !entered.has(sbClean(st.RegistrationNumber))).map(st=>({Roll:st.Roll, RegistrationNumber:st.RegistrationNumber, Name:st.Name, SessionYear:st.SessionYear, StudySessionYear:st.StudySessionYear || st.CurrentStudySession || st.SessionYear, StudentType:st.StudentType || 'Regular', Reason:'Marks not entered'}));
     assignedCount += subjectStudents.length;
     enteredCount += subjectStudents.length - missing.length;
     missingCount += missing.length;
     return {SubjectCode:sub.SubjectCode, SubjectName:sub.SubjectName, AssignedCount:subjectStudents.length, EnteredCount:subjectStudents.length - missing.length, MissingCount:missing.length, MissingStudents:missing};
   });
-  return {success:true, exam, subjects:groups, summary:{subjectCount:groups.length, assignedCount, enteredCount, missingCount}, markingSystem:{}, count:missingCount};
+  return {success:true, exam, subjects:groups, summary:{subjectCount:groups.length, assignedCount, enteredCount, missingCount}, markingSystem:{}, count:missingCount, noVisibleMarks:visibleMarks.length===0};
 }
 function sbIsIncourseAbsentRecord(m){
   if(!m) return false;
@@ -3240,6 +3418,8 @@ function sbResultRowFromGroup(student, marks, subjectRows, scheduleRows, exam){
     const code = sbClean(m.SubjectCode);
     const subject = subjectMap[code] || {SubjectCode:code, SubjectName:sbClean(m.SubjectName), FullMarks:''};
     const schedule = scheduleMap[code] || {};
+    const subjectName = [subject.SubjectName, schedule.SubjectName, m.SubjectName]
+      .map(sbClean).find(name=>name && name !== code) || '';
     const mark = sbMarkObtainedValue(m);
     const full = sbFindScheduleFullMarks(m, exam || {}, subject, schedule);
     const rs = sbGradeResultForDisplay(mark, full, subject);
@@ -3257,7 +3437,7 @@ function sbResultRowFromGroup(student, marks, subjectRows, scheduleRows, exam){
 
     return {
       code:code,
-      subject:subject.SubjectName || sbClean(m.SubjectName),
+      subject:subjectName,
       mark:sbRoundMarkValue(mark),
       fullMarks:String(full || ''),
       grade:grade,
@@ -3266,7 +3446,7 @@ function sbResultRowFromGroup(student, marks, subjectRows, scheduleRows, exam){
       credit:credit ? String(credit) : '',
       nonCredit:!!rs.nonCredit,
       SubjectCode:code,
-      SubjectName:subject.SubjectName || sbClean(m.SubjectName),
+      SubjectName:subjectName,
       Marks:sbRoundMarkValue(mark),
       FullMarks:String(full || ''),
       Grade:grade,
@@ -3450,7 +3630,7 @@ async function sbGetResultSummaryRows_(exam, p={}){
   });
   return Array.from(m.values());
 }
-function sbFinalizeResultList_(all, subjectRows){
+function sbFinalizeResultList_(all, subjectRows, scheduleRows){
   all = (all || []).filter(r=>sbClean(r.roll || r.Roll));
   all.sort(sbSortByRoll);
   const passed = all.filter(r=>sbClean(r.cgpa || r.GPA).toUpperCase() !== 'FAIL').sort((a,b)=>{
@@ -3467,7 +3647,17 @@ function sbFinalizeResultList_(all, subjectRows){
   });
   const allFailed = all.filter(r=>sbClean(r.cgpa || r.GPA).toUpperCase() === 'FAIL');
   const failed = {}; allFailed.forEach(r=>{ const c=String((r.failedCodes||'').split(',').filter(Boolean).length || 1); if(!failed[c]) failed[c]=[]; failed[c].push(r); });
-  const subjects = sbSortSubjects(subjectRows || []).map(s=>({code:s.SubjectCode, name:s.SubjectName, SubjectCode:s.SubjectCode, SubjectName:s.SubjectName}));
+  const byCode = new Map();
+  for(const row of [...(subjectRows || []), ...(scheduleRows || []), ...all.flatMap(r=>r.markDetails || [])]){
+    const code = sbClean(row.SubjectCode || row.code);
+    if(!code) continue;
+    const name = sbClean(row.SubjectName || row.subject);
+    const existing = byCode.get(code);
+    if(!existing || ((!existing.SubjectName || existing.SubjectName === code) && name && name !== code)){
+      byCode.set(code, {...row, SubjectCode:code, SubjectName:name === code ? '' : name});
+    }
+  }
+  const subjects = sbSortSubjects([...byCode.values()]).map(s=>({code:s.SubjectCode, name:s.SubjectName, SubjectCode:s.SubjectCode, SubjectName:s.SubjectName}));
   return {all, rows:all, results:all, students:all, passed, allFailed, failed, subjects};
 }
 async function sbBuildResultListFromMarks_(exam, p={}){
@@ -3476,12 +3666,7 @@ async function sbBuildResultListFromMarks_(exam, p={}){
   const academicYear = sbClean(p.academicYear || (exam && exam.AcademicYear));
 
   let marksAll = (await sbAll('Marks', {raw:true})).filter(sbIsActive);
-  let marks = examId ? marksAll.filter(m=>sbClean(m.ExamID) === examId) : marksAll;
-
-  // If ExamID data is missing in old import, relax by session/year/exam type instead of returning blank.
-  if(!marks.length){
-    marks = marksAll.filter(m=>(!studySession || sbClean(m.SessionYear) === studySession) && (!academicYear || sbClean(m.AcademicYear) === academicYear) && (!(exam && exam.ExamType) || sbClean(m.ExamType) === sbClean(exam.ExamType)));
-  }
+  let marks = examId ? sbSelectSavedExamMarks(marksAll, {...exam, ExamID:examId}) : marksAll;
 
   // ExamID is the strongest filter. Do not drop marks only because an old row has blank/mismatched AcademicYear.
   if(!examId && academicYear){
@@ -3497,8 +3682,7 @@ async function sbBuildResultListFromMarks_(exam, p={}){
   const byRoll={};
   marks.forEach(m=>{
     const r=sbClean(m.Roll); if(!r) return;
-    // Study Session list is primary. But if Supabase student data is not imported yet, still show mark-based result instead of 0.
-    if(studentsAll.length && !smap[r]) return;
+    if(studySession !== sbClean(exam?.SessionYear) && studentsAll.length && !smap[r]) return;
     if(!byRoll[r]) byRoll[r]=[];
     byRoll[r].push(m);
   });
@@ -3511,7 +3695,7 @@ async function sbBuildResultListFromMarks_(exam, p={}){
     exam
   ));
 
-  return Object.assign({exam, source:'marks'}, sbFinalizeResultList_(all, subjectRows));
+  return Object.assign({exam, source:'marks'}, sbFinalizeResultList_(all, subjectRows, scheduleRows));
 }
 async function sbGetEasyResultList(p={}){
   let exam=(await sbGetExams({examId:p.examId || p.ExamID})).exams[0] || {};
@@ -3534,7 +3718,7 @@ async function sbGetEasyResultList(p={}){
   const scheduleRows = (await sbGetExamSchedule({examId:exam.ExamID || p.examId, academicYear:academicYear, sessionYear:studySession, examType:exam.ExamType})).schedules || [];
   const summaryRows = await sbGetResultSummaryRows_(exam, p);
   const all = summaryRows.map(r=>sbResultRowFromSummary_(r, subjectRows, scheduleRows, exam));
-  return Object.assign({success:true, exam, source:'resultsummary-fallback'}, sbFinalizeResultList_(all, subjectRows));
+  return Object.assign({success:true, exam, source:'resultsummary-fallback'}, sbFinalizeResultList_(all, subjectRows, scheduleRows));
 }
 async function sbRefreshResultSummaryFromMarks(data={}){
   const res = await sbBuildResultListFromMarks_((await sbGetExams({examId:data.examId || data.ExamID})).exams[0] || {}, data);
@@ -3757,7 +3941,9 @@ async function sbGeoApiGet(action, params={}){
     case 'getPreloadData': return {success:true, disabled:true, message:'Preload/cache disabled. Use page-wise direct Supabase loading.'};
     case 'refreshAllResultSummaryFromMarks': return sbRefreshResultSummaryFromMarks(params);
     case 'listMarksBackupSheets': return {success:true, sheets:[]};
-    case 'hardRemoveOldSubjects': case 'cleanStudentSubjectsByLiveSubjects': case 'forceMarksSheetOldFormat': case 'restoreMarksFromBackup': case 'restoreMarksOldSubjectWiseFromBackup': return sbGenericSuccess('Supabase live subject data checked.');
+    case 'restoreMarksFromBackup': case 'restoreMarksOldSubjectWiseFromBackup':
+      return {success:false, message:'Automatic backup restore is not available in this Supabase portal. No marks were restored.'};
+    case 'hardRemoveOldSubjects': case 'cleanStudentSubjectsByLiveSubjects': case 'forceMarksSheetOldFormat': return sbGenericSuccess('Supabase live subject data checked.');
     case 'getSafeSheetSetupStatus': return {success:true, supabase:true, message:'Supabase connection active'};
     default: return {success:false, message:'Supabase adapter: action not implemented yet: '+action};
   }
@@ -3786,8 +3972,11 @@ async function sbGeoApiPost(payload={}){
     case 'addNotice': return sbAddNotice(data);
     case 'updateSheetRow': return sbUpdateSheetRow(data);
     case 'deleteSheetRow': return sbDeleteSheetRow(data);
-    case 'safeSheetSetup': case 'setupSheets': case 'initSystem': case 'setupFastSheets': case 'optimizeSheetsSafe': return sbGenericSuccess('Supabase tables already created from SQL.');
-    case 'cleanStudentSubjectsByLiveSubjects': case 'hardRemoveOldSubjects': case 'forceMarksSheetOldFormat': case 'restoreMarksFromBackup': case 'restoreMarksOldSubjectWiseFromBackup': return sbGenericSuccess('This maintenance action is safe/skipped in Supabase mode.');
+    case 'safeSheetSetup': case 'setupSheets': case 'initSystem': case 'setupFastSheets': case 'optimizeSheetsSafe':
+      return {success:false, message:'Database setup cannot run from this page. Run database/portal-permissions-repair.sql in the project SQL Editor and review its report. No tables were changed here.'};
+    case 'restoreMarksFromBackup': case 'restoreMarksOldSubjectWiseFromBackup':
+      return {success:false, message:'Automatic backup restore is not available in this Supabase portal. No marks were restored.'};
+    case 'cleanStudentSubjectsByLiveSubjects': case 'hardRemoveOldSubjects': case 'forceMarksSheetOldFormat': return sbGenericSuccess('This maintenance action is safe/skipped in Supabase mode.');
     case 'refreshAllResultSummaryFromMarks': return sbRefreshResultSummaryFromMarks(data);
     case 'importFinalResultSheet': return sbImportFinalResultSheet(data);
     case 'processPromotion': return sbProcessPromotion(data);
@@ -3798,17 +3987,27 @@ async function sbGeoApiPost(payload={}){
 geoApiGet = async function(action, params={}){ return sbGeoApiGet(action, params || {}); };
 geoApiPost = async function(payload={}){ return sbGeoApiPost(payload || {}); };
 processGeoWriteQueue = async function(){
+  if(__geoQueueRunning) return;
+  __geoQueueRunning = true;
   try{
-    const q = typeof getGeoWriteQueue === 'function' ? getGeoWriteQueue() : [];
-    if(!q || !q.length){ if(typeof updateGeoQueueBadge === 'function') updateGeoQueueBadge(); return; }
-    const remaining=[];
+    const q = getGeoWriteQueue();
+    const completed = new Set();
+    const failures = new Map();
     for(const item of q){
-      try{ const res=await sbGeoApiPost(item.payload||{}); if(!res || res.success===false) throw new Error((res&&res.message)||'Save failed'); }
-      catch(err){ item.lastError=err.message||String(err); remaining.push(item); }
+      try{
+        const res = await sbGeoApiPost(item.payload || {});
+        if(!res || res.success === false) throw new Error(res?.message || 'Save failed');
+        completed.add(item.id);
+      }catch(err){
+        failures.set(item.id,err.message || String(err));
+      }
     }
-    if(typeof setGeoWriteQueue === 'function') setGeoWriteQueue(remaining);
-    if(typeof updateGeoQueueBadge === 'function') updateGeoQueueBadge();
+    const remaining = getGeoWriteQueue().filter(item=>!completed.has(item.id)).map(item=>
+      failures.has(item.id) ? {...item,lastError:failures.get(item.id)} : item);
+    setGeoWriteQueue(remaining);
+    updateGeoQueueBadge();
   }catch(e){ console.warn('Supabase queue process failed', e); }
+  finally{ __geoQueueRunning = false; }
 };
 window.geoSupabaseAdapterReady = true;
 console.log('Supabase bug-fixed adapter active:', GEO_SUPABASE_URL);

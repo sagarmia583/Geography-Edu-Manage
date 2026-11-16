@@ -1,0 +1,123 @@
+/* Dedicated, measured print document. UI cards and responsive styles never enter the print layout. */
+#routine-print-root{position:absolute;left:-100000px;top:0;visibility:hidden;pointer-events:none;color:#000;font-family:"Times New Roman",serif;font-size:10pt;line-height:1.12}
+#routine-print-root *{box-sizing:border-box}
+#routine-print-root .rp-page{width:210mm;height:296mm;padding:7mm 6mm;overflow:hidden;background:#fff}
+#routine-print-root.rp-landscape .rp-page{width:297mm;height:209mm;padding:12mm 5mm 7mm}
+#routine-print-root .rp-content{width:100%;transform-origin:top left}
+#routine-print-root .rp-header{position:relative;text-align:center;padding:0 0 5mm;margin:0}
+#routine-print-root .rp-institution,#routine-print-root .rp-department,#routine-print-root h1{font-size:13pt;font-weight:bold;line-height:1.1;margin:0;font-family:"Times New Roman",serif;letter-spacing:normal}
+#routine-print-root .rp-subtitle{font-size:11pt;font-weight:bold;margin-top:1mm}
+#routine-print-root .rp-effective{font-size:10pt;margin-top:3mm}
+#routine-print-root.rp-landscape .rp-header{padding:0 46mm 5mm}
+#routine-print-root.rp-landscape .rp-effective{position:absolute;right:3mm;top:0;border:1px solid #000;padding:2mm;margin:0;font-size:10pt;font-weight:normal}
+#routine-print-root table{border-collapse:collapse;border:1px solid #000;width:100%;margin:0;font:inherit;table-layout:fixed}
+#routine-print-root th,#routine-print-root td{border:1px solid #000;padding:1.3mm 1mm;color:#000;background:#fff;overflow-wrap:anywhere;vertical-align:middle}
+#routine-print-root th{font-weight:bold;text-align:center}
+#routine-print-root .rp-week{font-size:9pt;line-height:1.08}
+#routine-print-root .rp-week .rp-day-col{width:21mm}
+#routine-print-root .rp-week .rp-break-col{width:12mm}
+#routine-print-root .rp-week thead th{height:8mm;font-size:9pt;padding:.8mm}
+#routine-print-root .rp-week tbody tr{height:19.5mm}
+#routine-print-root .rp-week td{text-align:center;padding:2mm 1mm}
+#routine-print-root .rp-entry{margin:0;line-height:1.1}
+#routine-print-root .rp-break{padding:0!important;text-align:center}
+#routine-print-root .rp-break span{writing-mode:vertical-rl;letter-spacing:3mm;font-weight:bold}
+#routine-print-root .rp-footer{display:flex;align-items:flex-start;justify-content:space-between;gap:12mm;margin-top:5mm}
+#routine-print-root .rp-teachers{width:auto;max-width:67%;table-layout:auto;flex:0 1 auto;font-size:9pt;line-height:1.05}
+#routine-print-root .rp-teachers th,#routine-print-root .rp-teachers td{padding:.8mm 1.5mm}
+#routine-print-root .rp-teachers th:nth-child(1),#routine-print-root .rp-teachers th:nth-child(3){white-space:nowrap}
+#routine-print-root .rp-teachers td:nth-child(2){text-align:left;overflow-wrap:normal}
+#routine-print-root .rp-teachers td:nth-child(1),#routine-print-root .rp-teachers td:nth-child(3){text-align:center}
+#routine-print-root .rp-signature{width:28%;text-align:center;font-size:10pt;line-height:1.1;padding-top:19mm}
+#routine-print-root .rp-list{font-size:10pt;line-height:1.15}
+#routine-print-root .rp-list th:nth-child(1){width:13%}
+#routine-print-root .rp-list th:nth-child(2){width:17%}
+#routine-print-root .rp-list th:nth-child(3){width:22%}
+#routine-print-root .rp-list th:nth-child(4){width:12%}
+#routine-print-root .rp-list td{padding:1.5mm 1mm}
+#routine-print-root .rp-list td[rowspan]{text-align:center;vertical-align:middle}
+#routine-print-root.rp-distribution .rp-page{padding:7mm 12mm}
+#routine-print-root.rp-distribution .rp-header{padding:1mm 28mm 1mm}
+#routine-print-root.rp-distribution h1{text-decoration:underline;font-size:14pt}
+#routine-print-root.rp-distribution .rp-effective{position:absolute;right:2mm;top:0;margin:0;padding:1mm 2mm;border:1px solid #000;font-size:9pt}
+#routine-print-root.rp-distribution .rp-subtitle{font-size:10pt;margin-top:2mm}
+#routine-print-root .rp-course-group h2{font:bold 11pt/1.1 "Times New Roman",serif;letter-spacing:normal;margin:2mm 0 1mm 2mm}
+#routine-print-root .rp-courses{font-size:10.5pt;line-height:1.08}
+#routine-print-root .rp-courses td{padding:1mm 2mm;height:6.8mm}
+#routine-print-root .rp-course-number{width:6%}
+#routine-print-root .rp-course-title{width:68%}
+#routine-print-root .rp-course-code{width:16%}
+#routine-print-root .rp-course-teacher{width:10%}
+#routine-print-root .rp-courses td:nth-child(3),#routine-print-root .rp-courses td:nth-child(4){text-align:center}
+#routine-print-root .rp-courses td:nth-child(4){white-space:pre-line;overflow-wrap:normal}
+#routine-print-root.rp-portrait .rp-footer{gap:5mm}
+#routine-print-root.rp-portrait .rp-teachers{font-size:8pt}
+#routine-print-root.rp-portrait .rp-signature{font-size:9pt;padding-top:12mm}
+@media print{
+ html:has(body.routine-print-ready),body.routine-print-ready{margin:0!important;padding:0!important;width:auto!important;min-height:0!important;height:auto!important;background:#fff!important}
+ body.routine-print-ready> :not(#routine-print-root){display:none!important}
+ body.routine-print-ready::before,body.routine-print-ready::after{display:none!important}
+ body.routine-print-ready #routine-print-root{position:static!important;visibility:visible!important;display:block!important;margin:0!important;padding:0!important}
+ #routine-print-root .rp-page{break-inside:avoid;page-break-inside:avoid}
+ #routine-print-root table,#routine-print-root tr{break-inside:auto;page-break-inside:auto}
+}
+
+
+#routine-print-root th,#routine-print-root td{text-align:center}
+#routine-print-root .rp-signature{margin-left:auto}
+#routine-print-root .rp-list th:nth-child(1){width:12%}
+#routine-print-root .rp-list th:nth-child(2){width:16%}
+#routine-print-root .rp-list th:nth-child(3){width:28%}
+#routine-print-root .rp-list th:nth-child(4){width:23%}
+#routine-print-root .rp-courses td:nth-child(2){text-align:left}
+#routine-print-root.rp-distribution .rp-header{padding:0 0 2mm}
+#routine-print-root.rp-distribution .rp-effective{position:static;display:table;margin:2mm 0 0 auto}
+#routine-print-root.rp-distribution .rp-institution,#routine-print-root.rp-distribution .rp-department{font-size:12pt}
+#routine-print-root.rp-distribution h1{margin-top:2mm}
+
+/* Filtered routines share one legible portrait layout with dedicated column widths. */
+#routine-print-root.rp-filtered .rp-page{padding:9mm 8mm}
+#routine-print-root.rp-filtered .rp-header{padding-bottom:3mm}
+#routine-print-root.rp-filtered .rp-institution{font-size:15pt;line-height:1.2}
+#routine-print-root.rp-filtered .rp-department{font-size:11.5pt;margin-top:1mm}
+#routine-print-root.rp-filtered h1{font-size:12pt;margin-top:2mm}
+#routine-print-root.rp-filtered .rp-subtitle{font-size:12pt;margin-top:2mm;line-height:1.2}
+#routine-print-root .rp-designation{font-size:9.5pt;line-height:1.2;margin-top:1mm}
+#routine-print-root.rp-filtered .rp-effective{font-size:9pt;margin-top:2mm}
+#routine-print-root .rp-meta{display:flex;justify-content:space-between;gap:5mm;margin-top:3mm;font-size:9pt;line-height:1.2}
+#routine-print-root .rp-list th:nth-child(n){width:auto}
+#routine-print-root .rp-list{font-size:10.5pt;line-height:1.18}
+#routine-print-root .rp-list th{height:8mm;padding:1.3mm .8mm;font-size:10pt}
+#routine-print-root .rp-list td{padding:1.3mm 1.1mm;height:auto;overflow-wrap:break-word}
+#routine-print-root .rp-list td[data-column="1"]{white-space:nowrap;font-size:9.5pt}
+#routine-print-root .rp-list .rp-day-start:not(:first-child) td{border-top-width:1.5px}
+#routine-print-root .rp-list.rp-spacious td{height:auto}
+#routine-print-root .rp-list.rp-compact{font-size:10pt;line-height:1.12}
+#routine-print-root .rp-list.rp-compact td{height:auto;padding:1mm .9mm}
+#routine-print-root.rp-filtered .rp-footer{margin-top:12mm}
+#routine-print-root.rp-filtered .rp-signature{width:65mm;padding-top:2mm;border-top:1px solid #444;font-size:9.5pt;line-height:1.25}
+/* Portrait routine: clear hierarchy, consistent rows and restrained ink usage. */
+#routine-print-root.rp-filtered .rp-page{padding:8mm 8mm 7mm}
+#routine-print-root.rp-filtered .rp-header{padding-bottom:3mm}
+#routine-print-root.rp-filtered .rp-institution{font-size:18pt;line-height:1.18}
+#routine-print-root.rp-filtered .rp-department{font-size:14pt;line-height:1.2}
+#routine-print-root.rp-filtered h1{font-size:14pt;margin-top:2.5mm}
+#routine-print-root.rp-filtered .rp-subtitle{font-size:14pt;line-height:1.2;margin-top:2mm}
+#routine-print-root.rp-filtered .rp-meta{border-top:1px solid #555;padding-top:2mm;margin-top:3mm;font-size:9pt}
+#routine-print-root.rp-filtered .rp-list{font-size:11pt;line-height:1.2;border:1px solid #333}
+#routine-print-root.rp-filtered .rp-list th{background:#f1f1f1;font-size:10.5pt;height:8mm;padding:1.5mm 1mm}
+#routine-print-root.rp-filtered .rp-list td{border-color:#555;padding:1.2mm 1.2mm;height:auto}
+#routine-print-root.rp-filtered .rp-list td[data-column="0"]{font-weight:bold;background:#fafafa}
+#routine-print-root.rp-filtered .rp-list td[data-column="1"]{font-size:10pt;font-variant-numeric:tabular-nums}
+#routine-print-root.rp-filtered .rp-list.rp-spacious td{height:auto;padding:1.2mm 1.3mm}
+#routine-print-root.rp-filtered .rp-list.rp-compact{font-size:10.5pt;line-height:1.15}
+#routine-print-root.rp-filtered .rp-list.rp-compact td{height:auto;padding:1.1mm 1mm}
+#routine-print-root.rp-filtered .rp-footer{margin-top:10mm}
+#routine-print-root.rp-filtered .rp-signature{font-size:10pt;width:67mm;padding-top:2mm;line-height:1.25}
+#routine-print-root .rp-entry.rp-higher-secondary{color:#13035c;font-weight:700;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+#routine-print-root .rp-entry.rp-level-xii{color:#9c5402}
+#routine-print-root .rp-signature-images{display:flex;align-items:center;justify-content:center;gap:3mm;height:23mm;margin-bottom:2mm}
+#routine-print-root .rp-signature-images img{display:block;width:auto;height:auto;flex-shrink:0;border:0}
+#routine-print-root .rp-signature-image{max-width:39mm;max-height:18mm}
+#routine-print-root .rp-seal-image{max-width:22mm;max-height:22mm}
+#routine-print-root .rp-signature.rp-signed{padding-top:0;border-top:0}
